@@ -13,10 +13,18 @@ import com.project5.backend.repository.ContactRepository;
 import com.project5.backend.repository.GiftHistoryRepository;
 import com.project5.backend.repository.MeetingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +36,9 @@ public class ContactService {
     private final ContactPreferenceRepository preferenceRepository;
     private final GiftHistoryRepository giftHistoryRepository;
     private final MeetingRepository meetingRepository;
+
+    @Value("${app.upload.dir}")
+    private String uploadDir;
 
     public List<ContactDto.Summary> getAll() {
         return contactRepository.findAllByOrderByNameAsc().stream()
@@ -134,6 +145,29 @@ public class ContactService {
     @Transactional
     public void deleteMeeting(Long meetingId) {
         meetingRepository.deleteById(meetingId);
+    }
+
+    // 프로필 사진 업로드
+    @Transactional
+    public String uploadPhoto(Long contactId, MultipartFile file) {
+        Contact contact = findContact(contactId);
+        try {
+            String ext = getExtension(file.getOriginalFilename());
+            String filename = contactId + "_" + UUID.randomUUID() + ext;
+            Path uploadPath = Paths.get(uploadDir);
+            Files.createDirectories(uploadPath);
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            String photoUrl = "/uploads/" + filename;
+            contact.setPhotoUrl(photoUrl);
+            return photoUrl;
+        } catch (IOException e) {
+            throw new RuntimeException("파일 업로드 실패", e);
+        }
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null || !filename.contains(".")) return ".jpg";
+        return filename.substring(filename.lastIndexOf("."));
     }
 
     private Contact findContact(Long id) {

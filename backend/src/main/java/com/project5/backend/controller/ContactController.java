@@ -6,8 +6,12 @@ import com.project5.backend.dto.MeetingDto;
 import com.project5.backend.dto.PreferenceDto;
 import com.project5.backend.service.ContactService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 import java.util.List;
 
@@ -48,6 +52,15 @@ public class ContactController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         contactService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // 프로필 사진 업로드
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> uploadPhoto(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        String photoUrl = contactService.uploadPhoto(id, file);
+        return ResponseEntity.ok(Map.of("photoUrl", photoUrl));
     }
 
     // 취향 추가

@@ -115,8 +115,12 @@ export default function Layout() {
                   background: color + '22', color,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 14, fontWeight: 700, flexShrink: 0,
+                  overflow: 'hidden',
                 }}>
-                  {c.name[0]}
+                  {c.photoUrl
+                    ? <img src={c.photoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : c.name[0]
+                  }
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -117,8 +117,12 @@ export default function ContactDetailPage() {
               background: relStyle.bg, color: relStyle.color,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 20, fontWeight: 700, flexShrink: 0,
+              overflow: 'hidden',
             }}>
-              {contact.name[0]}
+              {contact.photoUrl
+                ? <img src={contact.photoUrl} alt={contact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : contact.name[0]
+              }
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>

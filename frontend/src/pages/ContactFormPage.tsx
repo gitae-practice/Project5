@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getContact, createContact, updateContact } from '../api/contacts'
+import { getContact, createContact, updateContact, uploadPhoto } from '../api/contacts'
 
 const RELATIONSHIPS = ['친구', '가족', '직장', '연인', '지인', '기타']
+
+const REL_COLOR: Record<string, string> = {
+  친구: '#3b82f6', 가족: '#22c55e', 직장: '#f59e0b',
+  연인: '#ec4899', 지인: '#9ca3af', 기타: '#9ca3af',
+}
 
 const inputStyle: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
@@ -22,7 +27,11 @@ export default function ContactFormPage() {
   const isEdit = !!id
 
   const [form, setForm] = useState({ name: '', relationship: '친구', birthday: '', memo: '' })
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!isEdit) return
@@ -33,25 +42,44 @@ export default function ContactFormPage() {
         birthday: c.birthday ?? '',
         memo: c.memo ?? '',
       })
+      setCurrentPhotoUrl(c.photoUrl ?? null)
     })
   }, [id, isEdit])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPhotoFile(file)
+    const reader = new FileReader()
+    reader.onload = ev => setPhotoPreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
       const payload = { ...form, birthday: form.birthday || undefined, memo: form.memo || undefined }
+      let contactId: number
       if (isEdit) {
         await updateContact(Number(id), payload)
-        navigate(`/contacts/${id}`)
+        contactId = Number(id)
       } else {
         const created = await createContact(payload)
-        navigate(`/contacts/${created.id}`)
+        contactId = created.id
       }
+      // 사진 파일이 선택된 경우 업로드
+      if (photoFile) {
+        await uploadPhoto(contactId, photoFile)
+      }
+      navigate(`/contacts/${contactId}`)
     } finally {
       setLoading(false)
     }
   }
+
+  const avatarUrl = photoPreview ?? currentPhotoUrl
+  const color = REL_COLOR[form.relationship] ?? '#9ca3af'
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', minHeight: '100%', padding: '48px 24px' }}>
@@ -64,6 +92,46 @@ export default function ContactFormPage() {
         </h2>
 
         <form onSubmit={handleSubmit}>
+          {/* 프로필 사진 업로드 */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: 80, height: 80, borderRadius: '50%', cursor: 'pointer',
+                  overflow: 'hidden', border: '2px solid #e5e7eb',
+                  background: color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="프로필" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: 28, fontWeight: 700, color }}>
+                    {form.name ? form.name[0] : '?'}
+                  </span>
+                )}
+              </div>
+              {/* 카메라 아이콘 배지 */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  width: 24, height: 24, borderRadius: '50%',
+                  background: '#111', border: '2px solid #fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                <span style={{ color: '#fff', fontSize: 11 }}>✎</span>
+              </div>
+              <input
+                ref={fileInputRef} type="file"
+                accept="image/*" onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>이름 *</label>
             <input

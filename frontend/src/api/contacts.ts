@@ -18,6 +18,14 @@ export const updateContact = (id: number, data: Partial<Contact>) =>
 export const deleteContact = (id: number) =>
   api.delete(`/contacts/${id}`);
 
+export const uploadPhoto = (contactId: number, file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post<{ photoUrl: string }>(`/contacts/${contactId}/photo`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then(r => r.data.photoUrl);
+};
+
 export const addPreference = (contactId: number, type: PreferenceType, value: string) =>
   api.post<Preference>(`/contacts/${contactId}/preferences`, { type, value }).then(r => r.data);
 
