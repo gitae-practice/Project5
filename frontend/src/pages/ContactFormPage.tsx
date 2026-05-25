@@ -34,7 +34,14 @@ export default function ContactFormPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!isEdit) return
+    if (!isEdit) {
+      // /contacts/new로 이동 시 폼 전체 초기화
+      setForm({ name: '', relationship: '친구', birthday: '', memo: '' })
+      setCurrentPhotoUrl(null)
+      setPhotoFile(null)
+      setPhotoPreview(null)
+      return
+    }
     getContact(Number(id)).then(c => {
       setForm({
         name: c.name,
@@ -43,6 +50,8 @@ export default function ContactFormPage() {
         memo: c.memo ?? '',
       })
       setCurrentPhotoUrl(c.photoUrl ?? null)
+      setPhotoFile(null)
+      setPhotoPreview(null)
     })
   }, [id, isEdit])
 
