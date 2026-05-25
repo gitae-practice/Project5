@@ -3,6 +3,9 @@ backend/build/
 backend/.gradle/
 backend/src/main/resources/application.properties
 
+# 업로드된 이미지 파일 (로컬 저장, git 제외)
+uploads/
+
 # Frontend
 frontend/node_modules/
 frontend/dist/
