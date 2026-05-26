@@ -7,7 +7,6 @@
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
 - **Backend**: Spring Boot 3, Java 21, JPA
 - **Database**: MySQL 8
-- **배포**: Railway (예정)
 
 ## 프로젝트 구조
 
