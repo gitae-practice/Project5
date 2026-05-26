@@ -192,7 +192,7 @@ export default function ContactDetailPage() {
 
       {/* 콘텐츠 */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
-        <div style={{ maxWidth: 800 }}>
+        <div style={{ maxWidth: tab === 'meeting' ? 'none' : 800 }}>
 
           {/* 취향 탭 */}
           {tab === 'preference' && (
@@ -376,34 +376,40 @@ export default function ContactDetailPage() {
                 </form>
               )}
 
-              {/* 달력 (기본 표시) - 만남 있는 날 점 표시 */}
-              <MeetingCalendar meetings={meetings} />
+              {/* 2열 레이아웃: 달력(왼쪽) + 지도(오른쪽) */}
+              <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+                {/* 왼쪽: 달력 + 만남 목록 */}
+                <div style={{ flex: '0 0 380px' }}>
+                  <MeetingCalendar meetings={meetings} />
 
-              {/* 방문 장소 지도 (좌표 있는 만남이 있을 때만 표시) */}
-              <MeetingMap meetings={meetings} />
-
-              {/* 만남 목록 */}
-              {meetings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontSize: 14 }}>
-                  아직 만남 기록이 없어요
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {meetings.map(m => (
-                    <div key={m.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 16px',
-                    }}>
-                      <div>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
-                        {m.place && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {m.place}</p>}
-                        {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
-                      </div>
-                      <button onClick={() => deleteMeeting(m.id).then(() => setMeetings(prev => prev.filter(x => x.id !== m.id)))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14 }}>✕</button>
+                  {meetings.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '30px 0', color: '#9ca3af', fontSize: 14 }}>
+                      아직 만남 기록이 없어요
                     </div>
-                  ))}
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {meetings.map(m => (
+                        <div key={m.id} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 16px',
+                        }}>
+                          <div>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
+                            {m.place && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {m.place}</p>}
+                            {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
+                          </div>
+                          <button onClick={() => deleteMeeting(m.id).then(() => setMeetings(prev => prev.filter(x => x.id !== m.id)))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* 오른쪽: 지도 (항상 표시) */}
+                <div style={{ flex: 1, minWidth: 0, position: 'sticky', top: 0 }}>
+                  <MeetingMap meetings={meetings} />
+                </div>
+              </div>
             </div>
           )}
         </div>
