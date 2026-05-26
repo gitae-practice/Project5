@@ -145,6 +145,18 @@ public class ContactService {
     }
 
     @Transactional
+    public MeetingDto.Response updateMeeting(Long meetingId, MeetingDto.Request req) {
+        Meeting meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new RuntimeException("Meeting not found: " + meetingId));
+        meeting.setDate(req.getDate());
+        meeting.setPlace(req.getPlace());
+        meeting.setPlaceLat(req.getPlaceLat());
+        meeting.setPlaceLng(req.getPlaceLng());
+        meeting.setMemo(req.getMemo());
+        return MeetingDto.Response.from(meeting);
+    }
+
+    @Transactional
     public void deleteMeeting(Long meetingId) {
         meetingRepository.deleteById(meetingId);
     }

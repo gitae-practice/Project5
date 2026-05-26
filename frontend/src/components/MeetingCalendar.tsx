@@ -2,6 +2,9 @@ import { useState } from 'react'
 import type { Meeting } from '../types'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+const MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
+
+type ViewMode = 'days' | 'months' | 'years'
 
 interface Props {
   meetings: Meeting[]
@@ -10,18 +13,40 @@ interface Props {
 export default function MeetingCalendar({ meetings }: Props) {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth()) // 0-indexed
+  const [month, setMonth] = useState(now.getMonth())
+  const [viewMode, setViewMode] = useState<ViewMode>('days')
+  const [yearRangeStart, setYearRangeStart] = useState(Math.floor(now.getFullYear() / 12) * 12)
 
-  const prevMonth = () => {
-    if (month === 0) { setYear(y => y - 1); setMonth(11) }
-    else setMonth(m => m - 1)
-  }
-  const nextMonth = () => {
-    if (month === 11) { setYear(y => y + 1); setMonth(0) }
-    else setMonth(m => m + 1)
+  const prevUnit = () => {
+    if (viewMode === 'days') {
+      if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1)
+    } else if (viewMode === 'months') {
+      setYear(y => y - 1)
+    } else {
+      setYearRangeStart(y => y - 12)
+    }
   }
 
-  // 이번 달에 만남이 있는 날짜 Set
+  const nextUnit = () => {
+    if (viewMode === 'days') {
+      if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1)
+    } else if (viewMode === 'months') {
+      setYear(y => y + 1)
+    } else {
+      setYearRangeStart(y => y + 12)
+    }
+  }
+
+  const handleHeaderClick = () => {
+    if (viewMode === 'days') setViewMode('months')
+    else if (viewMode === 'months') setViewMode('years')
+    else setViewMode('days')
+  }
+
+  const selectMonth = (m: number) => { setMonth(m); setViewMode('days') }
+  const selectYear = (y: number) => { setYear(y); setViewMode('months') }
+
+  // 이번 달 만남 날짜 Set
   const meetingDates = new Set(
     meetings
       .filter(m => {
@@ -31,107 +56,148 @@ export default function MeetingCalendar({ meetings }: Props) {
       .map(m => new Date(m.date + 'T00:00:00').getDate())
   )
 
-  // 이번 달 첫 날 요일, 총 일수
-  const firstDayOfWeek = new Date(year, month, 1).getDay() // 0=일
+  const firstDayOfWeek = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month
   const todayDate = now.getDate()
 
-  // 달력 셀 배열 (null = 빈 셀)
   const cells: (number | null)[] = []
   for (let i = 0; i < firstDayOfWeek; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
   while (cells.length % 7 !== 0) cells.push(null)
 
-  const monthMeetingCount = meetingDates.size
+  const headerText =
+    viewMode === 'days' ? `${year}년 ${month + 1}월` :
+    viewMode === 'months' ? `${year}년` :
+    `${yearRangeStart} – ${yearRangeStart + 11}`
+
+  const btnStyle: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    fontSize: 22, color: '#374151', padding: '2px 10px', lineHeight: 1,
+  }
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb',
-      padding: '24px', marginBottom: 20,
-    }}>
-      {/* 월 이동 헤더 */}
+    <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', padding: '24px', marginBottom: 20 }}>
+      {/* 헤더 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <button type="button" onClick={prevUnit} style={btnStyle}>‹</button>
         <button
-          type="button" onClick={prevMonth}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#374151', padding: '2px 10px', lineHeight: 1 }}
+          type="button" onClick={handleHeaderClick}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 17, fontWeight: 700, color: '#111', fontFamily: 'inherit',
+            padding: '4px 8px', borderRadius: 6,
+          }}
         >
-          ‹
+          {headerText} <span style={{ fontSize: 11, color: '#9ca3af' }}>▾</span>
         </button>
-        <span style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>
-          {year}년 {month + 1}월
-        </span>
-        <button
-          type="button" onClick={nextMonth}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#374151', padding: '2px 10px', lineHeight: 1 }}
-        >
-          ›
-        </button>
+        <button type="button" onClick={nextUnit} style={btnStyle}>›</button>
       </div>
 
-      {/* 요일 헤더 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
-        {DAY_LABELS.map((d, i) => (
-          <div
-            key={d}
-            style={{
-              textAlign: 'center', fontSize: 12, fontWeight: 600,
-              color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : '#9ca3af',
-              paddingBottom: 8,
-            }}
-          >
-            {d}
+      {/* 날짜 뷰 */}
+      {viewMode === 'days' && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
+            {DAY_LABELS.map((d, i) => (
+              <div key={d} style={{
+                textAlign: 'center', fontSize: 12, fontWeight: 600, paddingBottom: 8,
+                color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : '#9ca3af',
+              }}>{d}</div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* 날짜 그리드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
-        {cells.map((day, i) => {
-          const isToday = isCurrentMonth && day === todayDate
-          const hasMeeting = day !== null && meetingDates.has(day)
-          const isSun = i % 7 === 0
-          const isSat = i % 7 === 6
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+            {cells.map((day, i) => {
+              const isToday = isCurrentMonth && day === todayDate
+              const hasMeeting = day !== null && meetingDates.has(day)
+              const isSun = i % 7 === 0
+              const isSat = i % 7 === 6
 
-          return (
-            <div
-              key={i}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                padding: '5px 0',
-              }}
-            >
-              {day !== null && (
-                <>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: isToday ? '#111' : 'transparent',
-                    fontSize: 14,
-                    fontWeight: isToday || hasMeeting ? 700 : 400,
-                    color: isToday ? '#fff' : isSun ? '#ef4444' : isSat ? '#3b82f6' : '#111',
-                  }}>
-                    {day}
-                  </div>
-                  {/* 만남이 있는 날: 점 표시 */}
-                  <div style={{
-                    width: 6, height: 6, borderRadius: '50%', marginTop: 3,
-                    background: hasMeeting ? (isToday ? '#fff' : '#111') : 'transparent',
-                  }} />
-                </>
-              )}
+              let bg = 'transparent'
+              let border = 'none'
+              let color = isSun ? '#ef4444' : isSat ? '#3b82f6' : '#111'
+              let fw = 400
+
+              if (hasMeeting && isToday) {
+                // 오늘 + 만남: 빨간 채움
+                bg = '#ef4444'; color = '#fff'; fw = 700
+              } else if (hasMeeting) {
+                // 만남: 빨간 테두리 원
+                border = '2px solid #ef4444'; color = '#ef4444'; fw = 700
+              } else if (isToday) {
+                // 오늘: 검은 채움
+                bg = '#111'; color = '#fff'; fw = 700
+              }
+
+              return (
+                <div key={i} style={{ display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
+                  {day !== null && (
+                    <div style={{
+                      width: 34, height: 34, borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: bg, border, fontSize: 14, fontWeight: fw, color,
+                    }}>
+                      {day}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {meetingDates.size > 0 && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f3f4f6', fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
+              {year}년 {month + 1}월 만남 {meetingDates.size}회
             </div>
-          )
-        })}
-      </div>
+          )}
+        </>
+      )}
 
-      {/* 하단 요약 */}
-      {monthMeetingCount > 0 && (
-        <div style={{
-          marginTop: 14, paddingTop: 14, borderTop: '1px solid #f3f4f6',
-          fontSize: 12, color: '#9ca3af', textAlign: 'center',
-        }}>
-          {year}년 {month + 1}월 만남 {monthMeetingCount}회
+      {/* 월 선택 뷰 */}
+      {viewMode === 'months' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          {MONTH_LABELS.map((label, i) => {
+            const isSelected = i === month
+            return (
+              <button
+                key={i} type="button" onClick={() => selectMonth(i)}
+                style={{
+                  padding: '14px 0', fontSize: 14, borderRadius: 8, cursor: 'pointer',
+                  border: isSelected ? 'none' : '1px solid #e5e7eb',
+                  background: isSelected ? '#111' : '#fff',
+                  color: isSelected ? '#fff' : '#111',
+                  fontWeight: isSelected ? 700 : 400,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 년도 선택 뷰 */}
+      {viewMode === 'years' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          {Array.from({ length: 12 }, (_, i) => yearRangeStart + i).map(y => {
+            const isSelected = y === year
+            return (
+              <button
+                key={y} type="button" onClick={() => selectYear(y)}
+                style={{
+                  padding: '14px 0', fontSize: 14, borderRadius: 8, cursor: 'pointer',
+                  border: isSelected ? 'none' : '1px solid #e5e7eb',
+                  background: isSelected ? '#111' : '#fff',
+                  color: isSelected ? '#fff' : '#111',
+                  fontWeight: isSelected ? 700 : 400,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {y}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

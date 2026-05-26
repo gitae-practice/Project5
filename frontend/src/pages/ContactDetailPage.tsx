@@ -4,7 +4,7 @@ import {
   getContact, getGifts, getMeetings,
   addPreference, deletePreference,
   addGift, deleteGift,
-  addMeeting, deleteMeeting,
+  addMeeting, updateMeeting, deleteMeeting,
 } from '../api/contacts'
 import type { Contact, Gift, Meeting, PreferenceType } from '../types'
 import PlaceSearch from '../components/PlaceSearch'
@@ -64,6 +64,8 @@ export default function ContactDetailPage() {
   const today = new Date().toISOString().split('T')[0]
   const [meetForm, setMeetForm] = useState({ date: today, place: '', placeLat: 0, placeLng: 0, memo: '' })
   const [showMeetForm, setShowMeetForm] = useState(false)
+  const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
+  const [editMeetForm, setEditMeetForm] = useState({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
 
   useEffect(() => {
     getContact(contactId).then(setContact)
@@ -106,6 +108,24 @@ export default function ContactDetailPage() {
     setMeetings(prev => [meeting, ...prev])
     setMeetForm({ date: new Date().toISOString().split('T')[0], place: '', placeLat: 0, placeLng: 0, memo: '' })
     setShowMeetForm(false)
+  }
+
+  const startEditMeeting = (m: Meeting) => {
+    setEditingMeetingId(m.id)
+    setEditMeetForm({ date: m.date, place: m.place ?? '', placeLat: m.placeLat ?? 0, placeLng: m.placeLng ?? 0, memo: m.memo ?? '' })
+  }
+
+  const handleUpdateMeeting = async (e: React.FormEvent, meetingId: number) => {
+    e.preventDefault()
+    const updated = await updateMeeting(meetingId, {
+      date: editMeetForm.date,
+      place: editMeetForm.place || undefined,
+      placeLat: editMeetForm.placeLat || undefined,
+      placeLng: editMeetForm.placeLng || undefined,
+      memo: editMeetForm.memo || undefined,
+    })
+    setMeetings(prev => prev.map(m => m.id === meetingId ? updated : m))
+    setEditingMeetingId(null)
   }
 
   if (!contact) return <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af' }}>불러오는 중...</div>
@@ -377,9 +397,9 @@ export default function ContactDetailPage() {
               )}
 
               {/* 2열 레이아웃: 달력(왼쪽) + 지도(오른쪽) */}
-              <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
                 {/* 왼쪽: 달력 + 만남 목록 */}
-                <div style={{ flex: '0 0 380px' }}>
+                <div style={{ flex: '0 0 390px', display: 'flex', flexDirection: 'column' }}>
                   <MeetingCalendar meetings={meetings} />
 
                   {meetings.length === 0 ? (
@@ -389,24 +409,56 @@ export default function ContactDetailPage() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {meetings.map(m => (
-                        <div key={m.id} style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 16px',
-                        }}>
-                          <div>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
-                            {m.place && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {m.place}</p>}
-                            {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
-                          </div>
-                          <button onClick={() => deleteMeeting(m.id).then(() => setMeetings(prev => prev.filter(x => x.id !== m.id)))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14 }}>✕</button>
+                        <div key={m.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
+                          {editingMeetingId === m.id ? (
+                            /* 인라인 수정 폼 */
+                            <form onSubmit={e => handleUpdateMeeting(e, m.id)} style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <input type="date" value={editMeetForm.date} onChange={e => setEditMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1, fontSize: 12 }} />
+                                <PlaceSearch
+                                  value={editMeetForm.place}
+                                  onSelect={({ name, lat, lng }) => setEditMeetForm(p => ({ ...p, place: name, placeLat: lat, placeLng: lng }))}
+                                  style={{ flex: 1, fontSize: 12 }}
+                                />
+                              </div>
+                              <input type="text" value={editMeetForm.memo} onChange={e => setEditMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, fontSize: 12 }} />
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                                <button type="button" onClick={() => setEditingMeetingId(null)} style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>
+                                <button type="submit" style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
+                              </div>
+                            </form>
+                          ) : (
+                            /* 일반 표시 */
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
+                                {m.place && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {m.place}</p>}
+                                {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
+                              </div>
+                              <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                                <button
+                                  onClick={() => startEditMeeting(m)}
+                                  style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit' }}
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  onClick={() => deleteMeeting(m.id).then(() => setMeetings(prev => prev.filter(x => x.id !== m.id)))}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '3px 4px' }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* 오른쪽: 지도 (항상 표시) */}
-                <div style={{ flex: 1, minWidth: 0, position: 'sticky', top: 0 }}>
+                {/* 오른쪽: 지도 (달력 높이에 맞춤) */}
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <MeetingMap meetings={meetings} />
                 </div>
               </div>

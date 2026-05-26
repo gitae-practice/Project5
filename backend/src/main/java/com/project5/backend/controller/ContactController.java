@@ -107,6 +107,12 @@ public class ContactController {
         return contactService.addMeeting(id, req);
     }
 
+    // 만남 수정
+    @PutMapping("/meetings/{meetingId}")
+    public MeetingDto.Response updateMeeting(@PathVariable Long meetingId, @RequestBody MeetingDto.Request req) {
+        return contactService.updateMeeting(meetingId, req);
+    }
+
     // 만남 삭제
     @DeleteMapping("/meetings/{meetingId}")
     public ResponseEntity<Void> deleteMeeting(@PathVariable Long meetingId) {

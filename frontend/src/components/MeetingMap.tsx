@@ -1,38 +1,42 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Meeting } from '../types'
+
+const DEFAULT_LAT = 37.5665
+const DEFAULT_LNG = 126.9780
 
 interface Props {
   meetings: Meeting[]
 }
 
-// 서울 기본 좌표
-const DEFAULT_LAT = 37.5665
-const DEFAULT_LNG = 126.9780
-
 export default function MeetingMap({ meetings }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
   const markersRef = useRef<any[]>([])
+  const [ready, setReady] = useState(false)
 
   const withCoords = meetings.filter(m => m.placeLat && m.placeLng)
 
-  // 지도 초기화
+  // 카카오 SDK 로드 대기 후 지도 초기화
   useEffect(() => {
-    if (!mapRef.current) return
-    const kakao = (window as any).kakao
-    if (!kakao?.maps) return
-
-    const center = new kakao.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG)
-    mapInstance.current = new kakao.maps.Map(mapRef.current, {
-      center,
-      level: 8,
-    })
+    let tries = 0
+    const tryInit = () => {
+      const kakao = (window as any).kakao
+      if (!kakao?.maps) {
+        if (tries++ < 30) setTimeout(tryInit, 300)
+        return
+      }
+      if (!mapRef.current || mapInstance.current) return
+      const center = new kakao.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG)
+      mapInstance.current = new kakao.maps.Map(mapRef.current, { center, level: 8 })
+      setReady(true)
+    }
+    tryInit()
   }, [])
 
-  // 마커 업데이트
+  // 마커 업데이트 (지도 준비 & 만남 변경 시)
   useEffect(() => {
     const kakao = (window as any).kakao
-    if (!kakao?.maps || !mapInstance.current) return
+    if (!ready || !kakao?.maps || !mapInstance.current) return
 
     // 기존 마커 제거
     markersRef.current.forEach(m => m.setMap(null))
@@ -51,7 +55,7 @@ export default function MeetingMap({ meetings }: Props) {
       markersRef.current.push(marker)
 
       const infoContent = `
-        <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;min-width:100px">
+        <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;min-width:100px;line-height:1.6">
           <strong>${m.place}</strong><br/>
           <span style="color:#9ca3af">${m.date}</span>
         </div>
@@ -66,21 +70,25 @@ export default function MeetingMap({ meetings }: Props) {
     } else {
       map.setBounds(bounds)
     }
-  }, [withCoords.length])
+  }, [ready, withCoords.length])
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {withCoords.length > 0 && (
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.05em', marginBottom: 8 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.05em', margin: '0 0 8px' }}>
           VISITED PLACES ({withCoords.length})
         </p>
       )}
       <div
         ref={mapRef}
-        style={{ width: '100%', height: '100%', minHeight: 300, borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}
+        style={{
+          flex: 1, minHeight: 380, borderRadius: 10,
+          border: '1px solid #e5e7eb', overflow: 'hidden',
+          background: '#f9fafb',
+        }}
       />
       {withCoords.length === 0 && (
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#d1d5db', marginTop: 8 }}>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#d1d5db', margin: '8px 0 0' }}>
           장소를 추가하면 지도에 표시돼요
         </p>
       )}

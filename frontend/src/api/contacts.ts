@@ -47,5 +47,8 @@ export const getMeetings = (contactId: number) =>
 export const addMeeting = (contactId: number, data: Partial<Meeting>) =>
   api.post<Meeting>(`/contacts/${contactId}/meetings`, data).then(r => r.data);
 
+export const updateMeeting = (meetingId: number, data: Partial<Meeting>) =>
+  api.put<Meeting>(`/contacts/meetings/${meetingId}`, data).then(r => r.data);
+
 export const deleteMeeting = (meetingId: number) =>
   api.delete(`/contacts/meetings/${meetingId}`);
