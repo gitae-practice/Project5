@@ -8,9 +8,11 @@ type ViewMode = 'days' | 'months' | 'years'
 
 interface Props {
   meetings: Meeting[]
+  selectedDate?: string | null
+  onDateSelect?: (date: string | null) => void
 }
 
-export default function MeetingCalendar({ meetings }: Props) {
+export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }: Props) {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -129,14 +131,24 @@ export default function MeetingCalendar({ meetings }: Props) {
                 bg = '#111'; color = '#fff'; fw = 700
               }
 
+              const dateStr = day !== null ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null
+              const isSelected = dateStr !== null && selectedDate === dateStr
+
               return (
                 <div key={i} style={{ display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
                   {day !== null && (
-                    <div style={{
-                      width: 34, height: 34, borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: bg, border, fontSize: 14, fontWeight: fw, color,
-                    }}>
+                    <div
+                      onClick={() => onDateSelect?.(isSelected ? null : dateStr)}
+                      style={{
+                        width: 34, height: 34, borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: bg, border, fontSize: 14, fontWeight: fw, color,
+                        cursor: 'pointer',
+                        // 선택된 날: 파란 외곽선으로 표시
+                        outline: isSelected ? '2.5px solid #3b82f6' : 'none',
+                        outlineOffset: '2px',
+                      }}
+                    >
                       {day}
                     </div>
                   )}

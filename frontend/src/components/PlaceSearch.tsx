@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { loadKakaoSdk } from '../utils/kakaoLoader'
 
 interface KakaoPlace {
   place_name: string
@@ -21,14 +22,13 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
   const [searching, setSearching] = useState(false)
   const [sdkError, setSdkError] = useState(false)
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!query.trim()) return
-    const kakao = (window as any).kakao
-    if (!kakao?.maps?.services) {
-      setSdkError(true)
-      return
-    }
+    // SDK 로드 보장 후 검색
+    const ok = await loadKakaoSdk()
+    if (!ok) { setSdkError(true); return }
     setSdkError(false)
+    const kakao = (window as any).kakao
     const ps = new kakao.maps.services.Places()
     setSearching(true)
     ps.keywordSearch(query, (data: KakaoPlace[], status: string) => {
@@ -101,7 +101,7 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
 
         {sdkError && (
           <p style={{ textAlign: 'center', color: '#ef4444', fontSize: 12, padding: '8px 0', margin: 0 }}>
-            카카오맵 SDK 로딩 중입니다. 잠시 후 다시 시도하세요.
+            지도 SDK를 불러올 수 없어요. 네트워크를 확인해주세요.
           </p>
         )}
 

@@ -66,6 +66,7 @@ export default function ContactDetailPage() {
   const [showMeetForm, setShowMeetForm] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
   const [editMeetForm, setEditMeetForm] = useState({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
+  const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(today)
 
   useEffect(() => {
     getContact(contactId).then(setContact)
@@ -400,7 +401,11 @@ export default function ContactDetailPage() {
               <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
                 {/* 왼쪽: 달력 + 만남 목록 */}
                 <div style={{ flex: '0 0 390px', display: 'flex', flexDirection: 'column' }}>
-                  <MeetingCalendar meetings={meetings} />
+                  <MeetingCalendar
+                    meetings={meetings}
+                    selectedDate={selectedMeetingDate}
+                    onDateSelect={setSelectedMeetingDate}
+                  />
 
                   {meetings.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '30px 0', color: '#9ca3af', fontSize: 14 }}>
@@ -408,7 +413,30 @@ export default function ContactDetailPage() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {meetings.map(m => (
+                      {/* 날짜 선택 시 필터 표시 */}
+                      {selectedMeetingDate && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ fontSize: 12, color: '#3b82f6', fontWeight: 600 }}>{selectedMeetingDate} 만남</span>
+                          <button
+                            onClick={() => setSelectedMeetingDate(null)}
+                            style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                          >
+                            전체보기
+                          </button>
+                        </div>
+                      )}
+                      {(selectedMeetingDate
+                        ? meetings.filter(m => m.date === selectedMeetingDate)
+                        : meetings
+                      ).length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '20px 0', color: '#9ca3af', fontSize: 13 }}>
+                          이 날 만남 기록이 없어요
+                        </div>
+                      )}
+                      {(selectedMeetingDate
+                        ? meetings.filter(m => m.date === selectedMeetingDate)
+                        : meetings
+                      ).map(m => (
                         <div key={m.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
                           {editingMeetingId === m.id ? (
                             /* 인라인 수정 폼 */
@@ -457,8 +485,8 @@ export default function ContactDetailPage() {
                   )}
                 </div>
 
-                {/* 오른쪽: 지도 (달력 높이에 맞춤) */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                {/* 오른쪽: 지도 — 명시적 height로 Kakao 지도 렌더링 보장 */}
+                <div style={{ flex: 1, minWidth: 0, height: 520 }}>
                   <MeetingMap meetings={meetings} />
                 </div>
               </div>

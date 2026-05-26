@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Meeting } from '../types'
+import { loadKakaoSdk } from '../utils/kakaoLoader'
 
 const DEFAULT_LAT = 37.5665
 const DEFAULT_LNG = 126.9780
@@ -13,24 +14,24 @@ export default function MeetingMap({ meetings }: Props) {
   const mapInstance = useRef<any>(null)
   const markersRef = useRef<any[]>([])
   const [ready, setReady] = useState(false)
+  const [sdkError, setSdkError] = useState(false)
 
   const withCoords = meetings.filter(m => m.placeLat && m.placeLng)
 
-  // 카카오 SDK 로드 대기 후 지도 초기화
+  // SDK 동적 로드 → 지도 초기화
   useEffect(() => {
-    let tries = 0
-    const tryInit = () => {
-      const kakao = (window as any).kakao
-      if (!kakao?.maps) {
-        if (tries++ < 30) setTimeout(tryInit, 300)
-        return
-      }
+    loadKakaoSdk().then(ok => {
+      if (!ok) { setSdkError(true); return }
       if (!mapRef.current || mapInstance.current) return
-      const center = new kakao.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG)
-      mapInstance.current = new kakao.maps.Map(mapRef.current, { center, level: 8 })
-      setReady(true)
-    }
-    tryInit()
+      const kakao = (window as any).kakao
+      try {
+        const center = new kakao.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG)
+        mapInstance.current = new kakao.maps.Map(mapRef.current, { center, level: 8 })
+        setReady(true)
+      } catch {
+        setSdkError(true)
+      }
+    })
   }, [])
 
   // 마커 업데이트 (지도 준비 & 만남 변경 시)
@@ -73,21 +74,32 @@ export default function MeetingMap({ meetings }: Props) {
   }, [ready, withCoords.length])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {withCoords.length > 0 && (
         <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.05em', margin: '0 0 8px' }}>
           VISITED PLACES ({withCoords.length})
         </p>
       )}
-      <div
-        ref={mapRef}
-        style={{
-          flex: 1, minHeight: 380, borderRadius: 10,
-          border: '1px solid #e5e7eb', overflow: 'hidden',
-          background: '#f9fafb',
-        }}
-      />
-      {withCoords.length === 0 && (
+
+      {/* position:relative 래퍼 + 내부 absolute div → Kakao가 크기를 정확히 인식 */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 380, borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden', background: '#f9fafb' }}>
+        <div ref={mapRef} style={{ position: 'absolute', inset: 0 }} />
+
+        {sdkError && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 8, background: '#f9fafb',
+          }}>
+            <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 600 }}>지도를 불러올 수 없어요</span>
+            <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', lineHeight: 1.8 }}>
+              네트워크 연결을 확인하거나 페이지를 새로고침 해주세요
+            </span>
+          </div>
+        )}
+      </div>
+
+      {withCoords.length === 0 && !sdkError && (
         <p style={{ textAlign: 'center', fontSize: 12, color: '#d1d5db', margin: '8px 0 0' }}>
           장소를 추가하면 지도에 표시돼요
         </p>
