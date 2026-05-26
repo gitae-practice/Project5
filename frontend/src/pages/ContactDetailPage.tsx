@@ -60,7 +60,8 @@ export default function ContactDetailPage() {
   const [prefValue, setPrefValue] = useState('')
   const [giftForm, setGiftForm] = useState({ item: '', price: '', date: '', occasion: '', isWishlist: false })
   const [showGiftForm, setShowGiftForm] = useState(false)
-  const [meetForm, setMeetForm] = useState({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
+  const today = new Date().toISOString().split('T')[0]
+  const [meetForm, setMeetForm] = useState({ date: today, place: '', placeLat: 0, placeLng: 0, memo: '' })
   const [showMeetForm, setShowMeetForm] = useState(false)
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function ContactDetailPage() {
       memo: meetForm.memo || undefined,
     })
     setMeetings(prev => [meeting, ...prev])
-    setMeetForm({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
+    setMeetForm({ date: new Date().toISOString().split('T')[0], place: '', placeLat: 0, placeLng: 0, memo: '' })
     setShowMeetForm(false)
   }
 
@@ -356,7 +357,7 @@ export default function ContactDetailPage() {
                   padding: '16px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10,
                 }}>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="date" required value={meetForm.date} onChange={e => setMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
+                    <input type="date" value={meetForm.date} onChange={e => setMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
                     {/* 카카오 장소 검색 */}
                     <PlaceSearch
                       value={meetForm.place}
