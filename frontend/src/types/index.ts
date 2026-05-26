@@ -50,6 +50,8 @@ export interface Meeting {
   contactId: number;
   date: string;
   place?: string;
+  placeLat?: number;
+  placeLng?: number;
   memo?: string;
   createdAt: string;
 }

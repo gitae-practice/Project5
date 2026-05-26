@@ -7,6 +7,8 @@ import {
   addMeeting, deleteMeeting,
 } from '../api/contacts'
 import type { Contact, Gift, Meeting, PreferenceType } from '../types'
+import PlaceSearch from '../components/PlaceSearch'
+import MeetingMap from '../components/MeetingMap'
 
 type Tab = 'preference' | 'gift' | 'meeting'
 
@@ -58,7 +60,7 @@ export default function ContactDetailPage() {
   const [prefValue, setPrefValue] = useState('')
   const [giftForm, setGiftForm] = useState({ item: '', price: '', date: '', occasion: '', isWishlist: false })
   const [showGiftForm, setShowGiftForm] = useState(false)
-  const [meetForm, setMeetForm] = useState({ date: '', place: '', memo: '' })
+  const [meetForm, setMeetForm] = useState({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
   const [showMeetForm, setShowMeetForm] = useState(false)
 
   useEffect(() => {
@@ -92,9 +94,15 @@ export default function ContactDetailPage() {
   const handleAddMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!meetForm.date) return
-    const meeting = await addMeeting(contactId, meetForm)
+    const meeting = await addMeeting(contactId, {
+      date: meetForm.date,
+      place: meetForm.place || undefined,
+      placeLat: meetForm.placeLat || undefined,
+      placeLng: meetForm.placeLng || undefined,
+      memo: meetForm.memo || undefined,
+    })
     setMeetings(prev => [meeting, ...prev])
-    setMeetForm({ date: '', place: '', memo: '' })
+    setMeetForm({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
     setShowMeetForm(false)
   }
 
@@ -349,7 +357,12 @@ export default function ContactDetailPage() {
                 }}>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input type="date" required value={meetForm.date} onChange={e => setMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
-                    <input type="text" value={meetForm.place} onChange={e => setMeetForm(p => ({ ...p, place: e.target.value }))} placeholder="장소" style={{ ...inputStyle, flex: 1 }} />
+                    {/* 카카오 장소 검색 */}
+                    <PlaceSearch
+                      value={meetForm.place}
+                      onSelect={({ name, lat, lng }) => setMeetForm(p => ({ ...p, place: name, placeLat: lat, placeLng: lng }))}
+                      style={{ flex: 1 }}
+                    />
                   </div>
                   <input type="text" value={meetForm.memo} onChange={e => setMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, width: '100%' }} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -358,6 +371,9 @@ export default function ContactDetailPage() {
                   </div>
                 </form>
               )}
+
+              {/* 방문 장소 지도 */}
+              <MeetingMap meetings={meetings} />
 
               {meetings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af', fontSize: 14 }}>만남 기록이 없어요</div>
@@ -370,7 +386,7 @@ export default function ContactDetailPage() {
                     }}>
                       <div>
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
-                        {m.place && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.place}</p>}
+                        {m.place && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {m.place}</p>}
                         {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
                       </div>
                       <button onClick={() => deleteMeeting(m.id).then(() => setMeetings(prev => prev.filter(x => x.id !== m.id)))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14 }}>✕</button>

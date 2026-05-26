@@ -24,8 +24,12 @@ public class Meeting {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(length = 100)
+    @Column(length = 200)
     private String place;
+
+    // 카카오맵 장소 좌표
+    private Double placeLat;
+    private Double placeLng;
 
     @Column(columnDefinition = "TEXT")
     private String memo;

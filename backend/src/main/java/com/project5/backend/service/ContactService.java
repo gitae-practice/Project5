@@ -137,6 +137,8 @@ public class ContactService {
                 .contact(contact)
                 .date(req.getDate())
                 .place(req.getPlace())
+                .placeLat(req.getPlaceLat())
+                .placeLng(req.getPlaceLng())
                 .memo(req.getMemo())
                 .build();
         return MeetingDto.Response.from(meetingRepository.save(meeting));

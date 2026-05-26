@@ -15,6 +15,8 @@ public class MeetingDto {
     public static class Request {
         private LocalDate date;
         private String place;
+        private Double placeLat;
+        private Double placeLng;
         private String memo;
     }
 
@@ -25,6 +27,8 @@ public class MeetingDto {
         private Long contactId;
         private LocalDate date;
         private String place;
+        private Double placeLat;
+        private Double placeLng;
         private String memo;
         private LocalDateTime createdAt;
 
@@ -34,6 +38,8 @@ public class MeetingDto {
                     .contactId(meeting.getContact().getId())
                     .date(meeting.getDate())
                     .place(meeting.getPlace())
+                    .placeLat(meeting.getPlaceLat())
+                    .placeLng(meeting.getPlaceLng())
                     .memo(meeting.getMemo())
                     .createdAt(meeting.getCreatedAt())
                     .build();
