@@ -9,6 +9,7 @@ import {
 import type { Contact, Gift, Meeting, PreferenceType } from '../types'
 import PlaceSearch from '../components/PlaceSearch'
 import MeetingMap from '../components/MeetingMap'
+import MeetingCalendar from '../components/MeetingCalendar'
 
 type Tab = 'preference' | 'gift' | 'meeting'
 
@@ -337,20 +338,24 @@ export default function ContactDetailPage() {
           {/* 만남 탭 */}
           {tab === 'meeting' && (
             <div>
+              {/* 헤더: 만남 수 + 추가 버튼 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <span style={{ fontSize: 13, color: '#6b7280' }}>만남 {meetings.length}회</span>
                 <button
                   onClick={() => setShowMeetForm(v => !v)}
                   style={{
                     fontSize: 13, fontWeight: 600, padding: '7px 14px',
-                    background: '#111', color: '#fff', border: 'none',
+                    background: showMeetForm ? '#f3f4f6' : '#111',
+                    color: showMeetForm ? '#374151' : '#fff',
+                    border: showMeetForm ? '1px solid #e5e7eb' : 'none',
                     borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  + 만남 추가
+                  {showMeetForm ? '취소' : '+ 만남 추가'}
                 </button>
               </div>
 
+              {/* 만남 추가 폼 (버튼 클릭 시에만 표시) */}
               {showMeetForm && (
                 <form onSubmit={handleAddMeeting} style={{
                   background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
@@ -358,7 +363,6 @@ export default function ContactDetailPage() {
                 }}>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input type="date" value={meetForm.date} onChange={e => setMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
-                    {/* 카카오 장소 검색 */}
                     <PlaceSearch
                       value={meetForm.place}
                       onSelect={({ name, lat, lng }) => setMeetForm(p => ({ ...p, place: name, placeLat: lat, placeLng: lng }))}
@@ -367,17 +371,22 @@ export default function ContactDetailPage() {
                   </div>
                   <input type="text" value={meetForm.memo} onChange={e => setMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, width: '100%' }} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                    <button type="button" onClick={() => setShowMeetForm(false)} style={{ fontSize: 13, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>
                     <button type="submit" style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
                   </div>
                 </form>
               )}
 
-              {/* 방문 장소 지도 */}
+              {/* 달력 (기본 표시) - 만남 있는 날 점 표시 */}
+              <MeetingCalendar meetings={meetings} />
+
+              {/* 방문 장소 지도 (좌표 있는 만남이 있을 때만 표시) */}
               <MeetingMap meetings={meetings} />
 
+              {/* 만남 목록 */}
               {meetings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af', fontSize: 14 }}>만남 기록이 없어요</div>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontSize: 14 }}>
+                  아직 만남 기록이 없어요
+                </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {meetings.map(m => (
