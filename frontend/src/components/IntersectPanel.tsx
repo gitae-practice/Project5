@@ -127,7 +127,7 @@ export default function IntersectPanel({ open, onClose }: Props) {
           borderBottom: '1px solid #f3f4f6',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>취향 교집합 비교</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>취향 비교</span>
           <button
             onClick={onClose}
             style={{
