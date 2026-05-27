@@ -246,7 +246,7 @@ export default function Layout() {
               fontFamily: 'inherit',
             }}
           >
-            취향 교집합 비교
+            취향 비교
           </button>
           <div style={{ fontSize: 11, color: '#9ca3af' }}>
             {contacts.filter(c => !c.isMe).length}명 등록됨
