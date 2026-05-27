@@ -76,7 +76,8 @@ public class ContactService {
         Contact contact = findContact(id);
         contact.setName(req.getName());
         contact.setRelationship(req.getRelationship());
-        contact.setPhotoUrl(req.getPhotoUrl());
+        // photoUrl은 /photo 엔드포인트로 관리, null이면 기존 사진 유지
+        if (req.getPhotoUrl() != null) contact.setPhotoUrl(req.getPhotoUrl());
         contact.setBirthday(req.getBirthday());
         contact.setMemo(req.getMemo());
         if (req.getIsMe() != null) contact.setMe(req.getIsMe());
