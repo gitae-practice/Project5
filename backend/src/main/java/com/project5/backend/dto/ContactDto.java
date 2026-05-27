@@ -1,5 +1,6 @@
 package com.project5.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project5.backend.entity.Contact;
 import com.project5.backend.entity.ContactPreference;
 import lombok.*;
@@ -33,6 +34,7 @@ public class ContactDto {
         private String photoUrl;
         private LocalDate birthday;
         private String memo;
+        @JsonProperty("isMe")
         private boolean isMe;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
@@ -64,6 +66,7 @@ public class ContactDto {
         private String relationship;
         private String photoUrl;
         private LocalDate birthday;
+        @JsonProperty("isMe")
         private boolean isMe;
 
         public static Summary from(Contact contact) {

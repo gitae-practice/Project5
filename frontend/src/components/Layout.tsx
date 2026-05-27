@@ -91,43 +91,61 @@ export default function Layout() {
         </div>
 
         {/* 목록 */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-          {/* 나 (본인) 고정 항목 */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
+
+          {/* 나 섹션 */}
+          <div style={{ padding: '8px 14px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#d1d5db', letterSpacing: '0.06em' }}>나</span>
+            <div style={{ flex: 1, height: 1, background: '#f3f4f6' }} />
+          </div>
+
           {meContact ? (
             <div
-              onClick={() => navigate(`/contacts/${meContact.id}`)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
-                padding: '8px 14px', cursor: 'pointer',
+                padding: '7px 14px',
                 background: activeId === String(meContact.id) ? '#f3f4f6' : 'transparent',
-                borderBottom: '1px solid #f3f4f6',
               }}
-              onMouseEnter={e => { if (activeId !== String(meContact.id)) (e.currentTarget as HTMLElement).style.background = '#f9fafb' }}
-              onMouseLeave={e => { if (activeId !== String(meContact.id)) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
             >
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: '#111', color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16, flexShrink: 0, overflow: 'hidden',
-              }}>
-                {meContact.photoUrl
-                  ? <img src={meContact.photoUrl} alt={meContact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : '⭐'
-                }
+              <div
+                onClick={() => navigate(`/contacts/${meContact.id}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer', minWidth: 0 }}
+                onMouseEnter={e => { if (activeId !== String(meContact.id)) (e.currentTarget as HTMLElement).style.opacity = '0.7' }}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: '#111', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16, flexShrink: 0, overflow: 'hidden',
+                }}>
+                  {meContact.photoUrl
+                    ? <img src={meContact.photoUrl} alt={meContact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : '⭐'
+                  }
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meContact.name}</div>
+                  <div style={{ fontSize: 11, color: '#9ca3af' }}>내 정보</div>
+                </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{meContact.name}</span>
-                <div style={{ fontSize: 11, color: '#9ca3af' }}>내 정보</div>
-              </div>
+              <button
+                onClick={() => navigate(`/contacts/${meContact.id}/edit`)}
+                style={{
+                  fontSize: 11, color: '#6b7280', background: 'none',
+                  border: '1px solid #e5e7eb', borderRadius: 5,
+                  padding: '3px 8px', cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit',
+                }}
+              >
+                수정
+              </button>
             </div>
           ) : (
             <div
               onClick={() => navigate('/contacts/new?me=true')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: '9px 14px', cursor: 'pointer',
-                borderBottom: '1px solid #f3f4f6', color: '#9ca3af',
+                padding: '9px 14px', cursor: 'pointer', color: '#9ca3af',
               }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
@@ -137,7 +155,7 @@ export default function Layout() {
             </div>
           )}
 
-          {/* 지인 섹션 구분선 */}
+          {/* 지인 섹션 */}
           <div style={{ padding: '10px 14px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#d1d5db', letterSpacing: '0.06em' }}>지인</span>
             <div style={{ flex: 1, height: 1, background: '#f3f4f6' }} />
