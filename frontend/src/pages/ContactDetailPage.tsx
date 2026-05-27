@@ -57,6 +57,11 @@ export default function ContactDetailPage() {
   const [gifts, setGifts] = useState<Gift[]>([])
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [tab, setTab] = useState<Tab>('preference')
+
+  // isMe 연락처로 전환 시 선물/만남 탭에 머물러 있으면 취향 탭으로 리셋
+  useEffect(() => {
+    if (contact?.isMe && tab !== 'preference') setTab('preference')
+  }, [contact?.isMe])
   const [prefType, setPrefType] = useState<PreferenceType>('FOOD_LIKE')
   const [prefValue, setPrefValue] = useState('')
   const [giftForm, setGiftForm] = useState({ item: '', price: '', date: '', occasion: '', isWishlist: false })
@@ -177,7 +182,7 @@ export default function ContactDetailPage() {
             </div>
           </div>
           <button
-            onClick={() => navigate(`/contacts/${contactId}/edit`)}
+            onClick={() => navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)}
             style={{
               fontSize: 13, color: '#374151', background: '#fff',
               border: '1px solid #e5e7eb', borderRadius: 6,
@@ -192,7 +197,8 @@ export default function ContactDetailPage() {
       {/* 탭 */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 32px' }}>
         <div style={{ display: 'flex', gap: 0, maxWidth: 800 }}>
-          {(['preference', 'gift', 'meeting'] as Tab[]).map(t => {
+          {/* isMe 연락처는 선물/만남 탭 미표시 */}
+          {((contact.isMe ? ['preference'] : ['preference', 'gift', 'meeting']) as Tab[]).map(t => {
             const count = t === 'preference' ? contact.preferences.length : t === 'gift' ? gifts.length : meetings.length
             const label = t === 'preference' ? '취향' : t === 'gift' ? '선물' : '만남'
             return (

@@ -129,16 +129,28 @@ export default function Layout() {
                   <div style={{ fontSize: 11, color: '#9ca3af' }}>내 정보</div>
                 </div>
               </div>
-              <button
-                onClick={() => navigate(`/contacts/${meContact.id}/edit`)}
-                style={{
-                  fontSize: 11, color: '#6b7280', background: 'none',
-                  border: '1px solid #e5e7eb', borderRadius: 5,
-                  padding: '3px 8px', cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit',
-                }}
-              >
-                수정
-              </button>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button
+                  onClick={() => navigate(`/contacts/${meContact.id}/edit?me=true`)}
+                  style={{
+                    fontSize: 11, color: '#6b7280', background: 'none',
+                    border: '1px solid #e5e7eb', borderRadius: 5,
+                    padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  수정
+                </button>
+                <button
+                  onClick={e => handleDelete(e, meContact.id)}
+                  style={{
+                    fontSize: 11, color: '#ef4444', background: 'none',
+                    border: '1px solid #fecaca', borderRadius: 5,
+                    padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  삭제
+                </button>
+              </div>
             </div>
           ) : (
             <div
