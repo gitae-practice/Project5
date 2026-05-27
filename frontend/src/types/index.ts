@@ -5,6 +5,7 @@ export interface Contact {
   photoUrl?: string;
   birthday?: string;
   memo?: string;
+  isMe?: boolean;
   createdAt: string;
   updatedAt: string;
   preferences: Preference[];
@@ -16,6 +17,7 @@ export interface ContactSummary {
   relationship: string;
   photoUrl?: string;
   birthday?: string;
+  isMe?: boolean;
 }
 
 export interface Preference {

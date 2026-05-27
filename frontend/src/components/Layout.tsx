@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { getContacts, deleteContact } from '../api/contacts'
 import type { ContactSummary } from '../types'
+import IntersectPanel from './IntersectPanel'
 
 const REL_COLOR: Record<string, string> = {
   친구: '#3b82f6',
@@ -25,6 +26,7 @@ function getDday(birthday?: string) {
 export default function Layout() {
   const [contacts, setContacts] = useState<ContactSummary[]>([])
   const [query, setQuery] = useState('')
+  const [intersectOpen, setIntersectOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const activeId = location.pathname.match(/\/contacts\/(\d+)/)?.[1]
@@ -33,8 +35,10 @@ export default function Layout() {
     getContacts().then(setContacts)
   }, [location])
 
+  const meContact = contacts.find(c => c.isMe)
+  // 검색 결과: "나" 제외한 일반 지인만
   const filtered = contacts.filter(c =>
-    c.name.includes(query) || (c.relationship ?? '').includes(query)
+    !c.isMe && (c.name.includes(query) || (c.relationship ?? '').includes(query))
   )
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
@@ -88,6 +92,51 @@ export default function Layout() {
 
         {/* 목록 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+          {/* 나 (본인) 고정 항목 */}
+          {meContact ? (
+            <div
+              onClick={() => navigate(`/contacts/${meContact.id}`)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 14px', cursor: 'pointer',
+                background: activeId === String(meContact.id) ? '#f3f4f6' : 'transparent',
+                borderBottom: '1px solid #f3f4f6',
+              }}
+              onMouseEnter={e => { if (activeId !== String(meContact.id)) (e.currentTarget as HTMLElement).style.background = '#f9fafb' }}
+              onMouseLeave={e => { if (activeId !== String(meContact.id)) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: '#111', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 16, flexShrink: 0, overflow: 'hidden',
+              }}>
+                {meContact.photoUrl
+                  ? <img src={meContact.photoUrl} alt={meContact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : '⭐'
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{meContact.name}</span>
+                <div style={{ fontSize: 11, color: '#9ca3af' }}>내 정보</div>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => navigate('/contacts/new?me=true')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '9px 14px', cursor: 'pointer',
+                borderBottom: '1px solid #f3f4f6', color: '#9ca3af',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+            >
+              <span style={{ fontSize: 14 }}>⭐</span>
+              <span style={{ fontSize: 12 }}>내 정보 등록하기</span>
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginTop: 32 }}>
               {query ? '검색 결과 없음' : '등록된 지인이 없어요'}
@@ -150,8 +199,22 @@ export default function Layout() {
         </div>
 
         {/* 하단 */}
-        <div style={{ padding: '10px 16px', borderTop: '1px solid #f3f4f6', fontSize: 11, color: '#9ca3af' }}>
-          {contacts.length}명 등록됨
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #f3f4f6' }}>
+          <button
+            onClick={() => setIntersectOpen(true)}
+            style={{
+              width: '100%', padding: '8px', marginBottom: 6,
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: '#f3f4f6', color: '#374151',
+              border: '1px solid #e5e7eb', borderRadius: 7,
+              fontFamily: 'inherit',
+            }}
+          >
+            취향 교집합 비교
+          </button>
+          <div style={{ fontSize: 11, color: '#9ca3af' }}>
+            {contacts.filter(c => !c.isMe).length}명 등록됨
+          </div>
         </div>
       </aside>
 
@@ -159,6 +222,8 @@ export default function Layout() {
       <main style={{ flex: 1, overflowY: 'auto' }}>
         <Outlet />
       </main>
+
+      <IntersectPanel open={intersectOpen} onClose={() => setIntersectOpen(false)} />
     </div>
   )
 }

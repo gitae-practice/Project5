@@ -13,11 +13,8 @@ export default function MeetingMap({ meetings }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
   const markersRef = useRef<any[]>([])
-  const locationMarkerRef = useRef<any>(null) // 현재 위치 마커
-  const locationInfoRef = useRef<any>(null)   // 현재 위치 인포윈도우
   const [ready, setReady] = useState(false)
   const [sdkError, setSdkError] = useState(false)
-  const [locating, setLocating] = useState(false)
 
   const withCoords = meetings.filter(m => m.placeLat && m.placeLng)
 
@@ -88,7 +85,7 @@ export default function MeetingMap({ meetings }: Props) {
       <div style={{ flex: 1, position: 'relative', minHeight: 380, borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden', background: '#f9fafb' }}>
         <div ref={mapRef} style={{ position: 'absolute', inset: 0 }} />
 
-        {/* 지도 컨트롤: +  /  -  /  현재위치 */}
+        {/* 지도 컨트롤: + / - */}
         {ready && (
           <div style={{
             position: 'absolute', right: 10, bottom: 20, zIndex: 10,
@@ -97,48 +94,6 @@ export default function MeetingMap({ meetings }: Props) {
             {[
               { label: '+', title: '확대', onClick: () => mapInstance.current.setLevel(mapInstance.current.getLevel() - 1) },
               { label: '−', title: '축소', onClick: () => mapInstance.current.setLevel(mapInstance.current.getLevel() + 1) },
-              {
-                label: locating ? '…' : '⊙', title: '현재 위치',
-                onClick: () => {
-                  if (!navigator.geolocation || locating) return
-                  setLocating(true)
-                  navigator.geolocation.getCurrentPosition(
-                    pos => {
-                      setLocating(false)
-                      const kakao = (window as any).kakao
-                      const loc = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
-
-                      // 기존 현재 위치 마커 제거
-                      if (locationMarkerRef.current) locationMarkerRef.current.setMap(null)
-                      if (locationInfoRef.current) locationInfoRef.current.close()
-
-                      // 파란 원 이미지로 현재 위치 마커 생성
-                      const imgSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png'
-                      const imgSize = new kakao.maps.Size(24, 35)
-                      const markerImg = new kakao.maps.MarkerImage(imgSrc, imgSize)
-
-                      const marker = new kakao.maps.Marker({ map: mapInstance.current, position: loc, image: markerImg })
-                      locationMarkerRef.current = marker
-
-                      const accuracy = Math.round(pos.coords.accuracy)
-                      const infoContent = `
-                        <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;line-height:1.6;min-width:120px">
-                          <strong style="color:#1d4ed8">현재 위치</strong><br/>
-                          <span style="color:#9ca3af">정확도 약 ${accuracy}m</span>
-                        </div>
-                      `
-                      const infoWindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true })
-                      infoWindow.open(mapInstance.current, marker)
-                      locationInfoRef.current = infoWindow
-
-                      mapInstance.current.setCenter(loc)
-                      mapInstance.current.setLevel(4)
-                    },
-                    () => setLocating(false),
-                    { enableHighAccuracy: true, timeout: 10000 }
-                  )
-                },
-              },
             ].map(btn => (
               <button
                 key={btn.label}
@@ -149,7 +104,7 @@ export default function MeetingMap({ meetings }: Props) {
                   background: '#fff', border: '1px solid #d1d5db',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                  fontSize: btn.label === '⊙' ? 18 : 20, fontWeight: 600, color: '#374151',
+                  fontSize: 20, fontWeight: 600, color: '#374151',
                   lineHeight: 1,
                 }}
               >

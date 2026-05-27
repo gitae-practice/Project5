@@ -23,10 +23,16 @@ public class ContactController {
 
     private final ContactService contactService;
 
-    // 지인 목록
+    // 지인 목록 (요약)
     @GetMapping
     public List<ContactDto.Summary> getAll() {
         return contactService.getAll();
+    }
+
+    // 교집합 비교용 전체 목록 (취향 포함)
+    @GetMapping("/full")
+    public List<ContactDto.Response> getAllFull() {
+        return contactService.getAllFull();
     }
 
     // 지인 상세

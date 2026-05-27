@@ -6,6 +6,10 @@ const api = axios.create({ baseURL: '/api' });
 export const getContacts = () =>
   api.get<ContactSummary[]>('/contacts').then(r => r.data);
 
+// 교집합 비교용: 취향 포함 전체 목록
+export const getContactsFull = () =>
+  api.get<Contact[]>('/contacts/full').then(r => r.data);
+
 export const getContact = (id: number) =>
   api.get<Contact>(`/contacts/${id}`).then(r => r.data);
 

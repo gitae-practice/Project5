@@ -46,6 +46,13 @@ public class ContactService {
                 .collect(Collectors.toList());
     }
 
+    // 교집합 비교용: 취향 포함한 전체 목록
+    public List<ContactDto.Response> getAllFull() {
+        return contactRepository.findAllByOrderByNameAsc().stream()
+                .map(ContactDto.Response::from)
+                .collect(Collectors.toList());
+    }
+
     public ContactDto.Response getOne(Long id) {
         Contact contact = findContact(id);
         return ContactDto.Response.from(contact);
@@ -59,6 +66,7 @@ public class ContactService {
                 .photoUrl(req.getPhotoUrl())
                 .birthday(req.getBirthday())
                 .memo(req.getMemo())
+                .me(Boolean.TRUE.equals(req.getIsMe()))
                 .build();
         return ContactDto.Response.from(contactRepository.save(contact));
     }
@@ -71,6 +79,7 @@ public class ContactService {
         contact.setPhotoUrl(req.getPhotoUrl());
         contact.setBirthday(req.getBirthday());
         contact.setMemo(req.getMemo());
+        if (req.getIsMe() != null) contact.setMe(req.getIsMe());
         return ContactDto.Response.from(contact);
     }
 

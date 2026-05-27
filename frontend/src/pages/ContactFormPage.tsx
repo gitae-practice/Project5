@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getContact, createContact, updateContact, uploadPhoto } from '../api/contacts'
 
 const RELATIONSHIPS = ['친구', '가족', '직장', '연인', '지인', '기타']
@@ -24,6 +24,8 @@ const labelStyle: React.CSSProperties = {
 export default function ContactFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isMe = searchParams.get('me') === 'true'
   const isEdit = !!id
 
   const [form, setForm] = useState({ name: '', relationship: '친구', birthday: '', memo: '' })
@@ -68,7 +70,12 @@ export default function ContactFormPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const payload = { ...form, birthday: form.birthday || undefined, memo: form.memo || undefined }
+      const payload = {
+        ...form,
+        birthday: form.birthday || undefined,
+        memo: form.memo || undefined,
+        ...(isMe ? { isMe: true } : {}),
+      }
       let contactId: number
       if (isEdit) {
         await updateContact(Number(id), payload)
@@ -97,7 +104,7 @@ export default function ContactFormPage() {
         padding: '36px 40px', width: '100%', maxWidth: 480,
       }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111', marginBottom: 28, marginTop: 0 }}>
-          {isEdit ? '지인 수정' : '지인 추가'}
+          {isMe ? '내 정보 등록' : isEdit ? '지인 수정' : '지인 추가'}
         </h2>
 
         <form onSubmit={handleSubmit}>
@@ -151,26 +158,28 @@ export default function ContactFormPage() {
             />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>관계</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {RELATIONSHIPS.map(r => (
-                <button
-                  type="button" key={r}
-                  onClick={() => setForm(p => ({ ...p, relationship: r }))}
-                  style={{
-                    padding: '7px 14px', fontSize: 13, borderRadius: 6, cursor: 'pointer',
-                    border: form.relationship === r ? '1px solid #111' : '1px solid #e5e7eb',
-                    background: form.relationship === r ? '#111' : '#fff',
-                    color: form.relationship === r ? '#fff' : '#374151',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {r}
-                </button>
-              ))}
+          {!isMe && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={labelStyle}>관계</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {RELATIONSHIPS.map(r => (
+                  <button
+                    type="button" key={r}
+                    onClick={() => setForm(p => ({ ...p, relationship: r }))}
+                    style={{
+                      padding: '7px 14px', fontSize: 13, borderRadius: 6, cursor: 'pointer',
+                      border: form.relationship === r ? '1px solid #111' : '1px solid #e5e7eb',
+                      background: form.relationship === r ? '#111' : '#fff',
+                      color: form.relationship === r ? '#fff' : '#374151',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>생일</label>

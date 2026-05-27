@@ -21,6 +21,7 @@ public class ContactDto {
         private String photoUrl;
         private LocalDate birthday;
         private String memo;
+        private Boolean isMe;
     }
 
     @Getter
@@ -32,6 +33,7 @@ public class ContactDto {
         private String photoUrl;
         private LocalDate birthday;
         private String memo;
+        private boolean isMe;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private List<PreferenceDto.Response> preferences;
@@ -44,6 +46,7 @@ public class ContactDto {
                     .photoUrl(contact.getPhotoUrl())
                     .birthday(contact.getBirthday())
                     .memo(contact.getMemo())
+                    .isMe(contact.isMe())
                     .createdAt(contact.getCreatedAt())
                     .updatedAt(contact.getUpdatedAt())
                     .preferences(contact.getPreferences().stream()
@@ -61,6 +64,7 @@ public class ContactDto {
         private String relationship;
         private String photoUrl;
         private LocalDate birthday;
+        private boolean isMe;
 
         public static Summary from(Contact contact) {
             return Summary.builder()
@@ -69,6 +73,7 @@ public class ContactDto {
                     .relationship(contact.getRelationship())
                     .photoUrl(contact.getPhotoUrl())
                     .birthday(contact.getBirthday())
+                    .isMe(contact.isMe())
                     .build();
         }
     }

@@ -33,6 +33,11 @@ public class Contact {
     @Column(columnDefinition = "TEXT")
     private String memo;
 
+    // 사용자 본인 프로필 여부 (교집합 비교 기능에서 "나"로 사용)
+    @Column(name = "is_me", nullable = false)
+    @Builder.Default
+    private boolean me = false;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
