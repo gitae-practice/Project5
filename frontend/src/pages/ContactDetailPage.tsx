@@ -135,7 +135,9 @@ export default function ContactDetailPage() {
   const daysSince = lastMeeting
     ? Math.floor((Date.now() - new Date(lastMeeting.date).getTime()) / (1000 * 60 * 60 * 24))
     : null
-  const relStyle = REL_COLORS[contact.relationship] ?? REL_COLORS['기타']
+  const relStyle = contact.isMe
+    ? { bg: '#111', color: '#fff' }
+    : (REL_COLORS[contact.relationship] ?? REL_COLORS['기타'])
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f5f5f5' }}>
@@ -162,7 +164,7 @@ export default function ContactDetailPage() {
                   fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
                   background: relStyle.bg, color: relStyle.color,
                 }}>
-                  {contact.relationship}
+                  {contact.isMe ? '내 정보' : contact.relationship}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#6b7280' }}>

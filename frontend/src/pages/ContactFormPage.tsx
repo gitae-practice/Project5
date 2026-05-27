@@ -38,7 +38,7 @@ export default function ContactFormPage() {
   useEffect(() => {
     if (!isEdit) {
       // /contacts/new로 이동 시 폼 전체 초기화
-      setForm({ name: '', relationship: '친구', birthday: '', memo: '' })
+      setForm({ name: '', relationship: isMe ? '본인' : '친구', birthday: '', memo: '' })
       setCurrentPhotoUrl(null)
       setPhotoFile(null)
       setPhotoPreview(null)

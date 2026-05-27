@@ -137,8 +137,14 @@ export default function Layout() {
             </div>
           )}
 
+          {/* 지인 섹션 구분선 */}
+          <div style={{ padding: '10px 14px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#d1d5db', letterSpacing: '0.06em' }}>지인</span>
+            <div style={{ flex: 1, height: 1, background: '#f3f4f6' }} />
+          </div>
+
           {filtered.length === 0 ? (
-            <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginTop: 32 }}>
+            <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginTop: 16 }}>
               {query ? '검색 결과 없음' : '등록된 지인이 없어요'}
             </p>
           ) : filtered.map(c => {
