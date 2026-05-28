@@ -8,6 +8,7 @@ import com.project5.backend.entity.Contact;
 import com.project5.backend.entity.ContactPreference;
 import com.project5.backend.entity.GiftHistory;
 import com.project5.backend.entity.Meeting;
+import com.project5.backend.entity.MeetingPlace;
 import com.project5.backend.repository.ContactPreferenceRepository;
 import com.project5.backend.repository.ContactRepository;
 import com.project5.backend.repository.GiftHistoryRepository;
@@ -146,11 +147,18 @@ public class ContactService {
         Meeting meeting = Meeting.builder()
                 .contact(contact)
                 .date(req.getDate())
-                .place(req.getPlace())
-                .placeLat(req.getPlaceLat())
-                .placeLng(req.getPlaceLng())
                 .memo(req.getMemo())
                 .build();
+        // 장소 목록 추가
+        if (req.getPlaces() != null) {
+            for (int i = 0; i < req.getPlaces().size(); i++) {
+                MeetingDto.PlaceRequest pr = req.getPlaces().get(i);
+                meeting.getPlaces().add(MeetingPlace.builder()
+                        .meeting(meeting).name(pr.getName())
+                        .lat(pr.getLat()).lng(pr.getLng())
+                        .sortOrder(i).build());
+            }
+        }
         return MeetingDto.Response.from(meetingRepository.save(meeting));
     }
 
@@ -159,10 +167,18 @@ public class ContactService {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new RuntimeException("Meeting not found: " + meetingId));
         meeting.setDate(req.getDate());
-        meeting.setPlace(req.getPlace());
-        meeting.setPlaceLat(req.getPlaceLat());
-        meeting.setPlaceLng(req.getPlaceLng());
         meeting.setMemo(req.getMemo());
+        // orphanRemoval=true → 기존 장소 모두 제거 후 새 목록으로 교체
+        meeting.getPlaces().clear();
+        if (req.getPlaces() != null) {
+            for (int i = 0; i < req.getPlaces().size(); i++) {
+                MeetingDto.PlaceRequest pr = req.getPlaces().get(i);
+                meeting.getPlaces().add(MeetingPlace.builder()
+                        .meeting(meeting).name(pr.getName())
+                        .lat(pr.getLat()).lng(pr.getLng())
+                        .sortOrder(i).build());
+            }
+        }
         return MeetingDto.Response.from(meeting);
     }
 

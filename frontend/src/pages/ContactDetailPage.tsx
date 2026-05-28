@@ -6,7 +6,7 @@ import {
   addGift, deleteGift,
   addMeeting, updateMeeting, deleteMeeting,
 } from '../api/contacts'
-import type { Contact, Gift, Meeting, PreferenceType } from '../types'
+import type { Contact, Gift, Meeting, MeetingPlaceInput, PreferenceType } from '../types'
 import PlaceSearch from '../components/PlaceSearch'
 import MeetingMap from '../components/MeetingMap'
 import MeetingCalendar from '../components/MeetingCalendar'
@@ -67,10 +67,10 @@ export default function ContactDetailPage() {
   const [giftForm, setGiftForm] = useState({ item: '', price: '', date: '', occasion: '', isWishlist: false })
   const [showGiftForm, setShowGiftForm] = useState(false)
   const today = new Date().toISOString().split('T')[0]
-  const [meetForm, setMeetForm] = useState({ date: today, place: '', placeLat: 0, placeLng: 0, memo: '' })
+  const [meetForm, setMeetForm] = useState({ date: today, places: [] as MeetingPlaceInput[], memo: '' })
   const [showMeetForm, setShowMeetForm] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
-  const [editMeetForm, setEditMeetForm] = useState({ date: '', place: '', placeLat: 0, placeLng: 0, memo: '' })
+  const [editMeetForm, setEditMeetForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
   const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(today)
 
   useEffect(() => {
@@ -106,28 +106,28 @@ export default function ContactDetailPage() {
     if (!meetForm.date) return
     const meeting = await addMeeting(contactId, {
       date: meetForm.date,
-      place: meetForm.place || undefined,
-      placeLat: meetForm.placeLat || undefined,
-      placeLng: meetForm.placeLng || undefined,
+      places: meetForm.places,
       memo: meetForm.memo || undefined,
     })
     setMeetings(prev => [meeting, ...prev])
-    setMeetForm({ date: new Date().toISOString().split('T')[0], place: '', placeLat: 0, placeLng: 0, memo: '' })
+    setMeetForm({ date: new Date().toISOString().split('T')[0], places: [], memo: '' })
     setShowMeetForm(false)
   }
 
   const startEditMeeting = (m: Meeting) => {
     setEditingMeetingId(m.id)
-    setEditMeetForm({ date: m.date, place: m.place ?? '', placeLat: m.placeLat ?? 0, placeLng: m.placeLng ?? 0, memo: m.memo ?? '' })
+    setEditMeetForm({
+      date: m.date,
+      places: m.places.map(p => ({ name: p.name, lat: p.lat, lng: p.lng })),
+      memo: m.memo ?? '',
+    })
   }
 
   const handleUpdateMeeting = async (e: React.FormEvent, meetingId: number) => {
     e.preventDefault()
     const updated = await updateMeeting(meetingId, {
       date: editMeetForm.date,
-      place: editMeetForm.place || undefined,
-      placeLat: editMeetForm.placeLat || undefined,
-      placeLng: editMeetForm.placeLng || undefined,
+      places: editMeetForm.places,
       memo: editMeetForm.memo || undefined,
     })
     setMeetings(prev => prev.map(m => m.id === meetingId ? updated : m))
@@ -393,11 +393,30 @@ export default function ContactDetailPage() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input type="date" value={meetForm.date} onChange={e => setMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
                     <PlaceSearch
-                      value={meetForm.place}
-                      onSelect={({ name, lat, lng }) => setMeetForm(p => ({ ...p, place: name, placeLat: lat, placeLng: lng }))}
+                      value=""
+                      onSelect={({ name, lat, lng }) => setMeetForm(p => ({ ...p, places: [...p.places, { name, lat, lng }] }))}
                       style={{ flex: 1 }}
                     />
                   </div>
+                  {/* 추가된 장소 태그 목록 */}
+                  {meetForm.places.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {meetForm.places.map((p, i) => (
+                        <span key={i} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          fontSize: 12, background: '#f3f4f6', border: '1px solid #e5e7eb',
+                          borderRadius: 5, padding: '3px 8px', color: '#374151',
+                        }}>
+                          📍 {p.name}
+                          <button
+                            type="button"
+                            onClick={() => setMeetForm(prev => ({ ...prev, places: prev.places.filter((_, j) => j !== i) }))}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, padding: 0, lineHeight: 1 }}
+                          >×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <input type="text" value={meetForm.memo} onChange={e => setMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, width: '100%' }} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                     <button type="submit" style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
@@ -452,11 +471,30 @@ export default function ContactDetailPage() {
                               <div style={{ display: 'flex', gap: 8 }}>
                                 <input type="date" value={editMeetForm.date} onChange={e => setEditMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1, fontSize: 12 }} />
                                 <PlaceSearch
-                                  value={editMeetForm.place}
-                                  onSelect={({ name, lat, lng }) => setEditMeetForm(p => ({ ...p, place: name, placeLat: lat, placeLng: lng }))}
+                                  value=""
+                                  onSelect={({ name, lat, lng }) => setEditMeetForm(p => ({ ...p, places: [...p.places, { name, lat, lng }] }))}
                                   style={{ flex: 1, fontSize: 12 }}
                                 />
                               </div>
+                              {/* 수정 폼 장소 태그 목록 */}
+                              {editMeetForm.places.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                  {editMeetForm.places.map((p, i) => (
+                                    <span key={i} style={{
+                                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                                      fontSize: 12, background: '#f3f4f6', border: '1px solid #e5e7eb',
+                                      borderRadius: 5, padding: '3px 8px', color: '#374151',
+                                    }}>
+                                      📍 {p.name}
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditMeetForm(prev => ({ ...prev, places: prev.places.filter((_, j) => j !== i) }))}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, padding: 0, lineHeight: 1 }}
+                                      >×</button>
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                               <input type="text" value={editMeetForm.memo} onChange={e => setEditMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, fontSize: 12 }} />
                               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                                 <button type="button" onClick={() => setEditingMeetingId(null)} style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>
@@ -468,7 +506,9 @@ export default function ContactDetailPage() {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
-                                {m.place && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {m.place}</p>}
+                                {m.places.map((p, i) => (
+                                  <p key={i} style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {p.name}</p>
+                                ))}
                                 {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
                               </div>
                               <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>

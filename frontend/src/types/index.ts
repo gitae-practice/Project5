@@ -47,13 +47,25 @@ export interface Gift {
   createdAt: string;
 }
 
+export interface MeetingPlace {
+  id: number;
+  name: string;
+  lat?: number;
+  lng?: number;
+}
+
+// 만남 추가/수정 시 장소 입력용 (id 없음)
+export interface MeetingPlaceInput {
+  name: string;
+  lat?: number;
+  lng?: number;
+}
+
 export interface Meeting {
   id: number;
   contactId: number;
   date: string;
-  place?: string;
-  placeLat?: number;
-  placeLng?: number;
+  places: MeetingPlace[];
   memo?: string;
   createdAt: string;
 }

@@ -16,7 +16,12 @@ export default function MeetingMap({ meetings }: Props) {
   const [ready, setReady] = useState(false)
   const [sdkError, setSdkError] = useState(false)
 
-  const withCoords = meetings.filter(m => m.placeLat && m.placeLng)
+  // 모든 만남의 장소를 평탄화 (좌표 있는 것만)
+  const allPlaces = meetings.flatMap(m =>
+    m.places
+      .filter(p => p.lat && p.lng)
+      .map(p => ({ ...p, meetingDate: m.date }))
+  )
 
   // SDK 동적 로드 → 지도 초기화
   useEffect(() => {
@@ -34,7 +39,7 @@ export default function MeetingMap({ meetings }: Props) {
     })
   }, [])
 
-  // 마커 업데이트 (지도 준비 & 만남 변경 시)
+  // 마커 업데이트 (지도 준비 & 장소 수 변경 시)
   useEffect(() => {
     const kakao = (window as any).kakao
     if (!ready || !kakao?.maps || !mapInstance.current) return
@@ -43,13 +48,13 @@ export default function MeetingMap({ meetings }: Props) {
     markersRef.current.forEach(m => m.setMap(null))
     markersRef.current = []
 
-    if (withCoords.length === 0) return
+    if (allPlaces.length === 0) return
 
     const map = mapInstance.current
     const bounds = new kakao.maps.LatLngBounds()
 
-    withCoords.forEach(m => {
-      const pos = new kakao.maps.LatLng(m.placeLat, m.placeLng)
+    allPlaces.forEach(p => {
+      const pos = new kakao.maps.LatLng(p.lat, p.lng)
       bounds.extend(pos)
 
       const marker = new kakao.maps.Marker({ map, position: pos })
@@ -57,27 +62,27 @@ export default function MeetingMap({ meetings }: Props) {
 
       const infoContent = `
         <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;min-width:100px;line-height:1.6">
-          <strong>${m.place}</strong><br/>
-          <span style="color:#9ca3af">${m.date}</span>
+          <strong>${p.name}</strong><br/>
+          <span style="color:#9ca3af">${p.meetingDate}</span>
         </div>
       `
       const infoWindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true })
       kakao.maps.event.addListener(marker, 'click', () => infoWindow.open(map, marker))
     })
 
-    if (withCoords.length === 1) {
-      map.setCenter(new kakao.maps.LatLng(withCoords[0].placeLat, withCoords[0].placeLng))
+    if (allPlaces.length === 1) {
+      map.setCenter(new kakao.maps.LatLng(allPlaces[0].lat, allPlaces[0].lng))
       map.setLevel(4)
     } else {
       map.setBounds(bounds)
     }
-  }, [ready, withCoords.length])
+  }, [ready, allPlaces.length])
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {withCoords.length > 0 && (
+      {allPlaces.length > 0 && (
         <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.05em', margin: '0 0 8px' }}>
-          VISITED PLACES ({withCoords.length})
+          VISITED PLACES ({allPlaces.length})
         </p>
       )}
 
@@ -128,7 +133,7 @@ export default function MeetingMap({ meetings }: Props) {
         )}
       </div>
 
-      {withCoords.length === 0 && !sdkError && (
+      {allPlaces.length === 0 && !sdkError && (
         <p style={{ textAlign: 'center', fontSize: 12, color: '#d1d5db', margin: '8px 0 0' }}>
           장소를 추가하면 지도에 표시돼요
         </p>

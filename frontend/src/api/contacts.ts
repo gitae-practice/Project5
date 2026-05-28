@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Contact, ContactSummary, Gift, Meeting, Preference, PreferenceType } from '../types';
+import type { Contact, ContactSummary, Gift, Meeting, MeetingPlaceInput, Preference, PreferenceType } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -48,10 +48,10 @@ export const deleteGift = (giftId: number) =>
 export const getMeetings = (contactId: number) =>
   api.get<Meeting[]>(`/contacts/${contactId}/meetings`).then(r => r.data);
 
-export const addMeeting = (contactId: number, data: Partial<Meeting>) =>
+export const addMeeting = (contactId: number, data: { date: string; places?: MeetingPlaceInput[]; memo?: string }) =>
   api.post<Meeting>(`/contacts/${contactId}/meetings`, data).then(r => r.data);
 
-export const updateMeeting = (meetingId: number, data: Partial<Meeting>) =>
+export const updateMeeting = (meetingId: number, data: { date: string; places?: MeetingPlaceInput[]; memo?: string }) =>
   api.put<Meeting>(`/contacts/meetings/${meetingId}`, data).then(r => r.data);
 
 export const deleteMeeting = (meetingId: number) =>

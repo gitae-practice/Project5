@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "meetings")
@@ -24,12 +26,11 @@ public class Meeting {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(length = 200)
-    private String place;
-
-    // 카카오맵 장소 좌표
-    private Double placeLat;
-    private Double placeLng;
+    // 한 만남에 여러 장소 지원
+    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("sortOrder ASC")
+    @Builder.Default
+    private List<MeetingPlace> places = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String memo;
