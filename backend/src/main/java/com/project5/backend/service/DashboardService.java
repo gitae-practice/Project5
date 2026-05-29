@@ -45,9 +45,18 @@ public class DashboardService {
                 .collect(Collectors.toList());
 
         // 2. 오래 못 본 지인: 마지막 만남 날짜 맵 생성
+        // MySQL + Hibernate에서 MAX(date) 반환 타입이 LocalDate or java.sql.Date 둘 다 가능
         Map<Long, LocalDate> lastMeetingMap = new HashMap<>();
         for (Object[] row : meetingRepository.findLastMeetingDatePerContact()) {
-            lastMeetingMap.put((Long) row[0], (LocalDate) row[1]);
+            Long cid = (Long) row[0];
+            Object dateObj = row[1];
+            if (dateObj instanceof LocalDate ld) {
+                lastMeetingMap.put(cid, ld);
+            } else if (dateObj instanceof java.sql.Date sd) {
+                lastMeetingMap.put(cid, sd.toLocalDate());
+            } else if (dateObj != null) {
+                lastMeetingMap.put(cid, LocalDate.parse(dateObj.toString()));
+            }
         }
 
         // 30일 이상 못 만났거나 만남 기록 없는 지인, 최대 5명
