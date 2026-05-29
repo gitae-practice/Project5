@@ -69,3 +69,38 @@ export interface Meeting {
   memo?: string;
   createdAt: string;
 }
+
+// 대시보드 API 응답 타입
+export interface DashboardBirthdayItem {
+  id: number;
+  name: string;
+  photoUrl?: string;
+  relationship: string;
+  birthday: string;
+  daysUntil: number;
+}
+
+export interface DashboardNotSeenItem {
+  id: number;
+  name: string;
+  photoUrl?: string;
+  relationship: string;
+  lastMeetingDate?: string;
+  daysSince?: number;
+}
+
+export interface DashboardRecentMeetingItem {
+  contactId: number;
+  contactName: string;
+  contactPhotoUrl?: string;
+  contactRelationship: string;
+  date: string;
+  places: MeetingPlace[];
+  memo?: string;
+}
+
+export interface DashboardResponse {
+  upcomingBirthdays: DashboardBirthdayItem[];
+  notSeenRecently: DashboardNotSeenItem[];
+  recentMeetings: DashboardRecentMeetingItem[];
+}
