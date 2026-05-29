@@ -64,7 +64,10 @@ export default function Layout() {
         {/* 헤더 */}
         <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #f3f4f6' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>알쓸지인</span>
+            <span
+              onClick={() => navigate('/')}
+              style={{ fontSize: 15, fontWeight: 700, color: '#111', cursor: 'pointer' }}
+            >알쓸지인</span>
             <button
               onClick={() => navigate('/contacts/new')}
               style={{
