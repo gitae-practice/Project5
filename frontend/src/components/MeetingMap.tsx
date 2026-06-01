@@ -39,7 +39,10 @@ export default function MeetingMap({ meetings }: Props) {
     })
   }, [])
 
-  // 마커 업데이트 (지도 준비 & 장소 수 변경 시)
+  // 장소 목록의 내용(이름+좌표)을 문자열 키로 만들어 실제 변경 감지
+  const allPlacesKey = allPlaces.map(p => `${p.name}:${p.lat}:${p.lng}`).join('|')
+
+  // 마커 업데이트 (지도 준비 & 장소 내용 변경 시)
   useEffect(() => {
     const kakao = (window as any).kakao
     if (!ready || !kakao?.maps || !mapInstance.current) return
@@ -76,7 +79,7 @@ export default function MeetingMap({ meetings }: Props) {
     } else {
       map.setBounds(bounds)
     }
-  }, [ready, allPlaces.length])
+  }, [ready, allPlacesKey])
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
