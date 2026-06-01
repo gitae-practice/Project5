@@ -13,6 +13,62 @@ import MeetingCalendar from '../components/MeetingCalendar'
 
 type Tab = 'preference' | 'gift' | 'meeting'
 
+// 드래그앤드롭으로 순서 변경 가능한 장소 태그 목록
+function PlaceTagList({ places, onChange }: {
+  places: MeetingPlaceInput[]
+  onChange: (places: MeetingPlaceInput[]) => void
+}) {
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
+  if (places.length === 0) return null
+
+  const handleDrop = (e: React.DragEvent, toIdx: number) => {
+    e.preventDefault()
+    if (draggingIdx === null || draggingIdx === toIdx) { setDragOverIdx(null); return }
+    const next = [...places]
+    const [item] = next.splice(draggingIdx, 1)
+    next.splice(toIdx, 0, item)
+    onChange(next)
+    setDraggingIdx(null)
+    setDragOverIdx(null)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      {places.map((p, i) => (
+        <span
+          key={i}
+          draggable
+          onDragStart={() => setDraggingIdx(i)}
+          onDragOver={e => { e.preventDefault(); setDragOverIdx(i) }}
+          onDragLeave={() => setDragOverIdx(null)}
+          onDrop={e => handleDrop(e, i)}
+          onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null) }}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 12,
+            background: dragOverIdx === i ? '#eff6ff' : '#f3f4f6',
+            border: `1px solid ${dragOverIdx === i ? '#bfdbfe' : '#e5e7eb'}`,
+            borderRadius: 5, padding: '3px 8px', color: '#374151',
+            cursor: 'grab', userSelect: 'none',
+            opacity: draggingIdx === i ? 0.4 : 1,
+            transition: 'opacity 0.1s, background 0.1s, border-color 0.1s',
+          }}
+        >
+          <span style={{ color: '#9ca3af', fontSize: 11 }}>⠿</span>
+          📍 {p.name}
+          <button
+            type="button"
+            onClick={() => onChange(places.filter((_, j) => j !== i))}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, padding: 0, lineHeight: 1 }}
+          >×</button>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 const PREF_LABELS: Record<PreferenceType, string> = {
   FOOD_LIKE: '좋아하는 음식',
   FOOD_DISLIKE: '못 먹는 음식',
@@ -398,25 +454,11 @@ export default function ContactDetailPage() {
                       style={{ flex: 1 }}
                     />
                   </div>
-                  {/* 추가된 장소 태그 목록 */}
-                  {meetForm.places.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {meetForm.places.map((p, i) => (
-                        <span key={i} style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          fontSize: 12, background: '#f3f4f6', border: '1px solid #e5e7eb',
-                          borderRadius: 5, padding: '3px 8px', color: '#374151',
-                        }}>
-                          📍 {p.name}
-                          <button
-                            type="button"
-                            onClick={() => setMeetForm(prev => ({ ...prev, places: prev.places.filter((_, j) => j !== i) }))}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, padding: 0, lineHeight: 1 }}
-                          >×</button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {/* 추가된 장소 태그 목록 (드래그앤드롭 순서 변경 가능) */}
+                  <PlaceTagList
+                    places={meetForm.places}
+                    onChange={places => setMeetForm(p => ({ ...p, places }))}
+                  />
                   <input type="text" value={meetForm.memo} onChange={e => setMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, width: '100%' }} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                     <button type="submit" style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
@@ -476,25 +518,11 @@ export default function ContactDetailPage() {
                                   style={{ flex: 1, fontSize: 12 }}
                                 />
                               </div>
-                              {/* 수정 폼 장소 태그 목록 */}
-                              {editMeetForm.places.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                  {editMeetForm.places.map((p, i) => (
-                                    <span key={i} style={{
-                                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                                      fontSize: 12, background: '#f3f4f6', border: '1px solid #e5e7eb',
-                                      borderRadius: 5, padding: '3px 8px', color: '#374151',
-                                    }}>
-                                      📍 {p.name}
-                                      <button
-                                        type="button"
-                                        onClick={() => setEditMeetForm(prev => ({ ...prev, places: prev.places.filter((_, j) => j !== i) }))}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, padding: 0, lineHeight: 1 }}
-                                      >×</button>
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
+                              {/* 수정 폼 장소 태그 목록 (드래그앤드롭 순서 변경 가능) */}
+                              <PlaceTagList
+                                places={editMeetForm.places}
+                                onChange={places => setEditMeetForm(p => ({ ...p, places }))}
+                              />
                               <input type="text" value={editMeetForm.memo} onChange={e => setEditMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, fontSize: 12 }} />
                               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                                 <button type="button" onClick={() => setEditingMeetingId(null)} style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>
