@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   getContact, getGifts, getMeetings,
   addPreference, deletePreference,
@@ -107,12 +107,15 @@ const inputStyle: React.CSSProperties = {
 export default function ContactDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const contactId = Number(id)
 
   const [contact, setContact] = useState<Contact | null>(null)
   const [gifts, setGifts] = useState<Gift[]>([])
   const [meetings, setMeetings] = useState<Meeting[]>([])
-  const [tab, setTab] = useState<Tab>('preference')
+  // URL ?tab=meeting&date=2026-05-30 으로 초기 탭/날짜 지정 가능 (홈 대시보드 연결용)
+  const initialTab = searchParams.get('tab') as Tab | null
+  const [tab, setTab] = useState<Tab>(initialTab === 'meeting' || initialTab === 'gift' ? initialTab : 'preference')
 
   // isMe 연락처로 전환 시 선물/만남 탭에 머물러 있으면 취향 탭으로 리셋
   useEffect(() => {
@@ -127,7 +130,9 @@ export default function ContactDetailPage() {
   const [showMeetForm, setShowMeetForm] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
   const [editMeetForm, setEditMeetForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
-  const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(today)
+  const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(
+    searchParams.get('date') ?? today
+  )
 
   useEffect(() => {
     getContact(contactId).then(setContact)

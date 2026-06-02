@@ -244,7 +244,7 @@ export default function ContactListPage() {
           <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
             {recentMeetings.map((item, i) => (
               <div key={`${item.contactId}-${item.date}-${i}`} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
-                <RecentMeetingRow item={item} onClick={() => navigate(`/contacts/${item.contactId}`)} />
+                <RecentMeetingRow item={item} onClick={() => navigate(`/contacts/${item.contactId}?tab=meeting&date=${item.date}`)} />
               </div>
             ))}
           </div>
