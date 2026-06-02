@@ -14,10 +14,12 @@ interface Props {
 
 export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }: Props) {
   const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth())
+  // selectedDate가 있으면 그 달로 초기화 (홈 대시보드 딥링크 대응)
+  const initDate = selectedDate ? new Date(selectedDate + 'T00:00:00') : now
+  const [year, setYear] = useState(initDate.getFullYear())
+  const [month, setMonth] = useState(initDate.getMonth())
   const [viewMode, setViewMode] = useState<ViewMode>('days')
-  const [yearRangeStart, setYearRangeStart] = useState(Math.floor(now.getFullYear() / 12) * 12)
+  const [yearRangeStart, setYearRangeStart] = useState(Math.floor(initDate.getFullYear() / 12) * 12)
 
   const prevUnit = () => {
     if (viewMode === 'days') {
