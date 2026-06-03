@@ -60,10 +60,12 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
-    // 관계(그룹) 변경 — 드래그앤드롭 전용 경량 엔드포인트
-    @PatchMapping("/{id}/relationship")
-    public ResponseEntity<Void> updateRelationship(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        contactService.updateRelationship(id, body.get("relationship"));
+    // 커스텀 그룹 배정 (groupId=null이면 미분류)
+    @PatchMapping("/{id}/group")
+    public ResponseEntity<Void> assignGroup(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Object gid = body.get("groupId");
+        Long groupId = gid != null ? Long.valueOf(gid.toString()) : null;
+        contactService.assignGroup(id, groupId);
         return ResponseEntity.ok().build();
     }
 

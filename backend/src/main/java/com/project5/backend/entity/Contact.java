@@ -38,6 +38,11 @@ public class Contact {
     @Builder.Default
     private boolean me = false;
 
+    // 커스텀 그룹 (null이면 미분류)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = true)
+    private ContactGroup group;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

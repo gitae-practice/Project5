@@ -18,6 +18,13 @@ export interface ContactSummary {
   photoUrl?: string;
   birthday?: string;
   isMe?: boolean;
+  groupId?: number | null; // 커스텀 그룹 ID (null이면 미분류)
+}
+
+export interface ContactGroup {
+  id: number;
+  name: string;
+  sortOrder?: number;
 }
 
 export interface Preference {

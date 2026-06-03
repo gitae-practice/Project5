@@ -68,6 +68,7 @@ public class ContactDto {
         private LocalDate birthday;
         @JsonProperty("isMe")
         private boolean isMe;
+        private Long groupId; // 커스텀 그룹 ID (null이면 미분류)
 
         public static Summary from(Contact contact) {
             return Summary.builder()
@@ -77,6 +78,7 @@ public class ContactDto {
                     .photoUrl(contact.getPhotoUrl())
                     .birthday(contact.getBirthday())
                     .isMe(contact.isMe())
+                    .groupId(contact.getGroup() != null ? contact.getGroup().getId() : null)
                     .build();
         }
     }

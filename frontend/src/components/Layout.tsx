@@ -1,20 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { getContacts, deleteContact, updateRelationship } from '../api/contacts'
-import type { ContactSummary } from '../types'
+import { getContacts, deleteContact } from '../api/contacts'
+import { getGroups, createGroup, updateGroup, deleteGroup, assignGroup } from '../api/groups'
+import type { ContactGroup, ContactSummary } from '../types'
 import IntersectPanel from './IntersectPanel'
 
 const REL_COLOR: Record<string, string> = {
-  친구: '#3b82f6',
-  가족: '#22c55e',
-  직장: '#f59e0b',
-  연인: '#ec4899',
-  지인: '#9ca3af',
-  기타: '#9ca3af',
+  친구: '#3b82f6', 가족: '#22c55e', 직장: '#f59e0b',
+  연인: '#ec4899', 지인: '#9ca3af', 기타: '#9ca3af',
 }
-
-// 기본 그룹 순서
-const GROUP_ORDER = ['친구', '가족', '연인', '직장', '지인', '기타']
 
 function getDday(birthday?: string) {
   if (!birthday) return null
@@ -26,16 +20,31 @@ function getDday(birthday?: string) {
   return diff === 0 ? 'D-Day' : `D-${diff}`
 }
 
+// 드롭 타겟 ID (커스텀 그룹 id 숫자 또는 'ungrouped')
+type DropTarget = number | 'ungrouped' | null
+
 export default function Layout() {
   const [contacts, setContacts] = useState<ContactSummary[]>([])
+  const [groups, setGroups] = useState<ContactGroup[]>([])
   const [query, setQuery] = useState('')
   const [intersectOpen, setIntersectOpen] = useState(false)
-  // 그룹 접기/펼치기 (기본: 모두 펼침)
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
-  // 드래그 중인 contact id
+
+  // 그룹 접기/펼치기 (key: groupId or 'ungrouped')
+  const [collapsed, setCollapsed] = useState<Record<string | number, boolean>>({})
+  // 드래그 상태
   const [draggingId, setDraggingId] = useState<number | null>(null)
-  // 드래그 오버 중인 그룹
-  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<DropTarget>(null)
+  // 그룹 헤더 hover (edit/delete 버튼 표시)
+  const [hoverGroupId, setHoverGroupId] = useState<number | null>(null)
+  // 그룹명 인라인 수정
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null)
+  const [editingName, setEditingName] = useState('')
+  // 새 그룹 생성
+  const [showNewGroup, setShowNewGroup] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
+
+  const newGroupInputRef = useRef<HTMLInputElement>(null)
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -43,24 +52,64 @@ export default function Layout() {
 
   useEffect(() => {
     getContacts().then(setContacts)
+    getGroups().then(setGroups)
   }, [location])
+
+  // 새 그룹 입력창 auto-focus
+  useEffect(() => {
+    if (showNewGroup) newGroupInputRef.current?.focus()
+  }, [showNewGroup])
+  useEffect(() => {
+    if (editingGroupId !== null) editInputRef.current?.focus()
+  }, [editingGroupId])
 
   const meContact = contacts.find(c => c.isMe)
   const filtered = contacts.filter(c =>
     !c.isMe && (c.name.includes(query) || (c.relationship ?? '').includes(query))
   )
+  const ungrouped = filtered.filter(c => c.groupId == null)
 
-  // 관계별 그룹 생성 (GROUP_ORDER 순서 + 미정의 관계 뒤에 추가)
-  const groups: { rel: string; items: ContactSummary[] }[] = []
-  GROUP_ORDER.forEach(rel => {
-    const items = filtered.filter(c => c.relationship === rel)
-    if (items.length > 0) groups.push({ rel, items })
-  })
-  filtered.filter(c => !GROUP_ORDER.includes(c.relationship)).forEach(c => {
-    const g = groups.find(g => g.rel === c.relationship)
-    if (g) g.items.push(c)
-    else groups.push({ rel: c.relationship, items: [c] })
-  })
+  // 그룹 삭제 시 미분류로 이동되므로 contacts도 업데이트 필요
+  const handleDeleteGroup = async (g: ContactGroup) => {
+    if (!confirm(`"${g.name}" 그룹을 삭제할까요? 지인들은 미분류로 이동돼요.`)) return
+    await deleteGroup(g.id)
+    setContacts(prev => prev.map(c => c.groupId === g.id ? { ...c, groupId: null } : c))
+    setGroups(prev => prev.filter(x => x.id !== g.id))
+  }
+
+  // 그룹명 저장
+  const handleSaveGroupName = async (id: number) => {
+    const name = editingName.trim()
+    if (!name) { setEditingGroupId(null); return }
+    const updated = await updateGroup(id, name)
+    setGroups(prev => prev.map(g => g.id === id ? updated : g))
+    setEditingGroupId(null)
+  }
+
+  // 새 그룹 생성
+  const handleCreateGroup = async () => {
+    const name = newGroupName.trim()
+    if (!name) { setShowNewGroup(false); return }
+    const created = await createGroup(name)
+    setGroups(prev => [...prev, created])
+    setNewGroupName('')
+    setShowNewGroup(false)
+  }
+
+  // 드롭: 지인을 그룹에 배정
+  const handleDrop = async (target: DropTarget) => {
+    if (draggingId === null || target === null) return
+    const c = contacts.find(x => x.id === draggingId)
+    const newGroupId = target === 'ungrouped' ? null : target
+    // 같은 그룹이면 무시
+    if ((c?.groupId ?? null) === newGroupId) { setDraggingId(null); setDropTarget(null); return }
+
+    // 낙관적 업데이트 (API 완료 전에 UI 반영)
+    setContacts(prev => prev.map(x => x.id === draggingId ? { ...x, groupId: newGroupId } : x))
+    if (typeof target === 'number') setCollapsed(prev => ({ ...prev, [target]: false }))
+    setDraggingId(null); setDropTarget(null)
+    await assignGroup(draggingId, newGroupId)
+  }
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
@@ -70,56 +119,92 @@ export default function Layout() {
     if (activeId === String(id)) navigate('/')
   }
 
-  // 드래그앤드롭으로 그룹(관계) 변경
-  const handleGroupDrop = async (rel: string) => {
-    if (draggingId === null) return
-    const contact = contacts.find(c => c.id === draggingId)
-    if (!contact || contact.relationship === rel) {
-      setDraggingId(null); setDragOverGroup(null); return
-    }
-    setContacts(prev => prev.map(c => c.id === draggingId ? { ...c, relationship: rel } : c))
-    // 드롭된 그룹 자동 펼치기
-    setCollapsed(prev => ({ ...prev, [rel]: false }))
-    setDraggingId(null); setDragOverGroup(null)
-    await updateRelationship(draggingId, rel)
+  // 드롭존 공통 props
+  const dropZoneProps = (target: DropTarget) => ({
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); setDropTarget(target) },
+    onDragLeave: (e: React.DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropTarget(null)
+    },
+    onDrop: () => handleDrop(target),
+  })
+
+  // 지인 카드 렌더
+  const renderContact = (c: ContactSummary) => {
+    const dday = getDday(c.birthday)
+    const isActive = activeId === String(c.id)
+    const color = REL_COLOR[c.relationship] ?? '#9ca3af'
+    return (
+      <div
+        key={c.id}
+        draggable
+        onDragStart={() => setDraggingId(c.id)}
+        onDragEnd={() => { setDraggingId(null); setDropTarget(null) }}
+        onClick={() => navigate(`/contacts/${c.id}`)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 14px', cursor: 'pointer',
+          background: isActive ? '#f3f4f6' : 'transparent',
+          opacity: draggingId === c.id ? 0.4 : 1,
+          transition: 'background 0.1s, opacity 0.15s',
+        }}
+        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f9fafb' }}
+        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = isActive ? '#f3f4f6' : 'transparent' }}
+      >
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%',
+          background: color + '22', color,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 14, fontWeight: 700, flexShrink: 0, overflow: 'hidden',
+          pointerEvents: 'none',
+        }}>
+          {c.photoUrl
+            ? <img src={c.photoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : c.name[0]
+          }
+        </div>
+        <div style={{ flex: 1, minWidth: 0, pointerEvents: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {c.name}
+            </span>
+            {dday && <span style={{ fontSize: 11, color: '#ec4899', flexShrink: 0 }}>{dday}</span>}
+          </div>
+          <span style={{ fontSize: 11, color }}>{c.relationship}</span>
+        </div>
+        <button
+          onClick={e => handleDelete(e, c.id)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '2px 4px', flexShrink: 0 }}
+        >✕</button>
+      </div>
+    )
   }
+
+  // 섹션 헤더 (미분류 / 커스텀 그룹 공통)
+  const sectionHeaderStyle = (isTarget: boolean, color = '#d1d5db'): React.CSSProperties => ({
+    padding: '10px 14px 4px',
+    display: 'flex', alignItems: 'center', gap: 8,
+    cursor: 'pointer', userSelect: 'none',
+    borderLeft: isTarget ? `3px solid ${color}` : '3px solid transparent',
+    background: isTarget ? color + '15' : 'transparent',
+    transition: 'background 0.1s, border-color 0.1s',
+  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f5f5' }}>
-      {/* 사이드바 */}
-      <aside style={{
-        width: 260, flexShrink: 0,
-        background: '#fff', borderRight: '1px solid #e5e7eb',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }}>
+      <aside style={{ width: 260, flexShrink: 0, background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
         {/* 헤더 */}
         <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #f3f4f6' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span
-              onClick={() => navigate('/')}
-              style={{ fontSize: 15, fontWeight: 700, color: '#111', cursor: 'pointer' }}
-            >알쓸지인</span>
-            <button
-              onClick={() => navigate('/contacts/new')}
-              style={{
-                fontSize: 12, fontWeight: 600, color: '#fff',
-                background: '#111', border: 'none', borderRadius: 6,
-                padding: '5px 10px', cursor: 'pointer',
-              }}
-            >
+            <span onClick={() => navigate('/')} style={{ fontSize: 15, fontWeight: 700, color: '#111', cursor: 'pointer' }}>알쓸지인</span>
+            <button onClick={() => navigate('/contacts/new')} style={{ fontSize: 12, fontWeight: 600, color: '#fff', background: '#111', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer' }}>
               + 추가
             </button>
           </div>
           <input
-            type="text" value={query}
-            onChange={e => setQuery(e.target.value)}
+            type="text" value={query} onChange={e => setQuery(e.target.value)}
             placeholder="이름, 관계 검색..."
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              fontSize: 13, color: '#374151',
-              background: '#f9fafb', border: '1px solid #e5e7eb',
-              borderRadius: 6, padding: '7px 10px', outline: 'none',
-            }}
+            style={{ width: '100%', boxSizing: 'border-box', fontSize: 13, color: '#374151', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '7px 10px', outline: 'none' }}
           />
         </div>
 
@@ -134,21 +219,9 @@ export default function Layout() {
 
           {meContact ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px', background: activeId === String(meContact.id) ? '#f3f4f6' : 'transparent' }}>
-              <div
-                onClick={() => navigate(`/contacts/${meContact.id}`)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer', minWidth: 0 }}
-                onMouseEnter={e => { if (activeId !== String(meContact.id)) (e.currentTarget as HTMLElement).style.opacity = '0.7' }}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%', background: '#111', color: '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, flexShrink: 0, overflow: 'hidden',
-                }}>
-                  {meContact.photoUrl
-                    ? <img src={meContact.photoUrl} alt={meContact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : '⭐'
-                  }
+              <div onClick={() => navigate(`/contacts/${meContact.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer', minWidth: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, overflow: 'hidden' }}>
+                  {meContact.photoUrl ? <img src={meContact.photoUrl} alt={meContact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '⭐'}
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meContact.name}</div>
@@ -161,9 +234,7 @@ export default function Layout() {
               </div>
             </div>
           ) : (
-            <div
-              onClick={() => navigate('/contacts/new?me=true')}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', cursor: 'pointer', color: '#9ca3af' }}
+            <div onClick={() => navigate('/contacts/new?me=true')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', cursor: 'pointer', color: '#9ca3af' }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
             >
@@ -172,123 +243,129 @@ export default function Layout() {
             </div>
           )}
 
-          {/* 지인 — 그룹별 */}
-          {groups.length === 0 ? (
-            <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginTop: 16 }}>
-              {query ? '검색 결과 없음' : '등록된 지인이 없어요'}
-            </p>
-          ) : groups.map(({ rel, items }) => {
-            const isCollapsed = !!collapsed[rel]
-            const isDragTarget = dragOverGroup === rel
-            const color = REL_COLOR[rel] ?? '#9ca3af'
+          {/* 미분류 섹션 */}
+          {(ungrouped.length > 0 || dropTarget === 'ungrouped') && (
+            <div {...dropZoneProps('ungrouped')}>
+              <div
+                onClick={() => setCollapsed(p => ({ ...p, ungrouped: !p.ungrouped }))}
+                style={sectionHeaderStyle(dropTarget === 'ungrouped')}
+              >
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}>미분류</span>
+                <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>{ungrouped.length}</span>
+                <div style={{ flex: 1, height: 1, background: '#f3f4f6' }} />
+                <span style={{ fontSize: 9, color: '#c4c4c4' }}>{collapsed.ungrouped ? '▶' : '▼'}</span>
+              </div>
+              {!collapsed.ungrouped && ungrouped.map(renderContact)}
+            </div>
+          )}
+
+          {/* 커스텀 그룹 목록 */}
+          {groups.map(g => {
+            const members = filtered.filter(c => c.groupId === g.id)
+            const isTarget = dropTarget === g.id
+            const isCollapsed = !!collapsed[g.id]
+            const isHovered = hoverGroupId === g.id
+            const isEditing = editingGroupId === g.id
 
             return (
-              <div
-                key={rel}
-                // 그룹 전체가 드롭 타겟 (자식으로 나갈 때 오발사 방지)
-                onDragOver={e => { e.preventDefault(); setDragOverGroup(rel) }}
-                onDragLeave={e => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverGroup(null)
-                }}
-                onDrop={() => handleGroupDrop(rel)}
-              >
-                {/* 그룹 헤더 — 클릭으로 접기/펼치기 */}
+              <div key={g.id} {...dropZoneProps(g.id)}>
+                {/* 그룹 헤더 */}
                 <div
-                  onClick={() => setCollapsed(prev => ({ ...prev, [rel]: !prev[rel] }))}
-                  style={{
-                    padding: '10px 14px 4px',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    cursor: 'pointer',
-                    borderLeft: isDragTarget ? `3px solid ${color}` : '3px solid transparent',
-                    background: isDragTarget ? color + '0d' : 'transparent',
-                    transition: 'background 0.1s, border-color 0.1s',
-                    userSelect: 'none',
-                  }}
+                  onClick={() => { if (!isEditing) setCollapsed(p => ({ ...p, [g.id]: !p[g.id] })) }}
+                  onMouseEnter={() => setHoverGroupId(g.id)}
+                  onMouseLeave={() => setHoverGroupId(null)}
+                  style={sectionHeaderStyle(isTarget, '#6366f1')}
                 >
-                  <span style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: '0.06em' }}>{rel}</span>
-                  <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>{items.length}</span>
+                  {isEditing ? (
+                    // 인라인 이름 수정 입력창
+                    <input
+                      ref={editInputRef}
+                      value={editingName}
+                      onChange={e => setEditingName(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSaveGroupName(g.id)
+                        if (e.key === 'Escape') setEditingGroupId(null)
+                      }}
+                      onBlur={() => handleSaveGroupName(g.id)}
+                      style={{ fontSize: 11, fontWeight: 700, color: '#374151', border: '1px solid #6366f1', borderRadius: 4, padding: '1px 6px', outline: 'none', width: 100, fontFamily: 'inherit' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', letterSpacing: '0.06em' }}>{g.name}</span>
+                  )}
+                  <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>{members.length}</span>
                   <div style={{ flex: 1, height: 1, background: '#f3f4f6' }} />
-                  <span style={{ fontSize: 9, color: '#c4c4c4' }}>{isCollapsed ? '▶' : '▼'}</span>
+
+                  {/* hover 시 수정/삭제 버튼 */}
+                  {isHovered && !isEditing && (
+                    <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => { setEditingGroupId(g.id); setEditingName(g.name) }}
+                        title="이름 수정"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '0 2px', lineHeight: 1 }}
+                      >✏️</button>
+                      <button
+                        onClick={() => handleDeleteGroup(g)}
+                        title="그룹 삭제"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '0 2px', lineHeight: 1 }}
+                      >🗑️</button>
+                    </div>
+                  )}
+                  {(!isHovered || isEditing) && (
+                    <span style={{ fontSize: 9, color: '#c4c4c4' }}>{isCollapsed ? '▶' : '▼'}</span>
+                  )}
                 </div>
 
-                {/* 그룹 내 지인 목록 */}
-                {!isCollapsed && items.map(c => {
-                  const dday = getDday(c.birthday)
-                  const isActive = activeId === String(c.id)
-                  const isDragging = draggingId === c.id
-                  return (
-                    <div
-                      key={c.id}
-                      draggable
-                      onDragStart={() => setDraggingId(c.id)}
-                      onDragEnd={() => { setDraggingId(null); setDragOverGroup(null) }}
-                      onClick={() => navigate(`/contacts/${c.id}`)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '8px 14px', cursor: isDragging ? 'grabbing' : 'pointer',
-                        background: isActive ? '#f3f4f6' : 'transparent',
-                        opacity: isDragging ? 0.4 : 1,
-                        transition: 'background 0.1s, opacity 0.1s',
-                      }}
-                      onMouseEnter={e => { if (!isActive && !isDragging) (e.currentTarget as HTMLElement).style.background = '#f9fafb' }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = isActive ? '#f3f4f6' : 'transparent' }}
-                    >
-                      <div style={{
-                        width: 36, height: 36, borderRadius: '50%',
-                        background: color + '22', color,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 14, fontWeight: 700, flexShrink: 0, overflow: 'hidden',
-                        pointerEvents: 'none',
-                      }}>
-                        {c.photoUrl
-                          ? <img src={c.photoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : c.name[0]
-                        }
+                {/* 멤버 목록 */}
+                {!isCollapsed && (
+                  <>
+                    {members.map(renderContact)}
+                    {members.length === 0 && (
+                      <div style={{ padding: '8px 14px', fontSize: 11, color: isTarget ? '#6366f1' : '#d1d5db', textAlign: 'center' }}>
+                        {isTarget ? '여기에 놓기' : '지인을 드래그해서 추가하세요'}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0, pointerEvents: 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {c.name}
-                          </span>
-                          {dday && <span style={{ fontSize: 11, color: '#ec4899', flexShrink: 0 }}>{dday}</span>}
-                        </div>
-                      </div>
-                      <button
-                        onClick={e => handleDelete(e, c.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '2px 4px', flexShrink: 0 }}
-                        title="삭제"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )
-                })}
+                    )}
+                  </>
+                )}
               </div>
             )
           })}
+
+          {/* 그룹 추가 */}
+          <div style={{ padding: '8px 14px' }}>
+            {showNewGroup ? (
+              <input
+                ref={newGroupInputRef}
+                value={newGroupName}
+                onChange={e => setNewGroupName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleCreateGroup()
+                  if (e.key === 'Escape') { setShowNewGroup(false); setNewGroupName('') }
+                }}
+                onBlur={handleCreateGroup}
+                placeholder="그룹 이름 입력..."
+                style={{ width: '100%', boxSizing: 'border-box', fontSize: 12, color: '#374151', background: '#f9fafb', border: '1px solid #6366f1', borderRadius: 6, padding: '6px 10px', outline: 'none', fontFamily: 'inherit' }}
+              />
+            ) : (
+              <button
+                onClick={() => setShowNewGroup(true)}
+                style={{ width: '100%', fontSize: 11, color: '#9ca3af', background: 'none', border: '1px dashed #e5e7eb', borderRadius: 6, padding: '6px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+              >
+                + 그룹 추가
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 하단 */}
         <div style={{ padding: '10px 16px', borderTop: '1px solid #f3f4f6' }}>
-          <button
-            onClick={() => setIntersectOpen(true)}
-            style={{
-              width: '100%', padding: '8px', marginBottom: 6,
-              fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              background: '#f3f4f6', color: '#374151',
-              border: '1px solid #e5e7eb', borderRadius: 7,
-              fontFamily: 'inherit',
-            }}
-          >
+          <button onClick={() => setIntersectOpen(true)} style={{ width: '100%', padding: '8px', marginBottom: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 7, fontFamily: 'inherit' }}>
             취향 비교
           </button>
-          <div style={{ fontSize: 11, color: '#9ca3af' }}>
-            {contacts.filter(c => !c.isMe).length}명 등록됨
-          </div>
+          <div style={{ fontSize: 11, color: '#9ca3af' }}>{contacts.filter(c => !c.isMe).length}명 등록됨</div>
         </div>
       </aside>
 
-      {/* 메인 */}
       <main style={{ flex: 1, overflowY: 'auto' }}>
         <Outlet />
       </main>

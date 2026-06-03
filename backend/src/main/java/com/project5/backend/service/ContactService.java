@@ -5,10 +5,12 @@ import com.project5.backend.dto.GiftDto;
 import com.project5.backend.dto.MeetingDto;
 import com.project5.backend.dto.PreferenceDto;
 import com.project5.backend.entity.Contact;
+import com.project5.backend.entity.ContactGroup;
 import com.project5.backend.entity.ContactPreference;
 import com.project5.backend.entity.GiftHistory;
 import com.project5.backend.entity.Meeting;
 import com.project5.backend.entity.MeetingPlace;
+import com.project5.backend.repository.ContactGroupRepository;
 import com.project5.backend.repository.ContactPreferenceRepository;
 import com.project5.backend.repository.ContactRepository;
 import com.project5.backend.repository.GiftHistoryRepository;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 public class ContactService {
 
     private final ContactRepository contactRepository;
+    private final ContactGroupRepository contactGroupRepository;
     private final ContactPreferenceRepository preferenceRepository;
     private final GiftHistoryRepository giftHistoryRepository;
     private final MeetingRepository meetingRepository;
@@ -90,11 +93,17 @@ public class ContactService {
         contactRepository.deleteById(id);
     }
 
-    // 드래그앤드롭 그룹 이동용 — relationship만 변경
+    // 커스텀 그룹 배정 (groupId=null이면 미분류)
     @Transactional
-    public void updateRelationship(Long id, String relationship) {
-        Contact contact = findContact(id);
-        contact.setRelationship(relationship);
+    public void assignGroup(Long contactId, Long groupId) {
+        Contact contact = findContact(contactId);
+        if (groupId == null) {
+            contact.setGroup(null);
+        } else {
+            ContactGroup group = contactGroupRepository.findById(groupId)
+                    .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
+            contact.setGroup(group);
+        }
     }
 
     // 취향
