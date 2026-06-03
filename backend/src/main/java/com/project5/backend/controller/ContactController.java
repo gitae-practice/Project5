@@ -60,6 +60,13 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
+    // 관계(그룹) 변경 — 드래그앤드롭 전용 경량 엔드포인트
+    @PatchMapping("/{id}/relationship")
+    public ResponseEntity<Void> updateRelationship(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        contactService.updateRelationship(id, body.get("relationship"));
+        return ResponseEntity.ok().build();
+    }
+
     // 프로필 사진 업로드
     @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> uploadPhoto(

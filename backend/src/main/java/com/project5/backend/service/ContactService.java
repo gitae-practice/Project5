@@ -90,6 +90,13 @@ public class ContactService {
         contactRepository.deleteById(id);
     }
 
+    // 드래그앤드롭 그룹 이동용 — relationship만 변경
+    @Transactional
+    public void updateRelationship(Long id, String relationship) {
+        Contact contact = findContact(id);
+        contact.setRelationship(relationship);
+    }
+
     // 취향
     @Transactional
     public PreferenceDto.Response addPreference(Long contactId, PreferenceDto.Request req) {

@@ -22,6 +22,10 @@ export const updateContact = (id: number, data: Partial<Contact>) =>
 export const deleteContact = (id: number) =>
   api.delete(`/contacts/${id}`);
 
+// 드래그앤드롭 그룹 이동 전용
+export const updateRelationship = (id: number, relationship: string) =>
+  api.patch(`/contacts/${id}/relationship`, { relationship });
+
 export const uploadPhoto = (contactId: number, file: File) => {
   const formData = new FormData();
   formData.append('file', file);
