@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -176,6 +177,31 @@ public class ContactService {
             }
         }
         return MeetingDto.Response.from(meetingRepository.save(meeting));
+    }
+
+    // 여러 지인에게 동시에 같은 만남 기록 추가 (fan-out)
+    @Transactional
+    public List<MeetingDto.Response> addMeetingBulk(MeetingDto.BulkRequest req) {
+        List<MeetingDto.Response> results = new ArrayList<>();
+        for (Long contactId : req.getContactIds()) {
+            Contact contact = findContact(contactId);
+            Meeting meeting = Meeting.builder()
+                    .contact(contact)
+                    .date(req.getDate())
+                    .memo(req.getMemo())
+                    .build();
+            if (req.getPlaces() != null) {
+                for (int i = 0; i < req.getPlaces().size(); i++) {
+                    MeetingDto.PlaceRequest pr = req.getPlaces().get(i);
+                    meeting.getPlaces().add(MeetingPlace.builder()
+                            .meeting(meeting).name(pr.getName())
+                            .lat(pr.getLat()).lng(pr.getLng())
+                            .sortOrder(i).build());
+                }
+            }
+            results.add(MeetingDto.Response.from(meetingRepository.save(meeting)));
+        }
+        return results;
     }
 
     @Transactional

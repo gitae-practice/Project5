@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  getContact, getGifts, getMeetings,
+  getContact, getContacts, getGifts, getMeetings,
   addPreference, deletePreference,
   addGift, deleteGift,
-  addMeeting, updateMeeting, deleteMeeting,
+  addMeeting, addMeetingBulk, updateMeeting, deleteMeeting,
 } from '../api/contacts'
-import type { Contact, Gift, Meeting, MeetingPlaceInput, PreferenceType } from '../types'
+import type { Contact, ContactSummary, Gift, Meeting, MeetingPlaceInput, PreferenceType } from '../types'
 import PlaceSearch from '../components/PlaceSearch'
 import MeetingMap from '../components/MeetingMap'
 import MeetingCalendar from '../components/MeetingCalendar'
@@ -113,6 +113,8 @@ export default function ContactDetailPage() {
   const [contact, setContact] = useState<Contact | null>(null)
   const [gifts, setGifts] = useState<Gift[]>([])
   const [meetings, setMeetings] = useState<Meeting[]>([])
+  // 함께 만난 지인 다중 선택용 (현재 지인 제외한 전체 목록)
+  const [allContacts, setAllContacts] = useState<ContactSummary[]>([])
   // URL ?tab=meeting&date=2026-05-30 으로 초기 탭/날짜 지정 가능 (홈 대시보드 연결용)
   const initialTab = searchParams.get('tab') as Tab | null
   const [tab, setTab] = useState<Tab>(initialTab === 'meeting' || initialTab === 'gift' ? initialTab : 'preference')
@@ -127,6 +129,8 @@ export default function ContactDetailPage() {
   const [showGiftForm, setShowGiftForm] = useState(false)
   const today = new Date().toISOString().split('T')[0]
   const [meetForm, setMeetForm] = useState({ date: today, places: [] as MeetingPlaceInput[], memo: '' })
+  // 함께한 지인 ID 목록 (현재 페이지 지인은 자동 포함, 여기에는 추가 지인만)
+  const [extraContactIds, setExtraContactIds] = useState<number[]>([])
   const [showMeetForm, setShowMeetForm] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
   const [editMeetForm, setEditMeetForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
@@ -138,6 +142,8 @@ export default function ContactDetailPage() {
     getContact(contactId).then(setContact)
     getGifts(contactId).then(setGifts)
     getMeetings(contactId).then(setMeetings)
+    // 함께한 지인 다중 선택을 위해 전체 지인 목록 로드
+    getContacts().then(all => setAllContacts(all.filter(c => c.id !== contactId && !c.isMe)))
   }, [contactId])
 
   const handleAddPref = async () => {
@@ -165,13 +171,28 @@ export default function ContactDetailPage() {
   const handleAddMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!meetForm.date) return
-    const meeting = await addMeeting(contactId, {
-      date: meetForm.date,
-      places: meetForm.places,
-      memo: meetForm.memo || undefined,
-    })
-    setMeetings(prev => [meeting, ...prev])
+    const allIds = [contactId, ...extraContactIds]
+    if (extraContactIds.length > 0) {
+      // 여러 명 동시 등록: bulk API 사용
+      const results = await addMeetingBulk({
+        contactIds: allIds,
+        date: meetForm.date,
+        places: meetForm.places,
+        memo: meetForm.memo || undefined,
+      })
+      // 현재 페이지 지인의 만남만 목록에 반영
+      const mine = results.find(m => m.contactId === contactId)
+      if (mine) setMeetings(prev => [mine, ...prev])
+    } else {
+      const meeting = await addMeeting(contactId, {
+        date: meetForm.date,
+        places: meetForm.places,
+        memo: meetForm.memo || undefined,
+      })
+      setMeetings(prev => [meeting, ...prev])
+    }
     setMeetForm({ date: new Date().toISOString().split('T')[0], places: [], memo: '' })
+    setExtraContactIds([])
     setShowMeetForm(false)
   }
 
@@ -465,6 +486,40 @@ export default function ContactDetailPage() {
                     onChange={places => setMeetForm(p => ({ ...p, places }))}
                   />
                   <input type="text" value={meetForm.memo} onChange={e => setMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, width: '100%' }} />
+
+                  {/* 함께한 지인 다중 선택 (현재 지인은 자동 포함) */}
+                  {allContacts.length > 0 && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 6px', letterSpacing: '0.05em' }}>
+                        함께한 지인 (선택)
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {allContacts.map(c => {
+                          const selected = extraContactIds.includes(c.id)
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => setExtraContactIds(prev =>
+                                selected ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                              )}
+                              style={{
+                                fontSize: 12, padding: '4px 10px', borderRadius: 5, cursor: 'pointer',
+                                fontFamily: 'inherit', transition: 'all 0.1s',
+                                background: selected ? '#111' : '#f3f4f6',
+                                color: selected ? '#fff' : '#374151',
+                                border: selected ? '1px solid #111' : '1px solid #e5e7eb',
+                                fontWeight: selected ? 600 : 400,
+                              }}
+                            >
+                              {c.name}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                     <button type="submit" style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
                   </div>

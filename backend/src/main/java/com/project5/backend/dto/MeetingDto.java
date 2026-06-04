@@ -51,6 +51,18 @@ public class MeetingDto {
         private String memo;
     }
 
+    // 여러 지인에게 동시에 만남 기록 추가 (각 지인마다 개별 Meeting 생성)
+    @Getter @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BulkRequest {
+        private List<Long> contactIds;
+        private LocalDate date;
+        private List<PlaceRequest> places;
+        private String memo;
+    }
+
     @Getter
     @Builder
     public static class Response {

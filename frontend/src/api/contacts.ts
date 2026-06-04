@@ -55,6 +55,10 @@ export const getMeetings = (contactId: number) =>
 export const addMeeting = (contactId: number, data: { date: string; places?: MeetingPlaceInput[]; memo?: string }) =>
   api.post<Meeting>(`/contacts/${contactId}/meetings`, data).then(r => r.data);
 
+// 여러 지인에게 동시에 만남 추가 (fan-out: 각자 Meeting 레코드 생성)
+export const addMeetingBulk = (data: { contactIds: number[]; date: string; places?: MeetingPlaceInput[]; memo?: string }) =>
+  api.post<Meeting[]>('/contacts/meetings/bulk', data).then(r => r.data);
+
 export const updateMeeting = (meetingId: number, data: { date: string; places?: MeetingPlaceInput[]; memo?: string }) =>
   api.put<Meeting>(`/contacts/meetings/${meetingId}`, data).then(r => r.data);
 

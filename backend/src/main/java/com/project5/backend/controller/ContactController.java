@@ -122,6 +122,12 @@ public class ContactController {
         return contactService.addMeeting(id, req);
     }
 
+    // 여러 지인에게 동시에 만남 추가 (같은 날짜/장소/메모로 각자 Meeting 생성)
+    @PostMapping("/meetings/bulk")
+    public List<MeetingDto.Response> addMeetingBulk(@RequestBody MeetingDto.BulkRequest req) {
+        return contactService.addMeetingBulk(req);
+    }
+
     // 만남 수정
     @PutMapping("/meetings/{meetingId}")
     public MeetingDto.Response updateMeeting(@PathVariable Long meetingId, @RequestBody MeetingDto.Request req) {
