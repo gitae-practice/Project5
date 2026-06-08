@@ -244,11 +244,13 @@ export default function ContactListPage() {
       memo: group.memo ?? '',
     })
     setEditAddContactIds([])
-    setEditMode('bulk')
     // 개별 메모: 각 만남 레코드의 실제 메모값으로 초기화
     const memos: Record<number, string> = {}
     for (const m of group.meetings) memos[m.meetingId] = m.memo ?? ''
     setEditMemos(memos)
+    // 메모가 하나라도 다르면 개별 수정 모드로 시작
+    const uniqueMemos = new Set(group.meetings.map(m => m.memo ?? ''))
+    setEditMode(uniqueMemos.size > 1 ? 'individual' : 'bulk')
   }
 
   // 그룹 내 모든 만남 수정 + 새 지인 추가 (같은 groupId로 fan-out)
