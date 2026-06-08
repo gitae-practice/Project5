@@ -78,6 +78,7 @@ export default function ContactDetailPage() {
   // 함께한 지인 ID 목록 (현재 페이지 지인은 자동 포함, 여기에는 추가 지인만)
   const [extraContactIds, setExtraContactIds] = useState<number[]>([])
   const [showMeetForm, setShowMeetForm] = useState(false)
+  const [meetSubmitAttempted, setMeetSubmitAttempted] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
   const [editMeetForm, setEditMeetForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
   const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(
@@ -116,6 +117,7 @@ export default function ContactDetailPage() {
 
   const handleAddMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
+    setMeetSubmitAttempted(true)
     if (!meetForm.date || meetForm.places.length === 0) return
     const allIds = [contactId, ...extraContactIds]
     if (extraContactIds.length > 0) {
@@ -139,6 +141,7 @@ export default function ContactDetailPage() {
     }
     setMeetForm({ date: new Date().toISOString().split('T')[0], places: [], memo: '' })
     setExtraContactIds([])
+    setMeetSubmitAttempted(false)
     setShowMeetForm(false)
   }
 
@@ -467,18 +470,16 @@ export default function ContactDetailPage() {
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, alignItems: 'center' }}>
-                    {meetForm.places.length === 0 && (
+                    {meetSubmitAttempted && meetForm.places.length === 0 && (
                       <span style={{ fontSize: 11, color: '#ef4444' }}>장소를 1개 이상 추가해주세요</span>
                     )}
                     <button
                       type="submit"
-                      disabled={meetForm.places.length === 0}
                       style={{
                         fontSize: 13, fontWeight: 600, padding: '6px 14px',
                         background: meetForm.places.length === 0 ? '#e5e7eb' : '#111',
                         color: meetForm.places.length === 0 ? '#9ca3af' : '#fff',
-                        border: 'none', borderRadius: 6,
-                        cursor: meetForm.places.length === 0 ? 'default' : 'pointer',
+                        border: 'none', borderRadius: 6, cursor: 'pointer',
                         fontFamily: 'inherit',
                       }}
                     >저장</button>

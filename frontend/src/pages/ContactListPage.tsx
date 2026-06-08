@@ -172,6 +172,7 @@ export default function ContactListPage() {
   const [quickForm, setQuickForm] = useState({ date: today, places: [] as MeetingPlaceInput[], memo: '' })
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
+  const [quickSubmitAttempted, setQuickSubmitAttempted] = useState(false)
 
   useEffect(() => {
     getDashboard()
@@ -223,6 +224,7 @@ export default function ContactListPage() {
 
   const handleQuickSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    setQuickSubmitAttempted(true)
     if (selectedIds.length === 0 || !quickForm.date || quickForm.places.length === 0) return
     setSaving(true)
     try {
@@ -319,7 +321,7 @@ export default function ContactListPage() {
               <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>만남 기록</span>
               <button
                 type="button"
-                onClick={() => { setShowQuickForm(false); setSelectedIds([]); setQuickForm({ date: today, places: [], memo: '' }) }}
+                onClick={() => { setShowQuickForm(false); setSelectedIds([]); setQuickForm({ date: today, places: [], memo: '' }); setQuickSubmitAttempted(false) }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 18, lineHeight: 1, padding: 0 }}
               >×</button>
             </div>
@@ -385,16 +387,23 @@ export default function ContactListPage() {
               style={{ ...inputStyle, width: '100%' }}
             />
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}>
+              {/* 저장 시도 후 미충족 조건 안내 */}
+              {quickSubmitAttempted && quickForm.places.length === 0 && (
+                <span style={{ fontSize: 11, color: '#ef4444' }}>장소를 1개 이상 추가해주세요</span>
+              )}
+              {quickSubmitAttempted && selectedIds.length === 0 && quickForm.places.length > 0 && (
+                <span style={{ fontSize: 11, color: '#ef4444' }}>만난 지인을 1명 이상 선택해주세요</span>
+              )}
               <button
                 type="submit"
-                disabled={selectedIds.length === 0 || quickForm.places.length === 0 || saving}
+                disabled={saving}
                 style={{
                   fontSize: 13, fontWeight: 600, padding: '7px 18px',
                   background: (selectedIds.length === 0 || quickForm.places.length === 0) ? '#e5e7eb' : '#111',
                   color: (selectedIds.length === 0 || quickForm.places.length === 0) ? '#9ca3af' : '#fff',
                   border: 'none', borderRadius: 6,
-                  cursor: (selectedIds.length === 0 || quickForm.places.length === 0) ? 'default' : 'pointer',
+                  cursor: 'pointer',
                   fontFamily: 'inherit', transition: 'background 0.1s',
                 }}
               >
