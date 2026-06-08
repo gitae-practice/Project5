@@ -4,6 +4,7 @@ import { getDashboard } from '../api/dashboard'
 import { getContacts, addMeeting, addMeetingBulk, updateMeeting, deleteMeeting } from '../api/contacts'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
+import ConfirmModal from '../components/ConfirmModal'
 import type { ContactSummary, DashboardResponse, DashboardBirthdayItem, DashboardNotSeenItem, DashboardRecentMeetingItem, MeetingPlaceInput } from '../types'
 
 // 관계별 색상 (Layout.tsx와 동일)
@@ -183,6 +184,8 @@ export default function ContactListPage() {
   // 최근 만남 수정/삭제
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
+  // 확인 모달 (수정 저장 / 삭제 전 사용자 확인)
+  const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null)
 
   const startEditMeeting = (item: DashboardRecentMeetingItem) => {
     setEditingMeetingId(item.meetingId)
@@ -193,17 +196,29 @@ export default function ContactListPage() {
     })
   }
 
-  const handleUpdateMeeting = async (e: React.FormEvent, meetingId: number) => {
+  const handleUpdateMeeting = (e: React.FormEvent, meetingId: number) => {
     e.preventDefault()
     if (editForm.places.length === 0) return
-    await updateMeeting(meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
-    setEditingMeetingId(null)
-    getDashboard().then(setData)
+    setConfirm({
+      message: '만남 기록을 수정할까요?',
+      onConfirm: async () => {
+        setConfirm(null)
+        await updateMeeting(meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
+        setEditingMeetingId(null)
+        getDashboard().then(setData)
+      },
+    })
   }
 
-  const handleDeleteMeeting = async (meetingId: number) => {
-    await deleteMeeting(meetingId)
-    getDashboard().then(setData)
+  const handleDeleteMeeting = (meetingId: number) => {
+    setConfirm({
+      message: '만남 기록을 삭제할까요?\n삭제하면 되돌릴 수 없어요.',
+      onConfirm: async () => {
+        setConfirm(null)
+        await deleteMeeting(meetingId)
+        getDashboard().then(setData)
+      },
+    })
   }
 
   const handleQuickSave = async (e: React.FormEvent) => {
@@ -267,6 +282,13 @@ export default function ContactListPage() {
 
   return (
     <div style={{ padding: '28px 32px', maxWidth: 680, margin: '0 auto' }}>
+      {confirm && (
+        <ConfirmModal
+          message={confirm.message}
+          onConfirm={confirm.onConfirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
 
       {/* 빠른 만남 기록 */}
       <section style={{ marginBottom: 32 }}>
