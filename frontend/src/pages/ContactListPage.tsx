@@ -231,6 +231,8 @@ export default function ContactListPage() {
   const [editingGroupKey, setEditingGroupKey] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
   const [editAddContactIds, setEditAddContactIds] = useState<number[]>([]) // 기존 그룹에 추가할 지인
+  const [editMode, setEditMode] = useState<'bulk' | 'individual'>('bulk') // 일괄/개별 수정 모드
+  const [editMemos, setEditMemos] = useState<Record<number, string>>({})  // 개별 모드 시 meetingId별 메모
   // 확인 모달 (수정 저장 / 삭제 전 사용자 확인)
   const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null)
 
@@ -242,6 +244,11 @@ export default function ContactListPage() {
       memo: group.memo ?? '',
     })
     setEditAddContactIds([])
+    setEditMode('bulk')
+    // 개별 메모: 각 만남 레코드의 실제 메모값으로 초기화
+    const memos: Record<number, string> = {}
+    for (const m of group.meetings) memos[m.meetingId] = m.memo ?? ''
+    setEditMemos(memos)
   }
 
   // 그룹 내 모든 만남 수정 + 새 지인 추가 (같은 groupId로 fan-out)
@@ -254,18 +261,29 @@ export default function ContactListPage() {
         : '만남 기록을 수정할까요?',
       onConfirm: async () => {
         setConfirm(null)
-        // 기존 그룹 멤버 전원 업데이트
-        await Promise.all(group.meetings.map(m =>
-          updateMeeting(m.meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
-        ))
+        if (editMode === 'individual') {
+          // 개별 수정: 각자 메모 따로 적용
+          await Promise.all(group.meetings.map(m =>
+            updateMeeting(m.meetingId, {
+              date: editForm.date,
+              places: editForm.places,
+              memo: editMemos[m.meetingId] || undefined,
+            })
+          ))
+        } else {
+          // 일괄 수정: 모두 같은 메모
+          await Promise.all(group.meetings.map(m =>
+            updateMeeting(m.meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
+          ))
+        }
         // 새 지인 추가 (groupId가 있으면 기존 그룹에 합류)
         if (editAddContactIds.length > 0) {
           await addMeetingBulk({
             contactIds: editAddContactIds,
             date: editForm.date,
             places: editForm.places,
-            memo: editForm.memo || undefined,
-            groupId: group.groupId, // undefined면 서버에서 새 UUID 생성
+            memo: editMode === 'bulk' ? editForm.memo || undefined : undefined,
+            groupId: group.groupId,
           })
         }
         setEditingGroupKey(null)
@@ -549,13 +567,53 @@ export default function ContactListPage() {
                     {editForm.places.length === 0 && (
                       <p style={{ fontSize: 11, color: '#ef4444', margin: 0 }}>장소를 1개 이상 추가해주세요</p>
                     )}
-                    <input
-                      type="text"
-                      value={editForm.memo}
-                      onChange={e => setEditForm(p => ({ ...p, memo: e.target.value }))}
-                      placeholder="메모"
-                      style={{ ...inputStyle, fontSize: 12 }}
-                    />
+
+                    {/* 그룹 만남이면 수정 방식 선택 가능 */}
+                    {group.meetings.length > 1 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.05em' }}>수정 방식</span>
+                        <select
+                          value={editMode}
+                          onChange={e => setEditMode(e.target.value as 'bulk' | 'individual')}
+                          style={{
+                            fontSize: 12, padding: '4px 8px', borderRadius: 5,
+                            border: '1px solid #e5e7eb', fontFamily: 'inherit',
+                            color: '#374151', background: '#fff', cursor: 'pointer',
+                          }}
+                        >
+                          <option value="bulk">일괄 수정</option>
+                          <option value="individual">개별 수정</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* 메모: 일괄이면 하나, 개별이면 멤버마다 */}
+                    {editMode === 'bulk' || group.meetings.length === 1 ? (
+                      <input
+                        type="text"
+                        value={editForm.memo}
+                        onChange={e => setEditForm(p => ({ ...p, memo: e.target.value }))}
+                        placeholder="메모"
+                        style={{ ...inputStyle, fontSize: 12 }}
+                      />
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {group.meetings.map(m => (
+                          <div key={m.meetingId} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#374151', minWidth: 52, flexShrink: 0 }}>
+                              {m.contactName}
+                            </span>
+                            <input
+                              type="text"
+                              value={editMemos[m.meetingId] ?? ''}
+                              onChange={e => setEditMemos(prev => ({ ...prev, [m.meetingId]: e.target.value }))}
+                              placeholder={`${m.contactName} 메모`}
+                              style={{ ...inputStyle, fontSize: 12, flex: 1 }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* 현재 멤버 표시 + 지인 추가 (groupId 있는 신규 그룹만) */}
                     <div>
@@ -607,7 +665,7 @@ export default function ContactListPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                       <button
                         type="button"
-                        onClick={() => { setEditingGroupKey(null); setEditAddContactIds([]) }}
+                        onClick={() => { setEditingGroupKey(null); setEditAddContactIds([]); setEditMode('bulk'); setEditMemos({}) }}
                         style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                       >취소</button>
                       <button
