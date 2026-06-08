@@ -231,6 +231,7 @@ export default function ContactListPage() {
   const [editingGroupKey, setEditingGroupKey] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
   const [editAddContactIds, setEditAddContactIds] = useState<number[]>([]) // 기존 그룹에 추가할 지인
+  const [editRemoveMeetingIds, setEditRemoveMeetingIds] = useState<number[]>([]) // 그룹에서 제거할 meetingId
   const [editMode, setEditMode] = useState<'bulk' | 'individual'>('bulk') // 일괄/개별 수정 모드
   const [editMemos, setEditMemos] = useState<Record<number, string>>({})  // 개별 모드 시 meetingId별 메모
   // 확인 모달 (수정 저장 / 삭제 전 사용자 확인)
@@ -244,6 +245,7 @@ export default function ContactListPage() {
       memo: group.memo ?? '',
     })
     setEditAddContactIds([])
+    setEditRemoveMeetingIds([])
     // 개별 메모: 각 만남 레코드의 실제 메모값으로 초기화
     const memos: Record<number, string> = {}
     for (const m of group.meetings) memos[m.meetingId] = m.memo ?? ''
@@ -263,9 +265,12 @@ export default function ContactListPage() {
         : '만남 기록을 수정할까요?',
       onConfirm: async () => {
         setConfirm(null)
+        // 제거 대상 meetingId는 삭제, 나머지는 업데이트
+        const keepMeetings = group.meetings.filter(m => !editRemoveMeetingIds.includes(m.meetingId))
+        await Promise.all(editRemoveMeetingIds.map(id => deleteMeeting(id)))
         if (editMode === 'individual') {
           // 개별 수정: 각자 메모 따로 적용
-          await Promise.all(group.meetings.map(m =>
+          await Promise.all(keepMeetings.map(m =>
             updateMeeting(m.meetingId, {
               date: editForm.date,
               places: editForm.places,
@@ -274,7 +279,7 @@ export default function ContactListPage() {
           ))
         } else {
           // 일괄 수정: 모두 같은 메모
-          await Promise.all(group.meetings.map(m =>
+          await Promise.all(keepMeetings.map(m =>
             updateMeeting(m.meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
           ))
         }
@@ -290,6 +295,7 @@ export default function ContactListPage() {
         }
         setEditingGroupKey(null)
         setEditAddContactIds([])
+        setEditRemoveMeetingIds([])
         getDashboard().then(setData)
       },
     })
@@ -623,19 +629,42 @@ export default function ContactListPage() {
                         만남 멤버
                       </p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                        {/* 현재 그룹 멤버: 고정 표시 */}
-                        {group.meetings.map(m => (
-                          <span
-                            key={m.meetingId}
-                            style={{
-                              fontSize: 11, padding: '3px 8px', borderRadius: 4,
-                              background: '#f3f4f6', color: '#374151',
-                              border: '1px solid #e5e7eb',
-                            }}
-                          >
-                            {m.contactName}
-                          </span>
-                        ))}
+                        {/* 현재 그룹 멤버: X로 제거 가능 (마지막 1명은 제거 불가) */}
+                        {group.meetings.map(m => {
+                          const removing = editRemoveMeetingIds.includes(m.meetingId)
+                          const keepCount = group.meetings.length - editRemoveMeetingIds.length
+                          const canRemove = keepCount > 1 || removing // 마지막 1명은 제거 불가
+                          return (
+                            <span
+                              key={m.meetingId}
+                              style={{
+                                fontSize: 11, padding: '3px 6px 3px 8px', borderRadius: 4,
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                background: removing ? '#fee2e2' : '#f3f4f6',
+                                color: removing ? '#ef4444' : '#374151',
+                                border: `1px solid ${removing ? '#fca5a5' : '#e5e7eb'}`,
+                                textDecoration: removing ? 'line-through' : 'none',
+                              }}
+                            >
+                              {m.contactName}
+                              {canRemove && (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditRemoveMeetingIds(prev =>
+                                    removing ? prev.filter(id => id !== m.meetingId) : [...prev, m.meetingId]
+                                  )}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: removing ? '#ef4444' : '#9ca3af',
+                                    fontSize: 12, lineHeight: 1, padding: 0,
+                                  }}
+                                >
+                                  {removing ? '↩' : '×'}
+                                </button>
+                              )}
+                            </span>
+                          )
+                        })}
                         {/* 새로 추가할 지인: 그룹에 없는 지인만 선택 가능 */}
                         {allContacts
                           .filter(c => !group.meetings.some(m => m.contactId === c.id))
@@ -667,7 +696,7 @@ export default function ContactListPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                       <button
                         type="button"
-                        onClick={() => { setEditingGroupKey(null); setEditAddContactIds([]); setEditMode('bulk'); setEditMemos({}) }}
+                        onClick={() => { setEditingGroupKey(null); setEditAddContactIds([]); setEditRemoveMeetingIds([]); setEditMode('bulk'); setEditMemos({}) }}
                         style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                       >취소</button>
                       <button
