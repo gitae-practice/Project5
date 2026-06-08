@@ -98,6 +98,7 @@ export interface DashboardNotSeenItem {
 
 export interface DashboardRecentMeetingItem {
   meetingId: number;  // 수정/삭제용
+  groupId?: string;   // 같은 그룹 만남 공유 UUID (없으면 레거시 레코드)
   contactId: number;
   contactName: string;
   contactPhotoUrl?: string;

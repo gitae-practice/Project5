@@ -124,9 +124,10 @@ function NotSeenRow({ item, onClick }: { item: DashboardNotSeenItem; onClick: ()
   )
 }
 
-// 날짜 + 장소명이 동일한 만남을 하나로 묶은 그룹 타입
+// 만남 그룹 타입: groupId 기반(신규) 또는 날짜+장소 기반(레거시)
 type GroupedMeeting = {
-  groupKey: string
+  groupKey: string       // 그룹 식별 키 (Map key)
+  groupId?: string       // 영구 UUID (있으면 신규 레코드, 없으면 레거시)
   meetings: DashboardRecentMeetingItem[]
   date: string
   places: DashboardRecentMeetingItem['places']
@@ -136,9 +137,10 @@ type GroupedMeeting = {
 function groupRecentMeetings(meetings: DashboardRecentMeetingItem[]): GroupedMeeting[] {
   const map = new Map<string, GroupedMeeting>()
   for (const item of meetings) {
-    const key = `${item.date}|${item.places.map(p => p.name).sort().join('|')}`
+    // groupId가 있으면 영구 UUID 기준, 없으면(레거시) 날짜+장소 내용 기반
+    const key = item.groupId ?? `legacy|${item.date}|${item.places.map(p => p.name).sort().join('|')}`
     if (!map.has(key)) {
-      map.set(key, { groupKey: key, meetings: [], date: item.date, places: item.places, memo: item.memo })
+      map.set(key, { groupKey: key, groupId: item.groupId, meetings: [], date: item.date, places: item.places, memo: item.memo })
     }
     map.get(key)!.meetings.push(item)
   }
@@ -228,6 +230,7 @@ export default function ContactListPage() {
   // 최근 만남 수정/삭제 (그룹 키 기반)
   const [editingGroupKey, setEditingGroupKey] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
+  const [editAddContactIds, setEditAddContactIds] = useState<number[]>([]) // 기존 그룹에 추가할 지인
   // 확인 모달 (수정 저장 / 삭제 전 사용자 확인)
   const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null)
 
@@ -238,20 +241,35 @@ export default function ContactListPage() {
       places: group.places.map(p => ({ name: p.name, lat: p.lat, lng: p.lng })),
       memo: group.memo ?? '',
     })
+    setEditAddContactIds([])
   }
 
-  // 그룹 내 모든 만남 수정 (날짜/장소/메모 동일하게 반영)
+  // 그룹 내 모든 만남 수정 + 새 지인 추가 (같은 groupId로 fan-out)
   const handleUpdateMeeting = (e: React.FormEvent, group: GroupedMeeting) => {
     e.preventDefault()
     if (editForm.places.length === 0) return
     setConfirm({
-      message: '만남 기록을 수정할까요?',
+      message: editAddContactIds.length > 0
+        ? `만남 기록을 수정하고 ${editAddContactIds.length}명을 추가할까요?`
+        : '만남 기록을 수정할까요?',
       onConfirm: async () => {
         setConfirm(null)
+        // 기존 그룹 멤버 전원 업데이트
         await Promise.all(group.meetings.map(m =>
           updateMeeting(m.meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
         ))
+        // 새 지인 추가 (groupId가 있으면 기존 그룹에 합류)
+        if (editAddContactIds.length > 0) {
+          await addMeetingBulk({
+            contactIds: editAddContactIds,
+            date: editForm.date,
+            places: editForm.places,
+            memo: editForm.memo || undefined,
+            groupId: group.groupId, // undefined면 서버에서 새 UUID 생성
+          })
+        }
         setEditingGroupKey(null)
+        setEditAddContactIds([])
         getDashboard().then(setData)
       },
     })
@@ -538,10 +556,58 @@ export default function ContactListPage() {
                       placeholder="메모"
                       style={{ ...inputStyle, fontSize: 12 }}
                     />
+
+                    {/* 현재 멤버 표시 + 지인 추가 (groupId 있는 신규 그룹만) */}
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 5px', letterSpacing: '0.05em' }}>
+                        만남 멤버
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        {/* 현재 그룹 멤버: 고정 표시 */}
+                        {group.meetings.map(m => (
+                          <span
+                            key={m.meetingId}
+                            style={{
+                              fontSize: 11, padding: '3px 8px', borderRadius: 4,
+                              background: '#f3f4f6', color: '#374151',
+                              border: '1px solid #e5e7eb',
+                            }}
+                          >
+                            {m.contactName}
+                          </span>
+                        ))}
+                        {/* 새로 추가할 지인: 그룹에 없는 지인만 선택 가능 */}
+                        {allContacts
+                          .filter(c => !group.meetings.some(m => m.contactId === c.id))
+                          .map(c => {
+                            const selected = editAddContactIds.includes(c.id)
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => setEditAddContactIds(prev =>
+                                  selected ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                                )}
+                                style={{
+                                  fontSize: 11, padding: '3px 8px', borderRadius: 4,
+                                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.1s',
+                                  background: selected ? '#111' : 'transparent',
+                                  color: selected ? '#fff' : '#9ca3af',
+                                  border: selected ? '1px solid #111' : '1px dashed #d1d5db',
+                                  fontWeight: selected ? 600 : 400,
+                                }}
+                              >
+                                + {c.name}
+                              </button>
+                            )
+                          })}
+                      </div>
+                    </div>
+
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                       <button
                         type="button"
-                        onClick={() => setEditingGroupKey(null)}
+                        onClick={() => { setEditingGroupKey(null); setEditAddContactIds([]) }}
                         style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                       >취소</button>
                       <button

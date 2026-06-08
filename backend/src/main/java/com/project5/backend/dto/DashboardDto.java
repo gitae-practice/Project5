@@ -51,6 +51,7 @@ public class DashboardDto {
     @NoArgsConstructor
     public static class RecentMeetingItem {
         private Long meetingId;  // 수정/삭제에 필요
+        private String groupId;  // 같은 그룹 만남 공유 UUID (그룹핑 기준)
         private Long contactId;
         private String contactName;
         private String contactPhotoUrl;

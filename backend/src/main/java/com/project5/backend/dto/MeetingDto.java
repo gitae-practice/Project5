@@ -61,6 +61,7 @@ public class MeetingDto {
         private LocalDate date;
         private List<PlaceRequest> places;
         private String memo;
+        private String groupId; // null이면 서버에서 새 UUID 생성
     }
 
     @Getter
@@ -71,6 +72,7 @@ public class MeetingDto {
         private LocalDate date;
         private List<PlaceResponse> places;
         private String memo;
+        private String groupId; // 같은 그룹 만남 공유 UUID
         private LocalDateTime createdAt;
 
         public static Response from(Meeting meeting) {
@@ -82,6 +84,7 @@ public class MeetingDto {
                             .map(PlaceResponse::from)
                             .collect(Collectors.toList()))
                     .memo(meeting.getMemo())
+                    .groupId(meeting.getGroupId())
                     .createdAt(meeting.getCreatedAt())
                     .build();
         }

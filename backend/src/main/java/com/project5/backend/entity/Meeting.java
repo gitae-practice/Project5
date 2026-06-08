@@ -35,6 +35,10 @@ public class Meeting {
     @Column(columnDefinition = "TEXT")
     private String memo;
 
+    // 같은 그룹으로 묶인 만남(동시에 여러 명 만날 때) 공유 UUID
+    @Column(name = "group_id", length = 36)
+    private String groupId;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

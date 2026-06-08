@@ -56,7 +56,8 @@ export const addMeeting = (contactId: number, data: { date: string; places?: Mee
   api.post<Meeting>(`/contacts/${contactId}/meetings`, data).then(r => r.data);
 
 // 여러 지인에게 동시에 만남 추가 (fan-out: 각자 Meeting 레코드 생성)
-export const addMeetingBulk = (data: { contactIds: number[]; date: string; places?: MeetingPlaceInput[]; memo?: string }) =>
+// groupId 전달 시 기존 그룹에 지인 추가, 없으면 서버에서 새 UUID 생성
+export const addMeetingBulk = (data: { contactIds: number[]; date: string; places?: MeetingPlaceInput[]; memo?: string; groupId?: string }) =>
   api.post<Meeting[]>('/contacts/meetings/bulk', data).then(r => r.data);
 
 export const updateMeeting = (meetingId: number, data: { date: string; places?: MeetingPlaceInput[]; memo?: string }) =>

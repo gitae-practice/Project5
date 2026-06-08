@@ -165,6 +165,7 @@ public class ContactService {
                 .contact(contact)
                 .date(req.getDate())
                 .memo(req.getMemo())
+                .groupId(UUID.randomUUID().toString()) // 단일 만남도 groupId 부여
                 .build();
         // 장소 목록 추가
         if (req.getPlaces() != null) {
@@ -182,6 +183,8 @@ public class ContactService {
     // 여러 지인에게 동시에 같은 만남 기록 추가 (fan-out)
     @Transactional
     public List<MeetingDto.Response> addMeetingBulk(MeetingDto.BulkRequest req) {
+        // groupId: 요청에 포함되면 기존 그룹에 추가, 없으면 새 UUID 생성
+        String gid = req.getGroupId() != null ? req.getGroupId() : UUID.randomUUID().toString();
         List<MeetingDto.Response> results = new ArrayList<>();
         for (Long contactId : req.getContactIds()) {
             Contact contact = findContact(contactId);
@@ -189,6 +192,7 @@ public class ContactService {
                     .contact(contact)
                     .date(req.getDate())
                     .memo(req.getMemo())
+                    .groupId(gid)
                     .build();
             if (req.getPlaces() != null) {
                 for (int i = 0; i < req.getPlaces().size(); i++) {

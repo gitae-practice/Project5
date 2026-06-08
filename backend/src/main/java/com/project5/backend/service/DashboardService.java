@@ -90,6 +90,7 @@ public class DashboardService {
                 .stream()
                 .map(m -> DashboardDto.RecentMeetingItem.builder()
                         .meetingId(m.getId())
+                        .groupId(m.getGroupId())
                         .contactId(m.getContact().getId())
                         .contactName(m.getContact().getName())
                         .contactPhotoUrl(m.getContact().getPhotoUrl())
