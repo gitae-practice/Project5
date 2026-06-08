@@ -606,7 +606,7 @@ export default function ContactListPage() {
                       />
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                        {group.meetings.map(m => (
+                        {group.meetings.filter(m => !editRemoveMeetingIds.includes(m.meetingId)).map(m => (
                           <div key={m.meetingId} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{ fontSize: 11, fontWeight: 600, color: '#374151', minWidth: 52, flexShrink: 0 }}>
                               {m.contactName}
