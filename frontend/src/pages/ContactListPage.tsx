@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDashboard } from '../api/dashboard'
-import type { DashboardResponse, DashboardBirthdayItem, DashboardNotSeenItem, DashboardRecentMeetingItem } from '../types'
+import { getContacts, addMeeting, addMeetingBulk } from '../api/contacts'
+import PlaceSearch from '../components/PlaceSearch'
+import PlaceTagList from '../components/PlaceTagList'
+import type { ContactSummary, DashboardResponse, DashboardBirthdayItem, DashboardNotSeenItem, DashboardRecentMeetingItem, MeetingPlaceInput } from '../types'
 
 // 관계별 색상 (Layout.tsx와 동일)
 const REL_COLOR: Record<string, string> = {
@@ -150,16 +153,52 @@ function RecentMeetingRow({ item, onClick }: { item: DashboardRecentMeetingItem;
   )
 }
 
+const inputStyle: React.CSSProperties = {
+  border: '1px solid #e5e7eb', borderRadius: 6, padding: '7px 10px',
+  fontSize: 13, outline: 'none', fontFamily: 'inherit', color: '#111',
+  background: '#fff', boxSizing: 'border-box',
+}
+
 export default function ContactListPage() {
   const navigate = useNavigate()
   const [data, setData] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // 빠른 만남 기록 폼
+  const today = new Date().toISOString().split('T')[0]
+  const [showQuickForm, setShowQuickForm] = useState(false)
+  const [allContacts, setAllContacts] = useState<ContactSummary[]>([])
+  const [quickForm, setQuickForm] = useState({ date: today, places: [] as MeetingPlaceInput[], memo: '' })
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     getDashboard()
       .then(setData)
       .finally(() => setLoading(false))
+    // 지인 선택을 위한 전체 목록 로드 (본인 제외)
+    getContacts().then(all => setAllContacts(all.filter(c => !c.isMe)))
   }, [])
+
+  const handleQuickSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (selectedIds.length === 0 || !quickForm.date) return
+    setSaving(true)
+    try {
+      if (selectedIds.length === 1) {
+        await addMeeting(selectedIds[0], { date: quickForm.date, places: quickForm.places, memo: quickForm.memo || undefined })
+      } else {
+        await addMeetingBulk({ contactIds: selectedIds, date: quickForm.date, places: quickForm.places, memo: quickForm.memo || undefined })
+      }
+      // 폼 초기화 후 대시보드 새로고침
+      setQuickForm({ date: today, places: [], memo: '' })
+      setSelectedIds([])
+      setShowQuickForm(false)
+      getDashboard().then(setData)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -202,6 +241,120 @@ export default function ContactListPage() {
 
   return (
     <div style={{ padding: '28px 32px', maxWidth: 680, margin: '0 auto' }}>
+
+      {/* 빠른 만남 기록 */}
+      <section style={{ marginBottom: 32 }}>
+        {!showQuickForm ? (
+          <button
+            onClick={() => setShowQuickForm(true)}
+            style={{
+              width: '100%', padding: '11px 16px', borderRadius: 10,
+              border: '1.5px dashed #d1d5db', background: '#fafafa',
+              fontSize: 13, color: '#9ca3af', cursor: 'pointer',
+              fontFamily: 'inherit', textAlign: 'left',
+              transition: 'border-color 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#111'; e.currentTarget.style.color = '#374151' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.color = '#9ca3af' }}
+          >
+            + 오늘 만남 기록하기
+          </button>
+        ) : (
+          <form
+            onSubmit={handleQuickSave}
+            style={{
+              background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+              padding: '16px', display: 'flex', flexDirection: 'column', gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>만남 기록</span>
+              <button
+                type="button"
+                onClick={() => { setShowQuickForm(false); setSelectedIds([]); setQuickForm({ date: today, places: [], memo: '' }) }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 18, lineHeight: 1, padding: 0 }}
+              >×</button>
+            </div>
+
+            {/* 날짜 + 장소 */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="date"
+                value={quickForm.date}
+                onChange={e => setQuickForm(p => ({ ...p, date: e.target.value }))}
+                style={{ ...inputStyle, flex: '0 0 140px' }}
+              />
+              <PlaceSearch
+                value=""
+                onSelect={({ name, lat, lng }) => setQuickForm(p => ({ ...p, places: [...p.places, { name, lat, lng }] }))}
+                style={{ flex: 1 }}
+              />
+            </div>
+
+            {/* 장소 태그 */}
+            <PlaceTagList
+              places={quickForm.places}
+              onChange={places => setQuickForm(p => ({ ...p, places }))}
+            />
+
+            {/* 지인 선택 */}
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 6px', letterSpacing: '0.05em' }}>
+                만난 지인 *
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {allContacts.map(c => {
+                  const selected = selectedIds.includes(c.id)
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedIds(prev =>
+                        selected ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                      )}
+                      style={{
+                        fontSize: 12, padding: '4px 10px', borderRadius: 5,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.1s',
+                        background: selected ? '#111' : '#f3f4f6',
+                        color: selected ? '#fff' : '#374151',
+                        border: selected ? '1px solid #111' : '1px solid #e5e7eb',
+                        fontWeight: selected ? 600 : 400,
+                      }}
+                    >
+                      {c.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* 메모 */}
+            <input
+              type="text"
+              value={quickForm.memo}
+              onChange={e => setQuickForm(p => ({ ...p, memo: e.target.value }))}
+              placeholder="메모 (선택)"
+              style={{ ...inputStyle, width: '100%' }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="submit"
+                disabled={selectedIds.length === 0 || saving}
+                style={{
+                  fontSize: 13, fontWeight: 600, padding: '7px 18px',
+                  background: selectedIds.length === 0 ? '#e5e7eb' : '#111',
+                  color: selectedIds.length === 0 ? '#9ca3af' : '#fff',
+                  border: 'none', borderRadius: 6, cursor: selectedIds.length === 0 ? 'default' : 'pointer',
+                  fontFamily: 'inherit', transition: 'background 0.1s',
+                }}
+              >
+                {saving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
 
       {/* 생일 임박 */}
       {upcomingBirthdays.length > 0 && (
