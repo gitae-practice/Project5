@@ -84,9 +84,9 @@ public class DashboardService {
                 .limit(5)
                 .collect(Collectors.toList());
 
-        // 3. 최근 만남 5건
+        // 3. 최근 만남: 그룹핑 후 5그룹이 표시되도록 레코드는 넉넉하게 30개 조회
         List<DashboardDto.RecentMeetingItem> recentMeetings = meetingRepository
-                .findRecentMeetingsAcrossContacts(PageRequest.of(0, 5))
+                .findRecentMeetingsAcrossContacts(PageRequest.of(0, 30))
                 .stream()
                 .map(m -> DashboardDto.RecentMeetingItem.builder()
                         .meetingId(m.getId())

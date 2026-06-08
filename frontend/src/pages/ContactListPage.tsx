@@ -541,7 +541,7 @@ export default function ContactListPage() {
           <EmptyMsg text="아직 만남 기록이 없어요" />
         ) : (
           <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-            {groupRecentMeetings(recentMeetings).map((group, i) => (
+            {groupRecentMeetings(recentMeetings).slice(0, 5).map((group, i) => (
               <div key={group.groupKey} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
                 {editingGroupKey === group.groupKey ? (
                   /* 인라인 수정 폼 */
