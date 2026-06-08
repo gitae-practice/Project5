@@ -9,6 +9,7 @@ import {
 import type { Contact, ContactSummary, Gift, Meeting, MeetingPlaceInput, PreferenceType } from '../types'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
+import ConfirmModal from '../components/ConfirmModal'
 import MeetingMap from '../components/MeetingMap'
 import MeetingCalendar from '../components/MeetingCalendar'
 
@@ -81,6 +82,7 @@ export default function ContactDetailPage() {
   const [meetSubmitAttempted, setMeetSubmitAttempted] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
   const [editMeetForm, setEditMeetForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
+  const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null)
   const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(
     searchParams.get('date') ?? today
   )
@@ -154,15 +156,32 @@ export default function ContactDetailPage() {
     })
   }
 
-  const handleUpdateMeeting = async (e: React.FormEvent, meetingId: number) => {
+  const handleUpdateMeeting = (e: React.FormEvent, meetingId: number) => {
     e.preventDefault()
-    const updated = await updateMeeting(meetingId, {
-      date: editMeetForm.date,
-      places: editMeetForm.places,
-      memo: editMeetForm.memo || undefined,
+    setConfirm({
+      message: '만남 기록을 수정할까요?',
+      onConfirm: async () => {
+        setConfirm(null)
+        const updated = await updateMeeting(meetingId, {
+          date: editMeetForm.date,
+          places: editMeetForm.places,
+          memo: editMeetForm.memo || undefined,
+        })
+        setMeetings(prev => prev.map(m => m.id === meetingId ? updated : m))
+        setEditingMeetingId(null)
+      },
     })
-    setMeetings(prev => prev.map(m => m.id === meetingId ? updated : m))
-    setEditingMeetingId(null)
+  }
+
+  const handleDeleteMeeting = (meetingId: number) => {
+    setConfirm({
+      message: '만남 기록을 삭제할까요?\n삭제하면 되돌릴 수 없어요.',
+      onConfirm: async () => {
+        setConfirm(null)
+        await deleteMeeting(meetingId)
+        setMeetings(prev => prev.filter(m => m.id !== meetingId))
+      },
+    })
   }
 
   if (!contact) return <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af' }}>불러오는 중...</div>
@@ -177,6 +196,13 @@ export default function ContactDetailPage() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f5f5f5' }}>
+      {confirm && (
+        <ConfirmModal
+          message={confirm.message}
+          onConfirm={confirm.onConfirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
       {/* 프로필 헤더 */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '24px 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 800 }}>
@@ -568,7 +594,7 @@ export default function ContactDetailPage() {
                                   수정
                                 </button>
                                 <button
-                                  onClick={() => deleteMeeting(m.id).then(() => setMeetings(prev => prev.filter(x => x.id !== m.id)))}
+                                  onClick={() => handleDeleteMeeting(m.id)}
                                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '3px 4px' }}
                                 >
                                   ✕
