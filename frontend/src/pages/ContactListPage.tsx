@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDashboard } from '../api/dashboard'
-import { getContacts, addMeeting, addMeetingBulk } from '../api/contacts'
+import { getContacts, addMeeting, addMeetingBulk, updateMeeting, deleteMeeting } from '../api/contacts'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
 import type { ContactSummary, DashboardResponse, DashboardBirthdayItem, DashboardNotSeenItem, DashboardRecentMeetingItem, MeetingPlaceInput } from '../types'
@@ -180,9 +180,35 @@ export default function ContactListPage() {
     getContacts().then(all => setAllContacts(all.filter(c => !c.isMe)))
   }, [])
 
+  // 최근 만남 수정/삭제
+  const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
+  const [editForm, setEditForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
+
+  const startEditMeeting = (item: DashboardRecentMeetingItem) => {
+    setEditingMeetingId(item.meetingId)
+    setEditForm({
+      date: item.date,
+      places: item.places.map(p => ({ name: p.name, lat: p.lat, lng: p.lng })),
+      memo: item.memo ?? '',
+    })
+  }
+
+  const handleUpdateMeeting = async (e: React.FormEvent, meetingId: number) => {
+    e.preventDefault()
+    if (editForm.places.length === 0) return
+    await updateMeeting(meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
+    setEditingMeetingId(null)
+    getDashboard().then(setData)
+  }
+
+  const handleDeleteMeeting = async (meetingId: number) => {
+    await deleteMeeting(meetingId)
+    getDashboard().then(setData)
+  }
+
   const handleQuickSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (selectedIds.length === 0 || !quickForm.date) return
+    if (selectedIds.length === 0 || !quickForm.date || quickForm.places.length === 0) return
     setSaving(true)
     try {
       if (selectedIds.length === 1) {
@@ -340,12 +366,13 @@ export default function ContactListPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 type="submit"
-                disabled={selectedIds.length === 0 || saving}
+                disabled={selectedIds.length === 0 || quickForm.places.length === 0 || saving}
                 style={{
                   fontSize: 13, fontWeight: 600, padding: '7px 18px',
-                  background: selectedIds.length === 0 ? '#e5e7eb' : '#111',
-                  color: selectedIds.length === 0 ? '#9ca3af' : '#fff',
-                  border: 'none', borderRadius: 6, cursor: selectedIds.length === 0 ? 'default' : 'pointer',
+                  background: (selectedIds.length === 0 || quickForm.places.length === 0) ? '#e5e7eb' : '#111',
+                  color: (selectedIds.length === 0 || quickForm.places.length === 0) ? '#9ca3af' : '#fff',
+                  border: 'none', borderRadius: 6,
+                  cursor: (selectedIds.length === 0 || quickForm.places.length === 0) ? 'default' : 'pointer',
                   fontFamily: 'inherit', transition: 'background 0.1s',
                 }}
               >
@@ -396,8 +423,81 @@ export default function ContactListPage() {
         ) : (
           <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
             {recentMeetings.map((item, i) => (
-              <div key={`${item.contactId}-${item.date}-${i}`} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
-                <RecentMeetingRow item={item} onClick={() => navigate(`/contacts/${item.contactId}?tab=meeting&date=${item.date}`)} />
+              <div key={item.meetingId} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
+                {editingMeetingId === item.meetingId ? (
+                  /* 인라인 수정 폼 */
+                  <form
+                    onSubmit={e => handleUpdateMeeting(e, item.meetingId)}
+                    style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        type="date"
+                        value={editForm.date}
+                        onChange={e => setEditForm(p => ({ ...p, date: e.target.value }))}
+                        style={{ ...inputStyle, flex: '0 0 140px', fontSize: 12 }}
+                      />
+                      <PlaceSearch
+                        value=""
+                        onSelect={({ name, lat, lng }) => setEditForm(p => ({ ...p, places: [...p.places, { name, lat, lng }] }))}
+                        style={{ flex: 1, fontSize: 12 }}
+                      />
+                    </div>
+                    <PlaceTagList
+                      places={editForm.places}
+                      onChange={places => setEditForm(p => ({ ...p, places }))}
+                    />
+                    {editForm.places.length === 0 && (
+                      <p style={{ fontSize: 11, color: '#ef4444', margin: 0 }}>장소를 1개 이상 추가해주세요</p>
+                    )}
+                    <input
+                      type="text"
+                      value={editForm.memo}
+                      onChange={e => setEditForm(p => ({ ...p, memo: e.target.value }))}
+                      placeholder="메모"
+                      style={{ ...inputStyle, fontSize: 12 }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                      <button
+                        type="button"
+                        onClick={() => setEditingMeetingId(null)}
+                        style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                      >취소</button>
+                      <button
+                        type="submit"
+                        disabled={editForm.places.length === 0}
+                        style={{
+                          fontSize: 12, fontWeight: 600, padding: '5px 12px',
+                          background: editForm.places.length === 0 ? '#e5e7eb' : '#111',
+                          color: editForm.places.length === 0 ? '#9ca3af' : '#fff',
+                          border: 'none', borderRadius: 6,
+                          cursor: editForm.places.length === 0 ? 'default' : 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >저장</button>
+                    </div>
+                  </form>
+                ) : (
+                  /* 일반 표시 + 수정/삭제 버튼 */
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <RecentMeetingRow
+                        item={item}
+                        onClick={() => navigate(`/contacts/${item.contactId}?tab=meeting&date=${item.date}`)}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, paddingRight: 12, flexShrink: 0 }}>
+                      <button
+                        onClick={() => startEditMeeting(item)}
+                        style={{ fontSize: 11, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit' }}
+                      >수정</button>
+                      <button
+                        onClick={() => handleDeleteMeeting(item.meetingId)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '3px 4px' }}
+                      >✕</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

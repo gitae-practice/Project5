@@ -116,7 +116,7 @@ export default function ContactDetailPage() {
 
   const handleAddMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!meetForm.date) return
+    if (!meetForm.date || meetForm.places.length === 0) return
     const allIds = [contactId, ...extraContactIds]
     if (extraContactIds.length > 0) {
       // 여러 명 동시 등록: bulk API 사용
@@ -466,8 +466,22 @@ export default function ContactDetailPage() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                    <button type="submit" style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, alignItems: 'center' }}>
+                    {meetForm.places.length === 0 && (
+                      <span style={{ fontSize: 11, color: '#ef4444' }}>장소를 1개 이상 추가해주세요</span>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={meetForm.places.length === 0}
+                      style={{
+                        fontSize: 13, fontWeight: 600, padding: '6px 14px',
+                        background: meetForm.places.length === 0 ? '#e5e7eb' : '#111',
+                        color: meetForm.places.length === 0 ? '#9ca3af' : '#fff',
+                        border: 'none', borderRadius: 6,
+                        cursor: meetForm.places.length === 0 ? 'default' : 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >저장</button>
                   </div>
                 </form>
               )}

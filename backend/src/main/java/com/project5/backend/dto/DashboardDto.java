@@ -50,6 +50,7 @@ public class DashboardDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class RecentMeetingItem {
+        private Long meetingId;  // 수정/삭제에 필요
         private Long contactId;
         private String contactName;
         private String contactPhotoUrl;

@@ -89,6 +89,7 @@ public class DashboardService {
                 .findRecentMeetingsAcrossContacts(PageRequest.of(0, 5))
                 .stream()
                 .map(m -> DashboardDto.RecentMeetingItem.builder()
+                        .meetingId(m.getId())
                         .contactId(m.getContact().getId())
                         .contactName(m.getContact().getName())
                         .contactPhotoUrl(m.getContact().getPhotoUrl())

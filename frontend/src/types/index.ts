@@ -97,6 +97,7 @@ export interface DashboardNotSeenItem {
 }
 
 export interface DashboardRecentMeetingItem {
+  meetingId: number;  // 수정/삭제용
   contactId: number;
   contactName: string;
   contactPhotoUrl?: string;
