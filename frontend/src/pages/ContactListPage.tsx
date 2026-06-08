@@ -124,32 +124,75 @@ function NotSeenRow({ item, onClick }: { item: DashboardNotSeenItem; onClick: ()
   )
 }
 
-// 최근 만남 행
-function RecentMeetingRow({ item, onClick }: { item: DashboardRecentMeetingItem; onClick: () => void }) {
-  const mainPlace = item.places[0]?.name
-  const extraCount = item.places.length - 1
+// 날짜 + 장소명이 동일한 만남을 하나로 묶은 그룹 타입
+type GroupedMeeting = {
+  groupKey: string
+  meetings: DashboardRecentMeetingItem[]
+  date: string
+  places: DashboardRecentMeetingItem['places']
+  memo?: string
+}
+
+function groupRecentMeetings(meetings: DashboardRecentMeetingItem[]): GroupedMeeting[] {
+  const map = new Map<string, GroupedMeeting>()
+  for (const item of meetings) {
+    const key = `${item.date}|${item.places.map(p => p.name).sort().join('|')}`
+    if (!map.has(key)) {
+      map.set(key, { groupKey: key, meetings: [], date: item.date, places: item.places, memo: item.memo })
+    }
+    map.get(key)!.meetings.push(item)
+  }
+  return Array.from(map.values())
+}
+
+// 그룹 만남 행 (여러 아바타 + 이름 표시)
+function GroupedMeetingRow({ group, onClick }: { group: GroupedMeeting; onClick: () => void }) {
+  const mainPlace = group.places[0]?.name
+  const extraCount = group.places.length - 1
+  const names = group.meetings.map(m => m.contactName).join(', ')
+  const canClick = group.meetings.length === 1
 
   return (
     <div
-      onClick={onClick}
+      onClick={canClick ? onClick : undefined}
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 14px', borderRadius: 8, cursor: 'pointer',
+        padding: '10px 14px', borderRadius: 8,
+        cursor: canClick ? 'pointer' : 'default',
         transition: 'background 0.1s',
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+      onMouseEnter={e => { if (canClick) e.currentTarget.style.background = '#f9fafb' }}
+      onMouseLeave={e => { if (canClick) e.currentTarget.style.background = 'transparent' }}
     >
-      <Avatar name={item.contactName} photoUrl={item.contactPhotoUrl} relationship={item.contactRelationship} size={38} />
+      {/* 아바타: 최대 3개 겹쳐서 표시 */}
+      <div style={{ display: 'flex', flexShrink: 0 }}>
+        {group.meetings.slice(0, 3).map((m, i) => (
+          <div key={m.meetingId} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: 3 - i }}>
+            <Avatar name={m.contactName} photoUrl={m.contactPhotoUrl} relationship={m.contactRelationship} size={38} />
+          </div>
+        ))}
+        {group.meetings.length > 3 && (
+          <div style={{
+            width: 38, height: 38, borderRadius: '50%', marginLeft: -10,
+            background: '#e5e7eb', color: '#6b7280',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700, zIndex: 0,
+          }}>
+            +{group.meetings.length - 3}
+          </div>
+        )}
+      </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{item.contactName}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {names}
+        </div>
         {mainPlace && (
           <div style={{ fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             📍 {mainPlace}{extraCount > 0 ? ` 외 ${extraCount}곳` : ''}
           </div>
         )}
       </div>
-      <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{item.date}</span>
+      <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{group.date}</span>
     </div>
   )
 }
@@ -182,41 +225,48 @@ export default function ContactListPage() {
     getContacts().then(all => setAllContacts(all.filter(c => !c.isMe)))
   }, [])
 
-  // 최근 만남 수정/삭제
-  const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
+  // 최근 만남 수정/삭제 (그룹 키 기반)
+  const [editingGroupKey, setEditingGroupKey] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
   // 확인 모달 (수정 저장 / 삭제 전 사용자 확인)
   const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null)
 
-  const startEditMeeting = (item: DashboardRecentMeetingItem) => {
-    setEditingMeetingId(item.meetingId)
+  const startEditMeeting = (group: GroupedMeeting) => {
+    setEditingGroupKey(group.groupKey)
     setEditForm({
-      date: item.date,
-      places: item.places.map(p => ({ name: p.name, lat: p.lat, lng: p.lng })),
-      memo: item.memo ?? '',
+      date: group.date,
+      places: group.places.map(p => ({ name: p.name, lat: p.lat, lng: p.lng })),
+      memo: group.memo ?? '',
     })
   }
 
-  const handleUpdateMeeting = (e: React.FormEvent, meetingId: number) => {
+  // 그룹 내 모든 만남 수정 (날짜/장소/메모 동일하게 반영)
+  const handleUpdateMeeting = (e: React.FormEvent, group: GroupedMeeting) => {
     e.preventDefault()
     if (editForm.places.length === 0) return
     setConfirm({
       message: '만남 기록을 수정할까요?',
       onConfirm: async () => {
         setConfirm(null)
-        await updateMeeting(meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
-        setEditingMeetingId(null)
+        await Promise.all(group.meetings.map(m =>
+          updateMeeting(m.meetingId, { date: editForm.date, places: editForm.places, memo: editForm.memo || undefined })
+        ))
+        setEditingGroupKey(null)
         getDashboard().then(setData)
       },
     })
   }
 
-  const handleDeleteMeeting = (meetingId: number) => {
+  // 그룹 내 모든 만남 삭제
+  const handleDeleteMeeting = (group: GroupedMeeting) => {
+    const multi = group.meetings.length > 1
     setConfirm({
-      message: '만남 기록을 삭제할까요?\n삭제하면 되돌릴 수 없어요.',
+      message: multi
+        ? `${group.meetings.map(m => m.contactName).join(', ')}의 만남 기록을 모두 삭제할까요?\n삭제하면 되돌릴 수 없어요.`
+        : '만남 기록을 삭제할까요?\n삭제하면 되돌릴 수 없어요.',
       onConfirm: async () => {
         setConfirm(null)
-        await deleteMeeting(meetingId)
+        await Promise.all(group.meetings.map(m => deleteMeeting(m.meetingId)))
         getDashboard().then(setData)
       },
     })
@@ -446,19 +496,19 @@ export default function ContactListPage() {
         )}
       </section>
 
-      {/* 최근 만남 */}
+      {/* 최근 만남 (같은 날짜+장소면 한 행으로 묶어 표시) */}
       <section>
         <SectionHeader title="최근 만남" />
         {recentMeetings.length === 0 ? (
           <EmptyMsg text="아직 만남 기록이 없어요" />
         ) : (
           <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-            {recentMeetings.map((item, i) => (
-              <div key={item.meetingId} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
-                {editingMeetingId === item.meetingId ? (
+            {groupRecentMeetings(recentMeetings).map((group, i) => (
+              <div key={group.groupKey} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
+                {editingGroupKey === group.groupKey ? (
                   /* 인라인 수정 폼 */
                   <form
-                    onSubmit={e => handleUpdateMeeting(e, item.meetingId)}
+                    onSubmit={e => handleUpdateMeeting(e, group)}
                     style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}
                   >
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -491,7 +541,7 @@ export default function ContactListPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                       <button
                         type="button"
-                        onClick={() => setEditingMeetingId(null)}
+                        onClick={() => setEditingGroupKey(null)}
                         style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                       >취소</button>
                       <button
@@ -512,18 +562,18 @@ export default function ContactListPage() {
                   /* 일반 표시 + 수정/삭제 버튼 */
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <RecentMeetingRow
-                        item={item}
-                        onClick={() => navigate(`/contacts/${item.contactId}?tab=meeting&date=${item.date}`)}
+                      <GroupedMeetingRow
+                        group={group}
+                        onClick={() => navigate(`/contacts/${group.meetings[0].contactId}?tab=meeting&date=${group.date}`)}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 4, paddingRight: 12, flexShrink: 0 }}>
                       <button
-                        onClick={() => startEditMeeting(item)}
+                        onClick={() => startEditMeeting(group)}
                         style={{ fontSize: 11, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit' }}
                       >수정</button>
                       <button
-                        onClick={() => handleDeleteMeeting(item.meetingId)}
+                        onClick={() => handleDeleteMeeting(group)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '3px 4px' }}
                       >✕</button>
                     </div>
