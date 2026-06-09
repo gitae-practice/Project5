@@ -353,8 +353,8 @@ export default function ContactListPage() {
     )
   }
 
-  const { upcomingBirthdays, notSeenRecently, recentMeetings } = data
-  const hasAnyData = upcomingBirthdays.length > 0 || notSeenRecently.length > 0 || recentMeetings.length > 0
+  const { upcomingBirthdays, notSeenRecently, recentMeetings, upcomingMeetings } = data
+  const hasAnyData = upcomingBirthdays.length > 0 || notSeenRecently.length > 0 || recentMeetings.length > 0 || upcomingMeetings.length > 0
 
   if (!hasAnyData) {
     return (
@@ -507,6 +507,73 @@ export default function ContactListPage() {
           </form>
         )}
       </section>
+
+      {/* 예정된 만남 */}
+      {upcomingMeetings.length > 0 && (
+        <section style={{ marginBottom: 32 }}>
+          <SectionHeader title="예정된 만남" count={groupRecentMeetings(upcomingMeetings).length} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {groupRecentMeetings(upcomingMeetings).map(group => {
+              const dDay = Math.round((new Date(group.date).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24))
+              const dLabel = dDay === 0 ? 'D-Day' : `D-${dDay}`
+              const names = group.meetings.map(m => m.contactName).join(', ')
+              const mainPlace = group.places[0]?.name
+              const extraCount = group.places.length - 1
+              return (
+                <div
+                  key={group.groupKey}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 14px', borderRadius: 10,
+                    border: `1px solid ${dDay === 0 ? '#bfdbfe' : '#e5e7eb'}`,
+                    background: dDay === 0 ? '#eff6ff' : '#fff',
+                  }}
+                >
+                  {/* D-day 배지 */}
+                  <div style={{
+                    flexShrink: 0, minWidth: 48, textAlign: 'center',
+                    padding: '4px 6px', borderRadius: 6,
+                    background: dDay === 0 ? '#3b82f6' : '#f3f4f6',
+                    color: dDay === 0 ? '#fff' : '#374151',
+                    fontSize: 11, fontWeight: 700,
+                  }}>
+                    {dLabel}
+                  </div>
+                  {/* 아바타 */}
+                  <div style={{ display: 'flex', flexShrink: 0 }}>
+                    {group.meetings.slice(0, 3).map((m, i) => (
+                      <div key={m.meetingId} style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 3 - i }}>
+                        <Avatar name={m.contactName} photoUrl={m.contactPhotoUrl} relationship={m.contactRelationship} size={34} />
+                      </div>
+                    ))}
+                    {group.meetings.length > 3 && (
+                      <div style={{
+                        width: 34, height: 34, borderRadius: '50%', marginLeft: -8,
+                        background: '#e5e7eb', color: '#6b7280',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 10, fontWeight: 700,
+                      }}>+{group.meetings.length - 3}</div>
+                    )}
+                  </div>
+                  {/* 이름 + 장소 */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {names}
+                    </div>
+                    {mainPlace && (
+                      <div style={{ fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        📍 {mainPlace}{extraCount > 0 ? ` 외 ${extraCount}곳` : ''}
+                      </div>
+                    )}
+                  </div>
+                  {/* 날짜 */}
+                  <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{group.date}</span>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {/* 생일 임박 */}
       {upcomingBirthdays.length > 0 && (

@@ -103,10 +103,30 @@ public class DashboardService {
                         .build())
                 .collect(Collectors.toList());
 
+        // 4. 예정된 만남: 오늘 이후(오늘 포함), 가까운 날짜 순
+        List<DashboardDto.RecentMeetingItem> upcomingMeetings = meetingRepository
+                .findUpcomingMeetings(today)
+                .stream()
+                .map(m -> DashboardDto.RecentMeetingItem.builder()
+                        .meetingId(m.getId())
+                        .groupId(m.getGroupId())
+                        .contactId(m.getContact().getId())
+                        .contactName(m.getContact().getName())
+                        .contactPhotoUrl(m.getContact().getPhotoUrl())
+                        .contactRelationship(m.getContact().getRelationship())
+                        .date(m.getDate().toString())
+                        .places(m.getPlaces().stream()
+                                .map(MeetingDto.PlaceResponse::from)
+                                .collect(Collectors.toList()))
+                        .memo(m.getMemo())
+                        .build())
+                .collect(Collectors.toList());
+
         return DashboardDto.Response.builder()
                 .upcomingBirthdays(upcomingBirthdays)
                 .notSeenRecently(notSeenRecently)
                 .recentMeetings(recentMeetings)
+                .upcomingMeetings(upcomingMeetings)
                 .build();
     }
 

@@ -11,9 +11,10 @@ public class DashboardDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private List<BirthdayItem> upcomingBirthdays;  // 30일 이내 생일
-        private List<NotSeenItem> notSeenRecently;     // 30일 이상 못 만난 지인
-        private List<RecentMeetingItem> recentMeetings; // 최근 만남 5건
+        private List<BirthdayItem> upcomingBirthdays;      // 30일 이내 생일
+        private List<NotSeenItem> notSeenRecently;         // 30일 이상 못 만난 지인
+        private List<RecentMeetingItem> recentMeetings;    // 최근 만남 5건
+        private List<RecentMeetingItem> upcomingMeetings;  // 오늘 이후 예정된 만남
     }
 
     // 생일 임박 항목

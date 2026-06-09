@@ -112,4 +112,5 @@ export interface DashboardResponse {
   upcomingBirthdays: DashboardBirthdayItem[];
   notSeenRecently: DashboardNotSeenItem[];
   recentMeetings: DashboardRecentMeetingItem[];
+  upcomingMeetings: DashboardRecentMeetingItem[]; // 오늘 이후 예정된 만남
 }
