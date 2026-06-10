@@ -219,6 +219,7 @@ export default function ContactFormPage() {
               <select
                 value={selectedGroupId}
                 onChange={e => setSelectedGroupId(e.target.value === '' ? '' : Number(e.target.value))}
+                onFocus={() => getGroups().then(setGroups)}
                 style={{ ...inputStyle, cursor: 'pointer' }}
               >
                 <option value="">그룹 없음</option>
