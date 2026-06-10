@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +43,13 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Group not found: " + id));
         group.setName(req.getName());
         return GroupDto.Response.from(group);
+    }
+
+    @Transactional
+    public void reorder(List<GroupDto.OrderItem> items) {
+        for (GroupDto.OrderItem item : items) {
+            groupRepository.findById(item.getId()).ifPresent(g -> g.setSortOrder(item.getSortOrder()));
+        }
     }
 
     @Transactional

@@ -13,6 +13,14 @@ public class GroupDto {
         private String name;
     }
 
+    @Getter @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrderItem {
+        private Long id;
+        private Integer sortOrder;
+    }
+
     @Getter
     @Builder
     public static class Response {

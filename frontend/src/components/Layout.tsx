@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { getContacts, deleteContact } from '../api/contacts'
-import { getGroups, createGroup, updateGroup, deleteGroup, assignGroup } from '../api/groups'
+import { getGroups, createGroup, updateGroup, deleteGroup, assignGroup, reorderGroups } from '../api/groups'
 import type { ContactGroup, ContactSummary } from '../types'
 import IntersectPanel from './IntersectPanel'
 
@@ -31,9 +31,12 @@ export default function Layout() {
 
   // 그룹 접기/펼치기 (key: groupId or 'ungrouped')
   const [collapsed, setCollapsed] = useState<Record<string | number, boolean>>({})
-  // 드래그 상태
+  // 지인 드래그 상태
   const [draggingId, setDraggingId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget>(null)
+  // 그룹 순서 드래그 상태
+  const [draggingGroupId, setDraggingGroupId] = useState<number | null>(null)
+  const [groupDragOverId, setGroupDragOverId] = useState<number | null>(null)
   // 그룹 헤더 hover (edit/delete 버튼 표시)
   const [hoverGroupId, setHoverGroupId] = useState<number | null>(null)
   // 그룹명 인라인 수정
@@ -95,6 +98,34 @@ export default function Layout() {
     setNewGroupName('')
     setShowNewGroup(false)
   }
+
+  // 드롭: 그룹 순서 재정렬
+  const handleGroupDrop = async (targetGroupId: number) => {
+    if (draggingGroupId === null || draggingGroupId === targetGroupId) {
+      setDraggingGroupId(null); setGroupDragOverId(null); return
+    }
+    const newOrder = [...groups]
+    const fromIdx = newOrder.findIndex(g => g.id === draggingGroupId)
+    const toIdx = newOrder.findIndex(g => g.id === targetGroupId)
+    const [moved] = newOrder.splice(fromIdx, 1)
+    newOrder.splice(toIdx, 0, moved)
+    const ordered = newOrder.map((g, i) => ({ ...g, sortOrder: i }))
+    setGroups(ordered)
+    setDraggingGroupId(null); setGroupDragOverId(null)
+    await reorderGroups(ordered.map(g => ({ id: g.id, sortOrder: g.sortOrder ?? 0 })))
+  }
+
+  // 드래그 중 표시 순서 미리보기 (드롭 전 시각적 피드백)
+  const displayedGroups = (() => {
+    if (draggingGroupId === null || groupDragOverId === null || draggingGroupId === groupDragOverId) return groups
+    const result = [...groups]
+    const fromIdx = result.findIndex(g => g.id === draggingGroupId)
+    const toIdx = result.findIndex(g => g.id === groupDragOverId)
+    if (fromIdx === -1 || toIdx === -1) return result
+    const [moved] = result.splice(fromIdx, 1)
+    result.splice(toIdx, 0, moved)
+    return result
+  })()
 
   // 드롭: 지인을 그룹에 배정
   const handleDrop = async (target: DropTarget) => {
@@ -260,21 +291,46 @@ export default function Layout() {
           )}
 
           {/* 커스텀 그룹 목록 */}
-          {groups.map(g => {
+          {displayedGroups.map(g => {
             const members = filtered.filter(c => c.groupId === g.id)
-            const isTarget = dropTarget === g.id
+            const isTarget = dropTarget === g.id && draggingGroupId === null
+            const isGroupTarget = groupDragOverId === g.id && draggingGroupId !== null && draggingGroupId !== g.id
             const isCollapsed = !!collapsed[g.id]
             const isHovered = hoverGroupId === g.id
             const isEditing = editingGroupId === g.id
 
             return (
-              <div key={g.id} {...dropZoneProps(g.id)}>
+              <div
+                key={g.id}
+                onDragOver={e => {
+                  e.preventDefault()
+                  if (draggingGroupId !== null) setGroupDragOverId(g.id)
+                  else setDropTarget(g.id)
+                }}
+                onDragLeave={e => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDropTarget(null); setGroupDragOverId(null)
+                  }
+                }}
+                onDrop={() => {
+                  if (draggingGroupId !== null) handleGroupDrop(g.id)
+                  else handleDrop(g.id)
+                }}
+                style={{ opacity: draggingGroupId === g.id ? 0.4 : 1, transition: 'opacity 0.15s' }}
+              >
                 {/* 그룹 헤더 */}
                 <div
+                  draggable
+                  onDragStart={e => { e.stopPropagation(); setDraggingGroupId(g.id) }}
+                  onDragEnd={() => { setDraggingGroupId(null); setGroupDragOverId(null) }}
                   onClick={() => { if (!isEditing) setCollapsed(p => ({ ...p, [g.id]: !p[g.id] })) }}
                   onMouseEnter={() => setHoverGroupId(g.id)}
                   onMouseLeave={() => setHoverGroupId(null)}
-                  style={sectionHeaderStyle(isTarget, '#6366f1')}
+                  style={{
+                    ...sectionHeaderStyle(isTarget, '#6366f1'),
+                    borderTop: isGroupTarget ? '2px solid #6366f1' : undefined,
+                    cursor: 'grab',
+                  }}
                 >
                   {isEditing ? (
                     // 인라인 이름 수정 입력창

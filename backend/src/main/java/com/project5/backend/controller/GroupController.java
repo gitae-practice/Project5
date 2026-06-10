@@ -31,6 +31,12 @@ public class GroupController {
         return groupService.update(id, req);
     }
 
+    @PatchMapping("/order")
+    public ResponseEntity<Void> reorder(@RequestBody List<GroupDto.OrderItem> items) {
+        groupService.reorder(items);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         groupService.delete(id);

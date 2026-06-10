@@ -17,3 +17,6 @@ export const deleteGroup = (id: number) =>
 
 export const assignGroup = (contactId: number, groupId: number | null) =>
   api.patch(`/contacts/${contactId}/group`, { groupId })
+
+export const reorderGroups = (orders: { id: number; sortOrder: number }[]) =>
+  api.patch('/groups/order', orders)
