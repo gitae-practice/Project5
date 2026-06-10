@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -28,10 +27,12 @@ public class GroupService {
 
     @Transactional
     public GroupDto.Response create(GroupDto.Request req) {
-        // sortOrder = 현재 그룹 수
+        if (groupRepository.existsByNameIgnoreCase(req.getName().trim())) {
+            throw new IllegalArgumentException("같은 이름의 그룹이 이미 있어요.");
+        }
         int order = (int) groupRepository.count();
         ContactGroup group = ContactGroup.builder()
-                .name(req.getName())
+                .name(req.getName().trim())
                 .sortOrder(order)
                 .build();
         return GroupDto.Response.from(groupRepository.save(group));

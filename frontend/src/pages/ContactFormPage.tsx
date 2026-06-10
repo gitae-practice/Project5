@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getContact, createContact, updateContact, uploadPhoto } from '../api/contacts'
+import { getGroups, assignGroup } from '../api/groups'
+import type { ContactGroup } from '../types'
 
 const RELATIONSHIPS = ['친구', '가족', '직장', '연인', '지인', '기타']
 
@@ -34,6 +36,12 @@ export default function ContactFormPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [groups, setGroups] = useState<ContactGroup[]>([])
+  const [selectedGroupId, setSelectedGroupId] = useState<number | ''>('')
+
+  useEffect(() => {
+    if (!isMe) getGroups().then(setGroups)
+  }, [isMe])
 
   useEffect(() => {
     if (!isEdit) {
@@ -42,6 +50,7 @@ export default function ContactFormPage() {
       setCurrentPhotoUrl(null)
       setPhotoFile(null)
       setPhotoPreview(null)
+      setSelectedGroupId('')
       return
     }
     getContact(Number(id)).then(c => {
@@ -87,6 +96,10 @@ export default function ContactFormPage() {
       // 사진 파일이 선택된 경우 업로드
       if (photoFile) {
         await uploadPhoto(contactId, photoFile)
+      }
+      // 새 지인 추가 시 선택한 그룹에 배정
+      if (!isEdit && selectedGroupId !== '') {
+        await assignGroup(contactId, selectedGroupId)
       }
       navigate(`/contacts/${contactId}`)
     } finally {
@@ -199,6 +212,22 @@ export default function ContactFormPage() {
               style={{ ...inputStyle, resize: 'none' }}
             />
           </div>
+
+          {!isEdit && !isMe && groups.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <label style={labelStyle}>그룹</label>
+              <select
+                value={selectedGroupId}
+                onChange={e => setSelectedGroupId(e.target.value === '' ? '' : Number(e.target.value))}
+                style={{ ...inputStyle, cursor: 'pointer' }}
+              >
+                <option value="">그룹 없음</option>
+                {groups.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button

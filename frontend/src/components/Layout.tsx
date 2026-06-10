@@ -45,6 +45,7 @@ export default function Layout() {
   // 새 그룹 생성
   const [showNewGroup, setShowNewGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
+  const [newGroupError, setNewGroupError] = useState('')
 
   const newGroupInputRef = useRef<HTMLInputElement>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
@@ -92,11 +93,16 @@ export default function Layout() {
   // 새 그룹 생성
   const handleCreateGroup = async () => {
     const name = newGroupName.trim()
-    if (!name) { setShowNewGroup(false); return }
-    const created = await createGroup(name)
-    setGroups(prev => [...prev, created])
-    setNewGroupName('')
-    setShowNewGroup(false)
+    if (!name) { setShowNewGroup(false); setNewGroupError(''); return }
+    try {
+      const created = await createGroup(name)
+      setGroups(prev => [...prev, created])
+      setNewGroupName('')
+      setNewGroupError('')
+      setShowNewGroup(false)
+    } catch {
+      setNewGroupError('같은 이름의 그룹이 이미 있어요.')
+    }
   }
 
   // 드롭: 그룹 순서 재정렬
@@ -115,17 +121,6 @@ export default function Layout() {
     await reorderGroups(ordered.map(g => ({ id: g.id, sortOrder: g.sortOrder ?? 0 })))
   }
 
-  // 드래그 중 표시 순서 미리보기 (드롭 전 시각적 피드백)
-  const displayedGroups = (() => {
-    if (draggingGroupId === null || groupDragOverId === null || draggingGroupId === groupDragOverId) return groups
-    const result = [...groups]
-    const fromIdx = result.findIndex(g => g.id === draggingGroupId)
-    const toIdx = result.findIndex(g => g.id === groupDragOverId)
-    if (fromIdx === -1 || toIdx === -1) return result
-    const [moved] = result.splice(fromIdx, 1)
-    result.splice(toIdx, 0, moved)
-    return result
-  })()
 
   // 드롭: 지인을 그룹에 배정
   const handleDrop = async (target: DropTarget) => {
@@ -291,7 +286,7 @@ export default function Layout() {
           )}
 
           {/* 커스텀 그룹 목록 */}
-          {displayedGroups.map(g => {
+          {groups.map(g => {
             const members = filtered.filter(c => c.groupId === g.id)
             const isTarget = dropTarget === g.id && draggingGroupId === null
             const isGroupTarget = groupDragOverId === g.id && draggingGroupId !== null && draggingGroupId !== g.id
@@ -390,18 +385,27 @@ export default function Layout() {
           {/* 그룹 추가 */}
           <div style={{ padding: '8px 14px' }}>
             {showNewGroup ? (
-              <input
-                ref={newGroupInputRef}
-                value={newGroupName}
-                onChange={e => setNewGroupName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleCreateGroup()
-                  if (e.key === 'Escape') { setShowNewGroup(false); setNewGroupName('') }
-                }}
-                onBlur={handleCreateGroup}
-                placeholder="그룹 이름 입력..."
-                style={{ width: '100%', boxSizing: 'border-box', fontSize: 12, color: '#374151', background: '#f9fafb', border: '1px solid #6366f1', borderRadius: 6, padding: '6px 10px', outline: 'none', fontFamily: 'inherit' }}
-              />
+              <div>
+                <input
+                  ref={newGroupInputRef}
+                  value={newGroupName}
+                  onChange={e => { setNewGroupName(e.target.value); setNewGroupError('') }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleCreateGroup()
+                    if (e.key === 'Escape') { setShowNewGroup(false); setNewGroupName(''); setNewGroupError('') }
+                  }}
+                  onBlur={handleCreateGroup}
+                  placeholder="그룹 이름 입력..."
+                  style={{
+                    width: '100%', boxSizing: 'border-box', fontSize: 12, color: '#374151',
+                    background: '#f9fafb', border: `1px solid ${newGroupError ? '#ef4444' : '#6366f1'}`,
+                    borderRadius: 6, padding: '6px 10px', outline: 'none', fontFamily: 'inherit',
+                  }}
+                />
+                {newGroupError && (
+                  <p style={{ margin: '4px 0 0', fontSize: 11, color: '#ef4444' }}>{newGroupError}</p>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => setShowNewGroup(true)}

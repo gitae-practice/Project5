@@ -22,8 +22,12 @@ public class GroupController {
     }
 
     @PostMapping
-    public GroupDto.Response create(@RequestBody GroupDto.Request req) {
-        return groupService.create(req);
+    public ResponseEntity<?> create(@RequestBody GroupDto.Request req) {
+        try {
+            return ResponseEntity.ok(groupService.create(req));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")

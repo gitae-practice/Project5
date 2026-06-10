@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ContactGroupRepository extends JpaRepository<ContactGroup, Long> {
     List<ContactGroup> findAllByOrderBySortOrderAsc();
+
+    boolean existsByNameIgnoreCase(String name);
 }
