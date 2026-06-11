@@ -31,6 +31,8 @@ export default function Layout() {
 
   // 그룹 접기/펼치기 (key: groupId or 'ungrouped')
   const [collapsed, setCollapsed] = useState<Record<string | number, boolean>>({})
+  // 그룹 삭제 확인 모달
+  const [deleteTarget, setDeleteTarget] = useState<ContactGroup | null>(null)
   // 지인 드래그 상태
   const [draggingId, setDraggingId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget>(null)
@@ -73,11 +75,20 @@ export default function Layout() {
   )
   const ungrouped = filtered.filter(c => c.groupId == null)
 
-  // 그룹 삭제 시 미분류로 이동되므로 contacts도 업데이트 필요
-  const handleDeleteGroup = async (g: ContactGroup) => {
-    if (!confirm(`"${g.name}" 그룹을 삭제할까요? 지인들은 미분류로 이동돼요.`)) return
-    await deleteGroup(g.id)
-    setContacts(prev => prev.map(c => c.groupId === g.id ? { ...c, groupId: null } : c))
+  const handleDeleteGroup = (g: ContactGroup) => {
+    setDeleteTarget(g)
+  }
+
+  const confirmDeleteGroup = async (withContacts: boolean) => {
+    if (!deleteTarget) return
+    const g = deleteTarget
+    setDeleteTarget(null)
+    await deleteGroup(g.id, withContacts)
+    if (withContacts) {
+      setContacts(prev => prev.filter(c => c.groupId !== g.id))
+    } else {
+      setContacts(prev => prev.map(c => c.groupId === g.id ? { ...c, groupId: null } : c))
+    }
     setGroups(prev => prev.filter(x => x.id !== g.id))
   }
 
@@ -431,6 +442,88 @@ export default function Layout() {
       </main>
 
       <IntersectPanel open={intersectOpen} onClose={() => setIntersectOpen(false)} />
+
+      {/* 그룹 삭제 확인 모달 */}
+      {deleteTarget && (
+        <div
+          onClick={() => setDeleteTarget(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeIn 0.15s ease-out',
+          }}
+        >
+          <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }`}</style>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff', borderRadius: 10, padding: '28px 28px 24px',
+              width: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+              animation: 'fadeIn 0.15s ease-out',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 20 }}>🗑️</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>
+                "{deleteTarget.name}" 그룹 삭제
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.6 }}>
+              소속 지인을 어떻게 처리할까요?
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              <button
+                onClick={() => confirmDeleteGroup(false)}
+                style={{
+                  padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                  color: '#374151', background: '#f9fafb',
+                  border: '1px solid #e5e7eb', borderRadius: 8,
+                  cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                  transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f9fafb')}
+              >
+                📂 소속 지인을 미분류로 이동
+                <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400, marginTop: 2 }}>
+                  지인은 그대로 유지되고 그룹만 삭제돼요
+                </div>
+              </button>
+
+              <button
+                onClick={() => confirmDeleteGroup(true)}
+                style={{
+                  padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                  color: '#fff', background: '#ef4444',
+                  border: '1px solid #ef4444', borderRadius: 8,
+                  cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                  transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#dc2626')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#ef4444')}
+              >
+                🗑️ 지인도 함께 삭제
+                <div style={{ fontSize: 11, color: '#fecaca', fontWeight: 400, marginTop: 2 }}>
+                  그룹과 소속 지인이 모두 삭제돼요
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setDeleteTarget(null)}
+              style={{
+                width: '100%', padding: '8px', fontSize: 13, color: '#9ca3af',
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

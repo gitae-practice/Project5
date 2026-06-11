@@ -12,8 +12,8 @@ export const createGroup = (name: string) =>
 export const updateGroup = (id: number, name: string) =>
   api.put<ContactGroup>(`/groups/${id}`, { name }).then(r => r.data)
 
-export const deleteGroup = (id: number) =>
-  api.delete(`/groups/${id}`)
+export const deleteGroup = (id: number, deleteContacts = false) =>
+  api.delete(`/groups/${id}`, { params: { deleteContacts } })
 
 export const assignGroup = (contactId: number, groupId: number | null) =>
   api.patch(`/contacts/${contactId}/group`, { groupId })

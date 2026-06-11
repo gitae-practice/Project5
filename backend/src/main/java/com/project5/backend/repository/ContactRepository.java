@@ -11,4 +11,6 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
     List<Contact> findByMeOrderByNameAsc(boolean me);
     // 그룹 삭제 시 해당 그룹 지인들 미분류 처리
     List<Contact> findByGroupId(Long groupId);
+    // 그룹 삭제 시 소속 지인 일괄 삭제
+    void deleteAllByGroupId(Long groupId);
 }

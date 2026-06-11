@@ -54,9 +54,14 @@ public class GroupService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        // 해당 그룹에 속한 지인들을 미분류(null)로 변경
-        contactRepository.findByGroupId(id).forEach(c -> c.setGroup(null));
+    public void delete(Long id, boolean deleteContacts) {
+        if (deleteContacts) {
+            // 소속 지인도 함께 삭제
+            contactRepository.deleteAllByGroupId(id);
+        } else {
+            // 소속 지인을 미분류로 이동
+            contactRepository.findByGroupId(id).forEach(c -> c.setGroup(null));
+        }
         groupRepository.deleteById(id);
     }
 }
