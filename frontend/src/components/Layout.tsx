@@ -76,12 +76,17 @@ export default function Layout() {
   const ungrouped = filtered.filter(c => c.groupId == null)
 
   const handleDeleteGroup = (g: ContactGroup) => {
+    const hasMembers = contacts.some(c => c.groupId === g.id)
+    if (!hasMembers) {
+      confirmDeleteGroup(false, g)
+      return
+    }
     setDeleteTarget(g)
   }
 
-  const confirmDeleteGroup = async (withContacts: boolean) => {
-    if (!deleteTarget) return
-    const g = deleteTarget
+  const confirmDeleteGroup = async (withContacts: boolean, target?: ContactGroup) => {
+    const g = target ?? deleteTarget
+    if (!g) return
     setDeleteTarget(null)
     await deleteGroup(g.id, withContacts)
     if (withContacts) {
