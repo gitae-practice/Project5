@@ -5,144 +5,189 @@ interface Props {
   meetings: Meeting[]
 }
 
-const CELL = 11
-const GAP = 2
-const WEEK_W = CELL + GAP
+const MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
-// 색상 단계: 0회, 1회, 2회, 3회+
-const COLOR = ['#ebedf0', '#9be9a8', '#40c463', '#216e39']
+function getDotStyle(count: number): React.CSSProperties {
+  if (count === 0) return {}
+  const bg = count === 1 ? '#fde68a' : count === 2 ? '#fb923c' : '#ea580c'
+  const size = count === 1 ? 28 : count === 2 ? 30 : 32
+  return {
+    background: bg,
+    width: size, height: size,
+    borderRadius: '50%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    boxShadow: count >= 3 ? '0 2px 6px rgba(234,88,12,0.35)' : 'none',
+  }
+}
 
-function getColor(count: number) {
-  if (count === 0) return COLOR[0]
-  if (count === 1) return COLOR[1]
-  if (count === 2) return COLOR[2]
-  return COLOR[3]
+function getMeetingBadge(count: number): React.CSSProperties {
+  if (count === 0) return { display: 'none' }
+  const bg = count === 1 ? '#fbbf24' : count === 2 ? '#f97316' : '#dc2626'
+  return {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    minWidth: 18, height: 18, borderRadius: 9,
+    background: bg, color: '#fff',
+    fontSize: 10, fontWeight: 700, padding: '0 5px',
+    marginLeft: 6,
+  }
 }
 
 export default function MeetingHeatmap({ meetings }: Props) {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null)
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
 
-  const { weeks, monthLabels } = useMemo(() => {
-    // 오늘 기준 52주(364일) 전 일요일부터 시작
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const startDate = new Date(today)
-    startDate.setDate(today.getDate() - 363 - today.getDay())
-
-    // 날짜별 만남 횟수 집계
+  const { months, totalCount } = useMemo(() => {
     const countMap: Record<string, number> = {}
     for (const m of meetings) {
       const d = m.date.slice(0, 10)
       countMap[d] = (countMap[d] ?? 0) + 1
     }
 
-    // 주 배열 구성
-    const weeksArr: { date: Date; count: number }[][] = []
-    let cur = new Date(startDate)
-    while (cur <= today) {
-      const week: { date: Date; count: number }[] = []
-      for (let d = 0; d < 7; d++) {
-        const key = cur.toISOString().slice(0, 10)
-        week.push({ date: new Date(cur), count: cur <= today ? (countMap[key] ?? 0) : -1 })
-        cur.setDate(cur.getDate() + 1)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const result = []
+
+    // 최근 6개월 (이번달 포함)
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+      const year = d.getFullYear()
+      const month = d.getMonth()
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      const firstDow = new Date(year, month, 1).getDay() // 0=일
+
+      const days: { day: number; count: number; dateStr: string; isToday: boolean; isFuture: boolean }[] = []
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        const cellDate = new Date(year, month, day)
+        days.push({
+          day,
+          count: countMap[dateStr] ?? 0,
+          dateStr,
+          isToday: cellDate.getTime() === today.getTime(),
+          isFuture: cellDate > today,
+        })
       }
-      weeksArr.push(week)
+
+      const monthTotal = days.reduce((s, d) => s + d.count, 0)
+      result.push({ year, month, firstDow, days, monthTotal })
     }
 
-    // 월 레이블 계산 (각 월의 첫 주 인덱스)
-    const labels: { label: string; x: number }[] = []
-    let lastMonth = -1
-    weeksArr.forEach((week, wi) => {
-      const firstDay = week.find(d => d.count >= 0)?.date ?? week[0].date
-      const m = firstDay.getMonth()
-      if (m !== lastMonth) {
-        labels.push({ label: `${m + 1}월`, x: wi * WEEK_W })
-        lastMonth = m
-      }
-    })
-
-    return { weeks: weeksArr, monthLabels: labels }
+    const totalCount = result.reduce((s, m) => s + m.monthTotal, 0)
+    return { months: result, totalCount }
   }, [meetings])
-
-  const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
-  const svgW = weeks.length * WEEK_W
-  const svgH = 7 * WEEK_W
 
   return (
     <div style={{
       background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
-      padding: '16px 20px', marginBottom: 20, position: 'relative',
+      padding: '18px 20px', marginBottom: 20,
     }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 12 }}>
-        최근 1년 만남
+      {/* 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, gap: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>최근 6개월 만남</span>
+        <span style={{
+          fontSize: 11, fontWeight: 700, color: '#fff',
+          background: totalCount > 0 ? '#ea580c' : '#d1d5db',
+          borderRadius: 10, padding: '1px 8px',
+        }}>
+          총 {totalCount}회
+        </span>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        {/* 요일 레이블 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: GAP, paddingTop: 18 }}>
-          {DAY_LABELS.map((d, i) => (
-            <div key={d} style={{
-              height: CELL, fontSize: 9, color: '#9ca3af',
-              lineHeight: `${CELL}px`, opacity: i % 2 === 1 ? 1 : 0,
-            }}>
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* 히트맵 본체 */}
-        <div style={{ overflow: 'auto' }}>
-          {/* 월 레이블 */}
-          <div style={{ position: 'relative', height: 16, width: svgW }}>
-            {monthLabels.map(({ label, x }) => (
-              <span key={label + x} style={{
-                position: 'absolute', left: x, fontSize: 9, color: '#6b7280', whiteSpace: 'nowrap',
-              }}>
-                {label}
+      {/* 캘린더 카드 그리드 */}
+      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+        {months.map(({ year, month, firstDow, days, monthTotal }) => (
+          <div key={`${year}-${month}`} style={{
+            flex: '0 0 148px',
+            border: '1px solid #f3f4f6',
+            borderRadius: 8, padding: '10px 8px',
+            background: '#fafafa',
+          }}>
+            {/* 월 헤더 */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#374151' }}>
+                {year !== new Date().getFullYear() ? `${year}.` : ''}{MONTH_LABELS[month]}
               </span>
-            ))}
-          </div>
+              {monthTotal > 0 && (
+                <span style={getMeetingBadge(Math.min(monthTotal, 3))}>{monthTotal}</span>
+              )}
+            </div>
 
-          {/* 셀 그리드 */}
-          <svg width={svgW} height={svgH}>
-            {weeks.map((week, wi) =>
-              week.map((cell, di) => {
-                if (cell.count < 0) return null
-                const x = wi * WEEK_W
-                const y = di * WEEK_W
-                const dateStr = cell.date.toISOString().slice(0, 10).replace(/-/g, '.')
-                return (
-                  <rect
-                    key={`${wi}-${di}`}
-                    x={x} y={y} width={CELL} height={CELL} rx={2}
-                    fill={getColor(cell.count)}
-                    style={{ cursor: cell.count > 0 ? 'pointer' : 'default' }}
-                    onMouseEnter={e => {
-                      const rect = (e.target as SVGRectElement).getBoundingClientRect()
-                      setTooltip({
-                        x: rect.left + window.scrollX + CELL / 2,
-                        y: rect.top + window.scrollY - 8,
-                        text: cell.count > 0
-                          ? `${dateStr} · 만남 ${cell.count}건`
-                          : `${dateStr} · 만남 없음`,
-                      })
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
-                  />
-                )
-              })
-            )}
-          </svg>
-        </div>
+            {/* 요일 헤더 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
+              {DAY_LABELS.map((d, i) => (
+                <div key={d} style={{
+                  fontSize: 8, fontWeight: 600, textAlign: 'center',
+                  color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : '#9ca3af',
+                  padding: '1px 0',
+                }}>
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* 날짜 그리드 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
+              {/* 첫째 날 전 빈 칸 */}
+              {Array.from({ length: firstDow }).map((_, i) => (
+                <div key={`empty-${i}`} />
+              ))}
+              {days.map(({ day, count, dateStr, isToday, isFuture }) => (
+                <div
+                  key={dateStr}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    height: 20, position: 'relative',
+                  }}
+                  onMouseEnter={e => {
+                    if (isFuture) return
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setTooltip({
+                      x: rect.left + rect.width / 2,
+                      y: rect.top - 6,
+                      text: count > 0 ? `${dateStr} · ${count}회` : `${dateStr} · 없음`,
+                    })
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                >
+                  <div style={{
+                    ...getDotStyle(count),
+                    width: count > 0 ? undefined : 20,
+                    height: count > 0 ? undefined : 20,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    outline: isToday ? '2px solid #6366f1' : 'none',
+                    outlineOffset: 1,
+                    borderRadius: '50%',
+                    cursor: count > 0 ? 'pointer' : 'default',
+                  }}>
+                    <span style={{
+                      fontSize: 9,
+                      fontWeight: isToday ? 800 : count > 0 ? 700 : 400,
+                      color: count >= 2 ? '#fff' : count === 1 ? '#92400e' : isFuture ? '#d1d5db' : '#6b7280',
+                      lineHeight: 1,
+                    }}>
+                      {day}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 범례 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, justifyContent: 'flex-end' }}>
-        <span style={{ fontSize: 9, color: '#9ca3af' }}>적음</span>
-        {COLOR.map(c => (
-          <div key={c} style={{ width: CELL, height: CELL, borderRadius: 2, background: c }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, justifyContent: 'flex-end' }}>
+        {[
+          { label: '만남 없음', color: '#e5e7eb' },
+          { label: '1회', color: '#fde68a' },
+          { label: '2회', color: '#fb923c' },
+          { label: '3회+', color: '#ea580c' },
+        ].map(({ label, color }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: color }} />
+            <span style={{ fontSize: 9, color: '#9ca3af' }}>{label}</span>
+          </div>
         ))}
-        <span style={{ fontSize: 9, color: '#9ca3af' }}>많음</span>
       </div>
 
       {/* 툴팁 */}
