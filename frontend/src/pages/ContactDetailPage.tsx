@@ -12,6 +12,7 @@ import PlaceTagList from '../components/PlaceTagList'
 import ConfirmModal from '../components/ConfirmModal'
 import MeetingMap from '../components/MeetingMap'
 import MeetingCalendar from '../components/MeetingCalendar'
+import MeetingHeatmap from '../components/MeetingHeatmap'
 
 type Tab = 'preference' | 'gift' | 'meeting'
 
@@ -512,6 +513,9 @@ export default function ContactDetailPage() {
                   </div>
                 </form>
               )}
+
+              {/* 히트맵 */}
+              <MeetingHeatmap meetings={meetings} />
 
               {/* 2열 레이아웃: 달력(왼쪽) + 지도(오른쪽) */}
               <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
