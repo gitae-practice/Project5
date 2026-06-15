@@ -3,6 +3,8 @@ import type { Meeting } from '../types'
 
 interface Props {
   meetings: Meeting[]
+  selectedRange?: { start: string; end: string }
+  onPointClick?: (startDate: string, endDate: string, label: string) => void
 }
 
 type FilterMode = 'year' | 'month' | 'week'
@@ -182,7 +184,7 @@ const FILTER_TITLE: Record<FilterMode, string> = {
   week: '이번 주',
 }
 
-export default function MeetingHeatmap({ meetings }: Props) {
+export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [filter, setFilter] = useState<FilterMode>('year')
 
@@ -335,14 +337,32 @@ export default function MeetingHeatmap({ meetings }: Props) {
           )
         })}
 
+        {/* 선택된 포인트 하이라이트 링 */}
+        {selectedRange && pts.map(([x, y], i) => {
+          const p = points[i]
+          const s = p.startDate.toISOString().slice(0, 10)
+          const e = p.endDate.toISOString().slice(0, 10)
+          if (s !== selectedRange.start || e !== selectedRange.end) return null
+          return (
+            <circle key={`sel-${i}`} cx={x} cy={y} r={7}
+              fill="none" stroke="#ea580c" strokeWidth="2" opacity="0.8" />
+          )
+        })}
+
         {/* 인터랙션 오버레이 */}
         {pts.map(([x], i) => {
           const slotW = N > 1 ? IW / N : IW
+          const p = points[i]
           return (
             <rect key={i} x={x - slotW / 2} y={PT} width={slotW} height={IH}
-              fill="transparent" style={{ cursor: 'crosshair' }}
+              fill="transparent" style={{ cursor: onPointClick ? 'pointer' : 'crosshair' }}
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
+              onClick={() => onPointClick?.(
+                p.startDate.toISOString().slice(0, 10),
+                p.endDate.toISOString().slice(0, 10),
+                p.label,
+              )}
             />
           )
         })}

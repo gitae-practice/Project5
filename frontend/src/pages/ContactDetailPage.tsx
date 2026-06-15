@@ -87,6 +87,7 @@ export default function ContactDetailPage() {
   const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(
     searchParams.get('date') ?? today
   )
+  const [heatmapFilter, setHeatmapFilter] = useState<{ start: string; end: string; label: string } | null>(null)
 
   useEffect(() => {
     getContact(contactId).then(setContact)
@@ -515,7 +516,14 @@ export default function ContactDetailPage() {
               )}
 
               {/* 히트맵 */}
-              <MeetingHeatmap meetings={meetings} />
+              <MeetingHeatmap
+                meetings={meetings}
+                selectedRange={heatmapFilter ?? undefined}
+                onPointClick={(start, end, label) => {
+                  setHeatmapFilter({ start, end, label })
+                  setSelectedMeetingDate(null)
+                }}
+              />
 
               {/* 2열 레이아웃: 달력(왼쪽) + 지도(오른쪽) */}
               <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
@@ -524,7 +532,10 @@ export default function ContactDetailPage() {
                   <MeetingCalendar
                     meetings={meetings}
                     selectedDate={selectedMeetingDate}
-                    onDateSelect={setSelectedMeetingDate}
+                    onDateSelect={date => {
+                      setSelectedMeetingDate(date)
+                      setHeatmapFilter(null)
+                    }}
                   />
 
                   {meetings.length === 0 ? (
@@ -533,30 +544,40 @@ export default function ContactDetailPage() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {/* 날짜 선택 시 필터 표시 */}
-                      {selectedMeetingDate && (
+                      {/* 날짜/기간 필터 표시 */}
+                      {(selectedMeetingDate || heatmapFilter) && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: '#3b82f6', fontWeight: 600 }}>{selectedMeetingDate} 만남</span>
+                          <span style={{ fontSize: 12, color: '#3b82f6', fontWeight: 600 }}>
+                            {heatmapFilter ? heatmapFilter.label : selectedMeetingDate} 만남
+                          </span>
                           <button
-                            onClick={() => setSelectedMeetingDate(null)}
+                            onClick={() => { setSelectedMeetingDate(null); setHeatmapFilter(null) }}
                             style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                           >
                             전체보기
                           </button>
                         </div>
                       )}
-                      {(selectedMeetingDate
-                        ? meetings.filter(m => m.date === selectedMeetingDate)
-                        : meetings
-                      ).length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '20px 0', color: '#9ca3af', fontSize: 13 }}>
-                          이 날 만남 기록이 없어요
-                        </div>
-                      )}
-                      {(selectedMeetingDate
-                        ? meetings.filter(m => m.date === selectedMeetingDate)
-                        : meetings
-                      ).map(m => (
+                      {(() => {
+                        const filtered = heatmapFilter
+                          ? meetings.filter(m => m.date >= heatmapFilter.start && m.date <= heatmapFilter.end)
+                          : selectedMeetingDate
+                          ? meetings.filter(m => m.date === selectedMeetingDate)
+                          : meetings
+                        return filtered.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '20px 0', color: '#9ca3af', fontSize: 13 }}>
+                            {heatmapFilter || selectedMeetingDate ? '이 기간 만남 기록이 없어요' : '아직 만남 기록이 없어요'}
+                          </div>
+                        ) : null
+                      })()}
+                      {(() => {
+                        const filtered = heatmapFilter
+                          ? meetings.filter(m => m.date >= heatmapFilter.start && m.date <= heatmapFilter.end)
+                          : selectedMeetingDate
+                          ? meetings.filter(m => m.date === selectedMeetingDate)
+                          : meetings
+                        return filtered
+                      })().map(m => (
                         <div key={m.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
                           {editingMeetingId === m.id ? (
                             /* 인라인 수정 폼 */
