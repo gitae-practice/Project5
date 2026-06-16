@@ -46,6 +46,25 @@ const REL_COLORS: Record<string, { bg: string; color: string }> = {
   기타: { bg: '#f9fafb', color: '#4b5563' },
 }
 
+const REL_GRADIENT: Record<string, string> = {
+  친구: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+  가족: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+  직장: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+  연인: 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)',
+  지인: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+  기타: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+}
+
+const PREF_ICONS: Record<PreferenceType, string> = {
+  FOOD_LIKE: '🍽️',
+  FOOD_DISLIKE: '🚫',
+  ALLERGY: '⚠️',
+  INTEREST: '🎯',
+  BRAND: '🏷️',
+  DISLIKE: '👎',
+  ETC: '💬',
+}
+
 const inputStyle: React.CSSProperties = {
   border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px',
   fontSize: 13, outline: 'none', fontFamily: 'inherit', color: '#111',
@@ -206,50 +225,87 @@ export default function ContactDetailPage() {
         />
       )}
       {/* 프로필 헤더 */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '24px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 800 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%',
-              background: relStyle.bg, color: relStyle.color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, fontWeight: 700, flexShrink: 0,
-              overflow: 'hidden',
-            }}>
-              {contact.photoUrl
-                ? <img src={contact.photoUrl} alt={contact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : contact.name[0]
-              }
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#111' }}>{contact.name}</h2>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
-                  background: relStyle.bg, color: relStyle.color,
-                }}>
-                  {contact.isMe ? '내 정보' : contact.relationship}
-                </span>
+      <div style={{
+        background: contact.isMe ? 'linear-gradient(135deg, #1f2937 0%, #374151 100%)' : (REL_GRADIENT[contact.relationship] ?? REL_GRADIENT['기타']),
+        borderBottom: '1px solid #e5e7eb',
+        padding: '28px 32px 0',
+      }}>
+        <div style={{ maxWidth: 800 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%',
+                background: contact.isMe ? '#4b5563' : relStyle.bg,
+                color: contact.isMe ? '#fff' : relStyle.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 24, fontWeight: 700, flexShrink: 0,
+                overflow: 'hidden',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+                border: '3px solid rgba(255,255,255,0.8)',
+              }}>
+                {contact.photoUrl
+                  ? <img src={contact.photoUrl} alt={contact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : contact.name[0]
+                }
               </div>
-              <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#6b7280' }}>
-                {contact.birthday && <span>생일 {contact.birthday}</span>}
-                {daysSince !== null && (
-                  <span>마지막 만남 {daysSince === 0 ? '오늘' : `${daysSince}일 전`}</span>
-                )}
-                {contact.memo && <span>{contact.memo}</span>}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: contact.isMe ? '#fff' : '#111' }}>{contact.name}</h2>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20,
+                    background: contact.isMe ? 'rgba(255,255,255,0.2)' : relStyle.bg,
+                    color: contact.isMe ? '#fff' : relStyle.color,
+                    border: contact.isMe ? '1px solid rgba(255,255,255,0.3)' : `1px solid ${relStyle.bg}`,
+                  }}>
+                    {contact.isMe ? '내 정보' : contact.relationship}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 14, fontSize: 12, color: contact.isMe ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
+                  {contact.birthday && <span>🎂 생일 {contact.birthday}</span>}
+                  {daysSince !== null && (
+                    <span>📅 마지막 만남 {daysSince === 0 ? '오늘' : `${daysSince}일 전`}</span>
+                  )}
+                  {contact.memo && <span>{contact.memo}</span>}
+                </div>
               </div>
             </div>
+            <button
+              onClick={() => navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)}
+              style={{
+                fontSize: 13, fontWeight: 600,
+                color: contact.isMe ? '#fff' : '#374151',
+                background: contact.isMe ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.8)',
+                border: contact.isMe ? '1px solid rgba(255,255,255,0.3)' : '1px solid #e5e7eb',
+                borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit',
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              수정
+            </button>
           </div>
-          <button
-            onClick={() => navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)}
-            style={{
-              fontSize: 13, color: '#374151', background: '#fff',
-              border: '1px solid #e5e7eb', borderRadius: 6,
-              padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            수정
-          </button>
+
+          {/* 통계 바 */}
+          {!contact.isMe && (
+            <div style={{
+              display: 'flex', gap: 0,
+              borderTop: '1px solid rgba(0,0,0,0.06)',
+            }}>
+              {[
+                { label: '만남', value: meetings.length, unit: '회' },
+                { label: '선물', value: gifts.length, unit: '건' },
+                { label: '취향', value: contact.preferences.length, unit: '개' },
+              ].map((s, i) => (
+                <div key={s.label} style={{
+                  padding: '12px 24px 12px 0', marginRight: 24,
+                  borderRight: i < 2 ? '1px solid rgba(0,0,0,0.08)' : 'none',
+                  paddingRight: i < 2 ? 24 : 0,
+                }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>{s.value}<span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af', marginLeft: 2 }}>{s.unit}</span></div>
+                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -319,22 +375,34 @@ export default function ContactDetailPage() {
                   아직 취향 정보가 없어요
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   {(Object.keys(PREF_LABELS) as PreferenceType[]).map(type => {
                     const items = contact.preferences.filter(p => p.type === type)
                     if (items.length === 0) return null
                     const cs = PREF_COLORS[type]
                     return (
-                      <div key={type}>
-                        <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8 }}>
-                          {PREF_LABELS[type]}
-                        </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <div key={type} style={{
+                        background: cs.bg,
+                        border: `1px solid ${cs.border}`,
+                        borderRadius: 10, padding: '14px 16px',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                          <span style={{ fontSize: 15 }}>{PREF_ICONS[type]}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: cs.color, letterSpacing: '0.03em' }}>
+                            {PREF_LABELS[type]}
+                          </span>
+                          <span style={{ fontSize: 10, color: cs.color, opacity: 0.6, marginLeft: 'auto' }}>
+                            {items.length}개
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                           {items.map(p => (
                             <span key={p.id} style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 6,
-                              fontSize: 13, padding: '5px 10px', borderRadius: 6,
-                              background: cs.bg, color: cs.color, border: `1px solid ${cs.border}`,
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
+                              fontSize: 12, padding: '4px 10px', borderRadius: 20,
+                              background: '#fff', color: cs.color,
+                              border: `1px solid ${cs.border}`,
+                              fontWeight: 500,
                             }}>
                               {p.value}
                               <button
@@ -342,7 +410,7 @@ export default function ContactDetailPage() {
                                   deletePreference(p.id)
                                   setContact(prev => prev ? { ...prev, preferences: prev.preferences.filter(x => x.id !== p.id) } : prev)
                                 }}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.5, padding: 0, fontSize: 12, lineHeight: 1 }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.4, padding: 0, fontSize: 11, lineHeight: 1 }}
                               >✕</button>
                             </span>
                           ))}
@@ -402,20 +470,40 @@ export default function ContactDetailPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {gifts.map(g => (
                     <div key={g.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 16px',
+                      display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                      background: g.isWishlist ? 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)' : '#fff',
+                      border: `1px solid ${g.isWishlist ? '#f5d0fe' : '#e5e7eb'}`,
+                      borderRadius: 10, padding: '14px 16px',
                     }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>{g.item}</span>
-                          {g.isWishlist && <span style={{ fontSize: 11, background: '#fdf2f8', color: '#be185d', border: '1px solid #fbcfe8', borderRadius: 4, padding: '1px 6px' }}>위시</span>}
-                          {g.occasion && <span style={{ fontSize: 12, color: '#9ca3af' }}>{g.occasion}</span>}
+                      <div style={{ display: 'flex', gap: 12, flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                          background: g.isWishlist ? '#fce7f3' : '#f9fafb',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 18,
+                        }}>
+                          {g.isWishlist ? '🎀' : '🎁'}
                         </div>
-                        <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
-                          {[g.date, g.price ? `${g.price.toLocaleString()}원` : null].filter(Boolean).join(' · ')}
-                        </p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{g.item}</span>
+                            {g.isWishlist && (
+                              <span style={{ fontSize: 10, fontWeight: 700, background: '#be185d', color: '#fff', borderRadius: 20, padding: '2px 7px' }}>위시리스트</span>
+                            )}
+                            {g.occasion && (
+                              <span style={{ fontSize: 11, background: '#f3f4f6', color: '#6b7280', borderRadius: 20, padding: '2px 8px' }}>{g.occasion}</span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#9ca3af' }}>
+                            {g.date && <span>📅 {g.date}</span>}
+                            {g.price && <span style={{ color: '#059669', fontWeight: 600 }}>₩ {g.price.toLocaleString()}</span>}
+                          </div>
+                        </div>
                       </div>
-                      <button onClick={() => deleteGift(g.id).then(() => setGifts(prev => prev.filter(x => x.id !== g.id)))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14 }}>✕</button>
+                      <button
+                        onClick={() => deleteGift(g.id).then(() => setGifts(prev => prev.filter(x => x.id !== g.id)))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '0 0 0 8px', flexShrink: 0 }}
+                      >✕</button>
                     </div>
                   ))}
                 </div>

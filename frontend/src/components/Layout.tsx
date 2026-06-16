@@ -179,19 +179,22 @@ export default function Layout() {
         onClick={() => navigate(`/contacts/${c.id}`)}
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
-          padding: '8px 14px', cursor: 'pointer',
-          background: isActive ? '#f3f4f6' : 'transparent',
+          padding: '8px 12px', margin: '1px 8px', borderRadius: 8,
+          cursor: 'pointer',
+          background: isActive ? color + '18' : 'transparent',
+          borderLeft: isActive ? `3px solid ${color}` : '3px solid transparent',
           opacity: draggingId === c.id ? 0.4 : 1,
-          transition: 'background 0.1s, opacity 0.15s',
+          transition: 'background 0.12s, border-color 0.12s, opacity 0.15s',
         }}
         onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f9fafb' }}
-        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = isActive ? '#f3f4f6' : 'transparent' }}
+        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
         <div style={{
-          width: 36, height: 36, borderRadius: '50%',
-          background: color + '22', color,
+          width: 34, height: 34, borderRadius: '50%',
+          background: color + '20', color,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14, fontWeight: 700, flexShrink: 0, overflow: 'hidden',
+          fontSize: 13, fontWeight: 700, flexShrink: 0, overflow: 'hidden',
+          border: `1.5px solid ${color}40`,
           pointerEvents: 'none',
         }}>
           {c.photoUrl
@@ -200,17 +203,28 @@ export default function Layout() {
           }
         </div>
         <div style={{ flex: 1, minWidth: 0, pointerEvents: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {c.name}
             </span>
-            {dday && <span style={{ fontSize: 11, color: '#ec4899', flexShrink: 0 }}>{dday}</span>}
+            {dday && (
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: '#fff',
+                background: dday === 'D-Day' ? '#ec4899' : '#f472b6',
+                borderRadius: 20, padding: '1px 5px', flexShrink: 0,
+              }}>{dday}</span>
+            )}
           </div>
-          <span style={{ fontSize: 11, color }}>{c.relationship}</span>
+          <span style={{
+            fontSize: 10, fontWeight: 600, color,
+            background: color + '15', borderRadius: 4, padding: '1px 5px',
+          }}>{c.relationship}</span>
         </div>
         <button
           onClick={e => handleDelete(e, c.id)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '2px 4px', flexShrink: 0 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 13, padding: '2px 4px', flexShrink: 0, opacity: 0 }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '0'}
         >✕</button>
       </div>
     )
