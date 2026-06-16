@@ -186,7 +186,7 @@ export default function Layout() {
           opacity: draggingId === c.id ? 0.4 : 1,
           transition: 'background 0.12s, border-color 0.12s, opacity 0.15s',
         }}
-        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = '#1e293b' }}
+        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f1f5f9' }}
         onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
         <div style={{
@@ -204,7 +204,7 @@ export default function Layout() {
         </div>
         <div style={{ flex: 1, minWidth: 0, pointerEvents: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {c.name}
             </span>
             {dday && (
@@ -231,31 +231,31 @@ export default function Layout() {
   }
 
   // 섹션 헤더 (미분류 / 커스텀 그룹 공통)
-  const sectionHeaderStyle = (isTarget: boolean, color = '#334155'): React.CSSProperties => ({
+  const sectionHeaderStyle = (isTarget: boolean, color = '#d1d5db'): React.CSSProperties => ({
     padding: '10px 14px 4px',
     display: 'flex', alignItems: 'center', gap: 8,
     cursor: 'pointer', userSelect: 'none',
     borderLeft: isTarget ? `3px solid ${color}` : '3px solid transparent',
-    background: isTarget ? color + '30' : 'transparent',
+    background: isTarget ? color + '20' : 'transparent',
     transition: 'background 0.1s, border-color 0.1s',
   })
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f5f5' }}>
-      <aside style={{ width: 260, flexShrink: 0, background: '#0f172a', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <aside style={{ width: 260, flexShrink: 0, background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* 헤더 */}
-        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #1e293b' }}>
+        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span onClick={() => navigate('/')} style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', cursor: 'pointer', letterSpacing: '-0.3px' }}>알쓸지인</span>
-            <button onClick={() => navigate('/contacts/new')} style={{ fontSize: 12, fontWeight: 600, color: '#0f172a', background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer' }}>
+            <span onClick={() => navigate('/')} style={{ fontSize: 15, fontWeight: 700, color: '#111', cursor: 'pointer', letterSpacing: '-0.3px' }}>알쓸지인</span>
+            <button onClick={() => navigate('/contacts/new')} style={{ fontSize: 12, fontWeight: 600, color: '#fff', background: '#111', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer' }}>
               + 추가
             </button>
           </div>
           <input
             type="text" value={query} onChange={e => setQuery(e.target.value)}
             placeholder="이름, 관계 검색..."
-            style={{ width: '100%', boxSizing: 'border-box', fontSize: 13, color: '#f1f5f9', background: '#1e293b', border: '1px solid #334155', borderRadius: 6, padding: '7px 10px', outline: 'none' }}
+            style={{ width: '100%', boxSizing: 'border-box', fontSize: 13, color: '#374151', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, padding: '7px 10px', outline: 'none' }}
           />
         </div>
 
@@ -264,29 +264,29 @@ export default function Layout() {
 
           {/* 나 섹션 */}
           <div style={{ padding: '8px 14px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: '0.06em' }}>나</span>
-            <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}>나</span>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
           </div>
 
           {meContact ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', margin: '1px 8px', borderRadius: 8, background: activeId === String(meContact.id) ? '#1e293b' : 'transparent' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', margin: '1px 8px', borderRadius: 8, background: activeId === String(meContact.id) ? '#e2e8f0' : 'transparent' }}>
               <div onClick={() => navigate(`/contacts/${meContact.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer', minWidth: 0 }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#334155', color: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, overflow: 'hidden', border: '1.5px solid #475569' }}>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, overflow: 'hidden', border: '1.5px solid #374151' }}>
                   {meContact.photoUrl ? <img src={meContact.photoUrl} alt={meContact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '⭐'}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meContact.name}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>내 정보</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meContact.name}</div>
+                  <div style={{ fontSize: 11, color: '#9ca3af' }}>내 정보</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                <button onClick={() => navigate(`/contacts/${meContact.id}/edit?me=true`)} style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: '1px solid #334155', borderRadius: 5, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>수정</button>
-                <button onClick={e => handleDelete(e, meContact.id)} style={{ fontSize: 11, color: '#f87171', background: 'none', border: '1px solid #7f1d1d', borderRadius: 5, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>삭제</button>
+                <button onClick={() => navigate(`/contacts/${meContact.id}/edit?me=true`)} style={{ fontSize: 11, color: '#6b7280', background: 'none', border: '1px solid #e2e8f0', borderRadius: 5, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>수정</button>
+                <button onClick={e => handleDelete(e, meContact.id)} style={{ fontSize: 11, color: '#ef4444', background: 'none', border: '1px solid #fecaca', borderRadius: 5, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>삭제</button>
               </div>
             </div>
           ) : (
-            <div onClick={() => navigate('/contacts/new?me=true')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', cursor: 'pointer', color: '#64748b' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1e293b'}
+            <div onClick={() => navigate('/contacts/new?me=true')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', cursor: 'pointer', color: '#9ca3af' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f1f5f9'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
             >
               <span style={{ fontSize: 14 }}>⭐</span>
@@ -301,10 +301,10 @@ export default function Layout() {
                 onClick={() => setCollapsed(p => ({ ...p, ungrouped: !p.ungrouped }))}
                 style={sectionHeaderStyle(dropTarget === 'ungrouped')}
               >
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b', letterSpacing: '0.06em' }}>미분류</span>
-                <span style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>{ungrouped.length}</span>
-                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
-                <span style={{ fontSize: 9, color: '#475569' }}>{collapsed.ungrouped ? '▶' : '▼'}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}>미분류</span>
+                <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>{ungrouped.length}</span>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                <span style={{ fontSize: 9, color: '#c4c4c4' }}>{collapsed.ungrouped ? '▶' : '▼'}</span>
               </div>
               {!collapsed.ungrouped && ungrouped.map(renderContact)}
             </div>
@@ -364,13 +364,13 @@ export default function Layout() {
                         if (e.key === 'Escape') setEditingGroupId(null)
                       }}
                       onBlur={() => handleSaveGroupName(g.id)}
-                      style={{ fontSize: 11, fontWeight: 700, color: '#f1f5f9', background: '#1e293b', border: '1px solid #6366f1', borderRadius: 4, padding: '1px 6px', outline: 'none', width: 100, fontFamily: 'inherit' }}
+                      style={{ fontSize: 11, fontWeight: 700, color: '#374151', background: '#fff', border: '1px solid #6366f1', borderRadius: 4, padding: '1px 6px', outline: 'none', width: 100, fontFamily: 'inherit' }}
                     />
                   ) : (
                     <span style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', letterSpacing: '0.06em' }}>{g.name}</span>
                   )}
-                  <span style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>{members.length}</span>
-                  <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+                  <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>{members.length}</span>
+                  <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
 
                   {/* hover 시 수정/삭제 버튼 */}
                   {isHovered && !isEditing && (
@@ -378,17 +378,17 @@ export default function Layout() {
                       <button
                         onClick={() => { setEditingGroupId(g.id); setEditingName(g.name) }}
                         title="이름 수정"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#64748b', padding: '0 2px', lineHeight: 1 }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '0 2px', lineHeight: 1 }}
                       >✏️</button>
                       <button
                         onClick={() => handleDeleteGroup(g)}
                         title="그룹 삭제"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#64748b', padding: '0 2px', lineHeight: 1 }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '0 2px', lineHeight: 1 }}
                       >🗑️</button>
                     </div>
                   )}
                   {(!isHovered || isEditing) && (
-                    <span style={{ fontSize: 9, color: '#475569' }}>{isCollapsed ? '▶' : '▼'}</span>
+                    <span style={{ fontSize: 9, color: '#c4c4c4' }}>{isCollapsed ? '▶' : '▼'}</span>
                   )}
                 </div>
 
@@ -397,7 +397,7 @@ export default function Layout() {
                   <>
                     {members.map(renderContact)}
                     {members.length === 0 && (
-                      <div style={{ padding: '8px 14px', fontSize: 11, color: isTarget ? '#818cf8' : '#334155', textAlign: 'center' }}>
+                      <div style={{ padding: '8px 14px', fontSize: 11, color: isTarget ? '#6366f1' : '#d1d5db', textAlign: 'center' }}>
                         {isTarget ? '여기에 놓기' : '지인을 드래그해서 추가하세요'}
                       </div>
                     )}
@@ -422,8 +422,8 @@ export default function Layout() {
                   onBlur={handleCreateGroup}
                   placeholder="그룹 이름 입력..."
                   style={{
-                    width: '100%', boxSizing: 'border-box', fontSize: 12, color: '#f1f5f9',
-                    background: '#1e293b', border: `1px solid ${newGroupError ? '#ef4444' : '#6366f1'}`,
+                    width: '100%', boxSizing: 'border-box', fontSize: 12, color: '#374151',
+                    background: '#fff', border: `1px solid ${newGroupError ? '#ef4444' : '#6366f1'}`,
                     borderRadius: 6, padding: '6px 10px', outline: 'none', fontFamily: 'inherit',
                   }}
                 />
@@ -434,7 +434,7 @@ export default function Layout() {
             ) : (
               <button
                 onClick={() => setShowNewGroup(true)}
-                style={{ width: '100%', fontSize: 11, color: '#475569', background: 'none', border: '1px dashed #334155', borderRadius: 6, padding: '6px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+                style={{ width: '100%', fontSize: 11, color: '#9ca3af', background: 'none', border: '1px dashed #e2e8f0', borderRadius: 6, padding: '6px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
               >
                 + 그룹 추가
               </button>
@@ -443,11 +443,11 @@ export default function Layout() {
         </div>
 
         {/* 하단 */}
-        <div style={{ padding: '10px 16px', borderTop: '1px solid #1e293b' }}>
-          <button onClick={() => setIntersectOpen(true)} style={{ width: '100%', padding: '8px', marginBottom: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: '#1e293b', color: '#94a3b8', border: '1px solid #334155', borderRadius: 7, fontFamily: 'inherit' }}>
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0' }}>
+          <button onClick={() => setIntersectOpen(true)} style={{ width: '100%', padding: '8px', marginBottom: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: '#f1f5f9', color: '#374151', border: '1px solid #e2e8f0', borderRadius: 7, fontFamily: 'inherit' }}>
             취향 비교
           </button>
-          <div style={{ fontSize: 11, color: '#475569' }}>{contacts.filter(c => !c.isMe).length}명 등록됨</div>
+          <div style={{ fontSize: 11, color: '#9ca3af' }}>{contacts.filter(c => !c.isMe).length}명 등록됨</div>
         </div>
       </aside>
 
