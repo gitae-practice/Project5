@@ -47,12 +47,12 @@ const REL_COLORS: Record<string, { bg: string; color: string }> = {
 }
 
 const REL_GRADIENT: Record<string, string> = {
-  친구: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-  가족: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-  직장: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-  연인: 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)',
-  지인: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
-  기타: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+  친구: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
+  가족: 'linear-gradient(135deg, #14532d 0%, #16a34a 100%)',
+  직장: 'linear-gradient(135deg, #78350f 0%, #d97706 100%)',
+  연인: 'linear-gradient(135deg, #831843 0%, #db2777 100%)',
+  지인: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+  기타: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
 }
 
 const PREF_ICONS: Record<PreferenceType, string> = {
@@ -226,22 +226,34 @@ export default function ContactDetailPage() {
       )}
       {/* 프로필 헤더 */}
       <div style={{
-        background: contact.isMe ? 'linear-gradient(135deg, #1f2937 0%, #374151 100%)' : (REL_GRADIENT[contact.relationship] ?? REL_GRADIENT['기타']),
-        borderBottom: '1px solid #e5e7eb',
-        padding: '28px 32px 0',
+        background: contact.isMe ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : (REL_GRADIENT[contact.relationship] ?? REL_GRADIENT['기타']),
+        padding: '36px 36px 28px',
+        position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ maxWidth: 800 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* 배경 장식 원 */}
+        <div style={{
+          position: 'absolute', top: -40, right: -40,
+          width: 180, height: 180, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.06)', pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: -20, right: 80,
+          width: 100, height: 100, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.04)', pointerEvents: 'none',
+        }} />
+
+        <div style={{ maxWidth: 800, position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
               <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                background: contact.isMe ? '#4b5563' : relStyle.bg,
-                color: contact.isMe ? '#fff' : relStyle.color,
+                width: 80, height: 80, borderRadius: '50%',
+                background: 'rgba(255,255,255,0.15)',
+                color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, fontWeight: 700, flexShrink: 0,
+                fontSize: 30, fontWeight: 700, flexShrink: 0,
                 overflow: 'hidden',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-                border: '3px solid rgba(255,255,255,0.8)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+                border: '3px solid rgba(255,255,255,0.4)',
               }}>
                 {contact.photoUrl
                   ? <img src={contact.photoUrl} alt={contact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -249,23 +261,24 @@ export default function ContactDetailPage() {
                 }
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: contact.isMe ? '#fff' : '#111' }}>{contact.name}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>{contact.name}</h2>
                   <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20,
-                    background: contact.isMe ? 'rgba(255,255,255,0.2)' : relStyle.bg,
-                    color: contact.isMe ? '#fff' : relStyle.color,
-                    border: contact.isMe ? '1px solid rgba(255,255,255,0.3)' : `1px solid ${relStyle.bg}`,
+                    fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20,
+                    background: 'rgba(255,255,255,0.2)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    backdropFilter: 'blur(8px)',
                   }}>
                     {contact.isMe ? '내 정보' : contact.relationship}
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: 14, fontSize: 12, color: contact.isMe ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
-                  {contact.birthday && <span>🎂 생일 {contact.birthday}</span>}
+                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                  {contact.birthday && <span>🎂 {contact.birthday}</span>}
                   {daysSince !== null && (
                     <span>📅 마지막 만남 {daysSince === 0 ? '오늘' : `${daysSince}일 전`}</span>
                   )}
-                  {contact.memo && <span>{contact.memo}</span>}
+                  {contact.memo && <span>· {contact.memo}</span>}
                 </div>
               </div>
             </div>
@@ -273,12 +286,15 @@ export default function ContactDetailPage() {
               onClick={() => navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)}
               style={{
                 fontSize: 13, fontWeight: 600,
-                color: contact.isMe ? '#fff' : '#374151',
-                background: contact.isMe ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.8)',
-                border: contact.isMe ? '1px solid rgba(255,255,255,0.3)' : '1px solid #e5e7eb',
-                borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit',
-                backdropFilter: 'blur(4px)',
+                color: '#fff',
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: 8, padding: '8px 18px', cursor: 'pointer', fontFamily: 'inherit',
+                backdropFilter: 'blur(8px)',
+                transition: 'background 0.15s',
               }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
             >
               수정
             </button>
@@ -287,8 +303,12 @@ export default function ContactDetailPage() {
           {/* 통계 바 */}
           {!contact.isMe && (
             <div style={{
-              display: 'flex', gap: 0,
-              borderTop: '1px solid rgba(0,0,0,0.06)',
+              display: 'flex', gap: 0, marginTop: 24,
+              background: 'rgba(255,255,255,0.12)',
+              borderRadius: 10, padding: '14px 20px',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              width: 'fit-content',
             }}>
               {[
                 { label: '만남', value: meetings.length, unit: '회' },
@@ -296,12 +316,14 @@ export default function ContactDetailPage() {
                 { label: '취향', value: contact.preferences.length, unit: '개' },
               ].map((s, i) => (
                 <div key={s.label} style={{
-                  padding: '12px 24px 12px 0', marginRight: 24,
-                  borderRight: i < 2 ? '1px solid rgba(0,0,0,0.08)' : 'none',
-                  paddingRight: i < 2 ? 24 : 0,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  padding: '0 20px',
+                  borderRight: i < 2 ? '1px solid rgba(255,255,255,0.2)' : 'none',
                 }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>{s.value}<span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af', marginLeft: 2 }}>{s.unit}</span></div>
-                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{s.label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                    {s.value}<span style={{ fontSize: 11, fontWeight: 500, marginLeft: 2, opacity: 0.7 }}>{s.unit}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{s.label}</div>
                 </div>
               ))}
             </div>
