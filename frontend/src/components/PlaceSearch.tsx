@@ -26,7 +26,10 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
     if (!query.trim()) return
     // SDK 로드 보장 후 검색
     const ok = await loadKakaoSdk()
-    if (!ok) { setSdkError(true); return }
+    if (!ok) {
+      setSdkError(true)
+      return
+    }
     setSdkError(false)
     const kakao = (window as any).kakao
     const ps = new kakao.maps.services.Places()
@@ -52,99 +55,181 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
   }
 
   // 모달을 document.body에 포털로 렌더링 → 부모 form의 submit 영향 없음
-  const modal = open ? createPortal(
-    <div
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 9999,
-      }}
-      onClick={handleClose}
-    >
-      <div
-        style={{
-          background: '#fff', borderRadius: 10, padding: 20,
-          width: 420, maxHeight: '70vh', display: 'flex', flexDirection: 'column',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>장소 검색</span>
-          <button type="button" onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9ca3af', lineHeight: 1 }}>✕</button>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <input
-            autoFocus
-            type="text" value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearch() } }}
-            placeholder="장소명 검색 (예: 성수동 카페)"
+  const modal = open
+    ? createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={handleClose}
+        >
+          <div
             style={{
-              flex: 1, border: '1px solid #e5e7eb', borderRadius: 6,
-              padding: '9px 12px', fontSize: 13, outline: 'none', fontFamily: 'inherit',
+              background: '#fff',
+              borderRadius: 10,
+              padding: 20,
+              width: 420,
+              maxHeight: '70vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
             }}
-          />
-          {/* type="button" 필수 - 없으면 부모 form submit 트리거 */}
-          <button
-            type="button"
-            onClick={handleSearch}
-            style={{
-              padding: '9px 16px', background: '#111', color: '#fff',
-              border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            검색
-          </button>
-        </div>
-
-        {sdkError && (
-          <p style={{ textAlign: 'center', color: '#ef4444', fontSize: 12, padding: '8px 0', margin: 0 }}>
-            지도 SDK를 불러올 수 없어요. 네트워크를 확인해주세요.
-          </p>
-        )}
-
-        <div style={{ overflowY: 'auto', flex: 1 }}>
-          {searching && (
-            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '20px 0' }}>검색 중...</p>
-          )}
-          {!searching && results.length === 0 && query && !sdkError && (
-            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '20px 0' }}>검색 결과가 없어요</p>
-          )}
-          {!searching && results.length === 0 && !query && (
-            <p style={{ textAlign: 'center', color: '#d1d5db', fontSize: 13, padding: '20px 0' }}>위에 장소명을 입력하세요</p>
-          )}
-          {results.map((place, i) => (
             <div
-              key={i}
-              onClick={() => handleSelect(place)}
               style={{
-                padding: '10px 8px', borderRadius: 6, cursor: 'pointer',
-                borderBottom: i < results.length - 1 ? '1px solid #f3f4f6' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 14,
               }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
             >
-              <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: '#111' }}>{place.place_name}</p>
-              <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>{place.address_name}</p>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>장소 검색</span>
+              <button
+                type="button"
+                onClick={handleClose}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 18,
+                  color: '#9ca3af',
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSearch()
+                  }
+                }}
+                placeholder="장소명 검색 (예: 성수동 카페)"
+                style={{
+                  flex: 1,
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 6,
+                  padding: '9px 12px',
+                  fontSize: 13,
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                }}
+              />
+              {/* type="button" 필수 - 없으면 부모 form submit 트리거 */}
+              <button
+                type="button"
+                onClick={handleSearch}
+                style={{
+                  padding: '9px 16px',
+                  background: '#111',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontFamily: 'inherit',
+                }}
+              >
+                검색
+              </button>
+            </div>
+
+            {sdkError && (
+              <p
+                style={{
+                  textAlign: 'center',
+                  color: '#ef4444',
+                  fontSize: 12,
+                  padding: '8px 0',
+                  margin: 0,
+                }}
+              >
+                지도 SDK를 불러올 수 없어요. 네트워크를 확인해주세요.
+              </p>
+            )}
+
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {searching && (
+                <p
+                  style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '20px 0' }}
+                >
+                  검색 중...
+                </p>
+              )}
+              {!searching && results.length === 0 && query && !sdkError && (
+                <p
+                  style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '20px 0' }}
+                >
+                  검색 결과가 없어요
+                </p>
+              )}
+              {!searching && results.length === 0 && !query && (
+                <p
+                  style={{ textAlign: 'center', color: '#d1d5db', fontSize: 13, padding: '20px 0' }}
+                >
+                  위에 장소명을 입력하세요
+                </p>
+              )}
+              {results.map((place, i) => (
+                <div
+                  key={i}
+                  onClick={() => handleSelect(place)}
+                  style={{
+                    padding: '10px 8px',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    borderBottom: i < results.length - 1 ? '1px solid #f3f4f6' : 'none',
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background = '#f9fafb')
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background = 'transparent')
+                  }
+                >
+                  <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: '#111' }}>
+                    {place.place_name}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>{place.address_name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null
 
   return (
     <>
       <div
         onClick={() => setOpen(true)}
         style={{
-          border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px',
-          fontSize: 13, color: value ? '#111' : '#9ca3af',
-          cursor: 'pointer', background: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          border: '1px solid #e5e7eb',
+          borderRadius: 6,
+          padding: '8px 10px',
+          fontSize: 13,
+          color: value ? '#111' : '#9ca3af',
+          cursor: 'pointer',
+          background: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           ...style,
         }}
       >

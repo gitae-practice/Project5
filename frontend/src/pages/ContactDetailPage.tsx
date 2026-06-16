@@ -1,12 +1,27 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  getContact, getContacts, getGifts, getMeetings,
-  addPreference, deletePreference,
-  addGift, deleteGift,
-  addMeeting, addMeetingBulk, updateMeeting, deleteMeeting,
+  getContact,
+  getContacts,
+  getGifts,
+  getMeetings,
+  addPreference,
+  deletePreference,
+  addGift,
+  deleteGift,
+  addMeeting,
+  addMeetingBulk,
+  updateMeeting,
+  deleteMeeting,
 } from '../api/contacts'
-import type { Contact, ContactSummary, Gift, Meeting, MeetingPlaceInput, PreferenceType } from '../types'
+import type {
+  Contact,
+  ContactSummary,
+  Gift,
+  Meeting,
+  MeetingPlaceInput,
+  PreferenceType,
+} from '../types'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
 import ConfirmModal from '../components/ConfirmModal'
@@ -15,7 +30,6 @@ import MeetingCalendar from '../components/MeetingCalendar'
 import MeetingHeatmap from '../components/MeetingHeatmap'
 
 type Tab = 'preference' | 'gift' | 'meeting'
-
 
 const PREF_LABELS: Record<PreferenceType, string> = {
   FOOD_LIKE: '좋아하는 음식',
@@ -28,22 +42,13 @@ const PREF_LABELS: Record<PreferenceType, string> = {
 }
 
 const PREF_COLORS: Record<PreferenceType, { bg: string; color: string; border: string }> = {
-  FOOD_LIKE:   { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-  FOOD_DISLIKE:{ bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
-  ALLERGY:     { bg: '#fefce8', color: '#ca8a04', border: '#fde68a' },
-  INTEREST:    { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-  BRAND:       { bg: '#faf5ff', color: '#7c3aed', border: '#ddd6fe' },
-  DISLIKE:     { bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' },
-  ETC:         { bg: '#f9fafb', color: '#4b5563', border: '#e5e7eb' },
-}
-
-const REL_COLORS: Record<string, { bg: string; color: string }> = {
-  친구: { bg: '#eff6ff', color: '#1d4ed8' },
-  가족: { bg: '#f0fdf4', color: '#15803d' },
-  직장: { bg: '#fffbeb', color: '#b45309' },
-  연인: { bg: '#fdf2f8', color: '#be185d' },
-  지인: { bg: '#f9fafb', color: '#4b5563' },
-  기타: { bg: '#f9fafb', color: '#4b5563' },
+  FOOD_LIKE: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+  FOOD_DISLIKE: { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
+  ALLERGY: { bg: '#fefce8', color: '#ca8a04', border: '#fde68a' },
+  INTEREST: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+  BRAND: { bg: '#faf5ff', color: '#7c3aed', border: '#ddd6fe' },
+  DISLIKE: { bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' },
+  ETC: { bg: '#f9fafb', color: '#4b5563', border: '#e5e7eb' },
 }
 
 const REL_GRADIENT: Record<string, string> = {
@@ -66,9 +71,15 @@ const PREF_ICONS: Record<PreferenceType, string> = {
 }
 
 const inputStyle: React.CSSProperties = {
-  border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px',
-  fontSize: 13, outline: 'none', fontFamily: 'inherit', color: '#111',
-  background: '#fff', boxSizing: 'border-box',
+  border: '1px solid #e5e7eb',
+  borderRadius: 6,
+  padding: '8px 10px',
+  fontSize: 13,
+  outline: 'none',
+  fontFamily: 'inherit',
+  color: '#111',
+  background: '#fff',
+  boxSizing: 'border-box',
 }
 
 export default function ContactDetailPage() {
@@ -84,7 +95,9 @@ export default function ContactDetailPage() {
   const [allContacts, setAllContacts] = useState<ContactSummary[]>([])
   // URL ?tab=meeting&date=2026-05-30 으로 초기 탭/날짜 지정 가능 (홈 대시보드 연결용)
   const initialTab = searchParams.get('tab') as Tab | null
-  const [tab, setTab] = useState<Tab>(initialTab === 'meeting' || initialTab === 'gift' ? initialTab : 'preference')
+  const [tab, setTab] = useState<Tab>(
+    initialTab === 'meeting' || initialTab === 'gift' ? initialTab : 'preference',
+  )
 
   // isMe 연락처로 전환 시 선물/만남 탭에 머물러 있으면 취향 탭으로 리셋
   useEffect(() => {
@@ -92,34 +105,55 @@ export default function ContactDetailPage() {
   }, [contact?.isMe])
   const [prefType, setPrefType] = useState<PreferenceType>('FOOD_LIKE')
   const [prefValue, setPrefValue] = useState('')
-  const [giftForm, setGiftForm] = useState({ item: '', price: '', date: '', occasion: '', isWishlist: false })
+  const [giftForm, setGiftForm] = useState({
+    item: '',
+    price: '',
+    date: '',
+    occasion: '',
+    isWishlist: false,
+  })
   const [showGiftForm, setShowGiftForm] = useState(false)
   const today = new Date().toISOString().split('T')[0]
-  const [meetForm, setMeetForm] = useState({ date: today, places: [] as MeetingPlaceInput[], memo: '' })
+  const [meetForm, setMeetForm] = useState({
+    date: today,
+    places: [] as MeetingPlaceInput[],
+    memo: '',
+  })
   // 함께한 지인 ID 목록 (현재 페이지 지인은 자동 포함, 여기에는 추가 지인만)
   const [extraContactIds, setExtraContactIds] = useState<number[]>([])
   const [showMeetForm, setShowMeetForm] = useState(false)
   const [meetSubmitAttempted, setMeetSubmitAttempted] = useState(false)
   const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null)
-  const [editMeetForm, setEditMeetForm] = useState({ date: '', places: [] as MeetingPlaceInput[], memo: '' })
-  const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null)
+  const [editMeetForm, setEditMeetForm] = useState({
+    date: '',
+    places: [] as MeetingPlaceInput[],
+    memo: '',
+  })
+  const [confirm, setConfirm] = useState<{
+    message: string
+    onConfirm: () => void
+  } | null>(null)
   const [selectedMeetingDate, setSelectedMeetingDate] = useState<string | null>(
-    searchParams.get('date') ?? today
+    searchParams.get('date') ?? today,
   )
-  const [heatmapFilter, setHeatmapFilter] = useState<{ start: string; end: string; label: string } | null>(null)
+  const [heatmapFilter, setHeatmapFilter] = useState<{
+    start: string
+    end: string
+    label: string
+  } | null>(null)
 
   useEffect(() => {
     getContact(contactId).then(setContact)
     getGifts(contactId).then(setGifts)
     getMeetings(contactId).then(setMeetings)
     // 함께한 지인 다중 선택을 위해 전체 지인 목록 로드
-    getContacts().then(all => setAllContacts(all.filter(c => c.id !== contactId && !c.isMe)))
+    getContacts().then((all) => setAllContacts(all.filter((c) => c.id !== contactId && !c.isMe)))
   }, [contactId])
 
   const handleAddPref = async () => {
     if (!prefValue.trim()) return
     const pref = await addPreference(contactId, prefType, prefValue.trim())
-    setContact(prev => prev ? { ...prev, preferences: [...prev.preferences, pref] } : prev)
+    setContact((prev) => (prev ? { ...prev, preferences: [...prev.preferences, pref] } : prev))
     setPrefValue('')
   }
 
@@ -133,8 +167,14 @@ export default function ContactDetailPage() {
       occasion: giftForm.occasion || undefined,
       isWishlist: giftForm.isWishlist,
     })
-    setGifts(prev => [gift, ...prev])
-    setGiftForm({ item: '', price: '', date: '', occasion: '', isWishlist: false })
+    setGifts((prev) => [gift, ...prev])
+    setGiftForm({
+      item: '',
+      price: '',
+      date: '',
+      occasion: '',
+      isWishlist: false,
+    })
     setShowGiftForm(false)
   }
 
@@ -152,17 +192,21 @@ export default function ContactDetailPage() {
         memo: meetForm.memo || undefined,
       })
       // 현재 페이지 지인의 만남만 목록에 반영
-      const mine = results.find(m => m.contactId === contactId)
-      if (mine) setMeetings(prev => [mine, ...prev])
+      const mine = results.find((m) => m.contactId === contactId)
+      if (mine) setMeetings((prev) => [mine, ...prev])
     } else {
       const meeting = await addMeeting(contactId, {
         date: meetForm.date,
         places: meetForm.places,
         memo: meetForm.memo || undefined,
       })
-      setMeetings(prev => [meeting, ...prev])
+      setMeetings((prev) => [meeting, ...prev])
     }
-    setMeetForm({ date: new Date().toISOString().split('T')[0], places: [], memo: '' })
+    setMeetForm({
+      date: new Date().toISOString().split('T')[0],
+      places: [],
+      memo: '',
+    })
     setExtraContactIds([])
     setMeetSubmitAttempted(false)
     setShowMeetForm(false)
@@ -172,7 +216,7 @@ export default function ContactDetailPage() {
     setEditingMeetingId(m.id)
     setEditMeetForm({
       date: m.date,
-      places: m.places.map(p => ({ name: p.name, lat: p.lat, lng: p.lng })),
+      places: m.places.map((p) => ({ name: p.name, lat: p.lat, lng: p.lng })),
       memo: m.memo ?? '',
     })
   }
@@ -188,7 +232,7 @@ export default function ContactDetailPage() {
           places: editMeetForm.places,
           memo: editMeetForm.memo || undefined,
         })
-        setMeetings(prev => prev.map(m => m.id === meetingId ? updated : m))
+        setMeetings((prev) => prev.map((m) => (m.id === meetingId ? updated : m)))
         setEditingMeetingId(null)
       },
     })
@@ -200,23 +244,27 @@ export default function ContactDetailPage() {
       onConfirm: async () => {
         setConfirm(null)
         await deleteMeeting(meetingId)
-        setMeetings(prev => prev.filter(m => m.id !== meetingId))
+        setMeetings((prev) => prev.filter((m) => m.id !== meetingId))
       },
     })
   }
 
-  if (!contact) return <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af' }}>불러오는 중...</div>
+  if (!contact)
+    return <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af' }}>불러오는 중...</div>
 
   const lastMeeting = meetings[0]
   const daysSince = lastMeeting
     ? Math.floor((Date.now() - new Date(lastMeeting.date).getTime()) / (1000 * 60 * 60 * 24))
     : null
-  const relStyle = contact.isMe
-    ? { bg: '#111', color: '#fff' }
-    : (REL_COLORS[contact.relationship] ?? REL_COLORS['기타'])
-
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f5f5f5' }}>
+    <div
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#f5f5f5',
+      }}
+    >
       {confirm && (
         <ConfirmModal
           message={confirm.message}
@@ -225,55 +273,126 @@ export default function ContactDetailPage() {
         />
       )}
       {/* 프로필 헤더 */}
-      <div style={{
-        background: contact.isMe ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : (REL_GRADIENT[contact.relationship] ?? REL_GRADIENT['기타']),
-        padding: '36px 36px 28px',
-        position: 'relative', overflow: 'hidden',
-      }}>
+      <div
+        style={{
+          background: contact.isMe
+            ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+            : (REL_GRADIENT[contact.relationship] ?? REL_GRADIENT['기타']),
+          padding: '36px 36px 28px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
         {/* 배경 장식 원 */}
-        <div style={{
-          position: 'absolute', top: -40, right: -40,
-          width: 180, height: 180, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.06)', pointerEvents: 'none',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -20, right: 80,
-          width: 100, height: 100, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.04)', pointerEvents: 'none',
-        }} />
+        <div
+          style={{
+            position: 'absolute',
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.06)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: -20,
+            right: 80,
+            width: 100,
+            height: 100,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.04)',
+            pointerEvents: 'none',
+          }}
+        />
 
         <div style={{ maxWidth: 800, position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div style={{
-                width: 80, height: 80, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 30, fontWeight: 700, flexShrink: 0,
-                overflow: 'hidden',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
-                border: '3px solid rgba(255,255,255,0.4)',
-              }}>
-                {contact.photoUrl
-                  ? <img src={contact.photoUrl} alt={contact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : contact.name[0]
-                }
+              <div
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 30,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+                  border: '3px solid rgba(255,255,255,0.4)',
+                }}
+              >
+                {contact.photoUrl ? (
+                  <img
+                    src={contact.photoUrl}
+                    alt={contact.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  contact.name[0]
+                )}
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>{contact.name}</h2>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20,
-                    background: 'rgba(255,255,255,0.2)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    backdropFilter: 'blur(8px)',
-                  }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: 26,
+                      fontWeight: 800,
+                      color: '#fff',
+                      letterSpacing: '-0.5px',
+                    }}
+                  >
+                    {contact.name}
+                  </h2>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '4px 10px',
+                      borderRadius: 20,
+                      background: 'rgba(255,255,255,0.2)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
                     {contact.isMe ? '내 정보' : contact.relationship}
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 16,
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.75)',
+                  }}
+                >
                   {contact.birthday && <span>🎂 {contact.birthday}</span>}
                   {daysSince !== null && (
                     <span>📅 마지막 만남 {daysSince === 0 ? '오늘' : `${daysSince}일 전`}</span>
@@ -283,18 +402,24 @@ export default function ContactDetailPage() {
               </div>
             </div>
             <button
-              onClick={() => navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)}
+              onClick={() =>
+                navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)
+              }
               style={{
-                fontSize: 13, fontWeight: 600,
+                fontSize: 13,
+                fontWeight: 600,
                 color: '#fff',
                 background: 'rgba(255,255,255,0.15)',
                 border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: 8, padding: '8px 18px', cursor: 'pointer', fontFamily: 'inherit',
+                borderRadius: 8,
+                padding: '8px 18px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
                 backdropFilter: 'blur(8px)',
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
             >
               수정
             </button>
@@ -302,28 +427,67 @@ export default function ContactDetailPage() {
 
           {/* 통계 바 */}
           {!contact.isMe && (
-            <div style={{
-              display: 'flex', gap: 0, marginTop: 24,
-              background: 'rgba(255,255,255,0.12)',
-              borderRadius: 10, padding: '14px 20px',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              width: 'fit-content',
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 0,
+                marginTop: 24,
+                background: 'rgba(255,255,255,0.12)',
+                borderRadius: 10,
+                padding: '14px 20px',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                width: 'fit-content',
+              }}
+            >
               {[
                 { label: '만남', value: meetings.length, unit: '회' },
                 { label: '선물', value: gifts.length, unit: '건' },
-                { label: '취향', value: contact.preferences.length, unit: '개' },
+                {
+                  label: '취향',
+                  value: contact.preferences.length,
+                  unit: '개',
+                },
               ].map((s, i) => (
-                <div key={s.label} style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  padding: '0 20px',
-                  borderRight: i < 2 ? '1px solid rgba(255,255,255,0.2)' : 'none',
-                }}>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1 }}>
-                    {s.value}<span style={{ fontSize: 11, fontWeight: 500, marginLeft: 2, opacity: 0.7 }}>{s.unit}</span>
+                <div
+                  key={s.label}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '0 20px',
+                    borderRight: i < 2 ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 800,
+                      color: '#fff',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {s.value}
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        marginLeft: 2,
+                        opacity: 0.7,
+                      }}
+                    >
+                      {s.unit}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{s.label}</div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.6)',
+                      marginTop: 3,
+                    }}
+                  >
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -332,60 +496,87 @@ export default function ContactDetailPage() {
       </div>
 
       {/* 탭 */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 32px' }}>
+      <div
+        style={{
+          background: '#fff',
+          borderBottom: '1px solid #e5e7eb',
+          padding: '0 32px',
+        }}
+      >
         <div style={{ display: 'flex', gap: 0, maxWidth: 800 }}>
           {/* isMe 연락처는 선물/만남 탭 미표시 */}
-          {((contact.isMe ? ['preference'] : ['preference', 'gift', 'meeting']) as Tab[]).map(t => {
-            const count = t === 'preference' ? contact.preferences.length : t === 'gift' ? gifts.length : meetings.length
-            const label = t === 'preference' ? '취향' : t === 'gift' ? '선물' : '만남'
-            return (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  padding: '14px 20px', fontSize: 14, fontWeight: tab === t ? 600 : 400,
-                  color: tab === t ? '#111' : '#9ca3af',
-                  background: 'none', border: 'none', borderBottom: tab === t ? '2px solid #111' : '2px solid transparent',
-                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.1s',
-                }}
-              >
-                {label} <span style={{ fontSize: 12 }}>{count}</span>
-              </button>
-            )
-          })}
+          {((contact.isMe ? ['preference'] : ['preference', 'gift', 'meeting']) as Tab[]).map(
+            (t) => {
+              const count =
+                t === 'preference'
+                  ? contact.preferences.length
+                  : t === 'gift'
+                    ? gifts.length
+                    : meetings.length
+              const label = t === 'preference' ? '취향' : t === 'gift' ? '선물' : '만남'
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  style={{
+                    padding: '14px 20px',
+                    fontSize: 14,
+                    fontWeight: tab === t ? 600 : 400,
+                    color: tab === t ? '#111' : '#9ca3af',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: tab === t ? '2px solid #111' : '2px solid transparent',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  {label} <span style={{ fontSize: 12 }}>{count}</span>
+                </button>
+              )
+            },
+          )}
         </div>
       </div>
 
       {/* 콘텐츠 */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
         <div style={{ maxWidth: tab === 'meeting' ? 'none' : 800 }}>
-
           {/* 취향 탭 */}
           {tab === 'preference' && (
             <div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
                 <select
                   value={prefType}
-                  onChange={e => setPrefType(e.target.value as PreferenceType)}
+                  onChange={(e) => setPrefType(e.target.value as PreferenceType)}
                   style={{ ...inputStyle, padding: '8px 12px' }}
                 >
-                  {(Object.keys(PREF_LABELS) as PreferenceType[]).map(k => (
-                    <option key={k} value={k}>{PREF_LABELS[k]}</option>
+                  {(Object.keys(PREF_LABELS) as PreferenceType[]).map((k) => (
+                    <option key={k} value={k}>
+                      {PREF_LABELS[k]}
+                    </option>
                   ))}
                 </select>
                 <input
-                  type="text" value={prefValue}
-                  onChange={e => setPrefValue(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddPref()}
+                  type="text"
+                  value={prefValue}
+                  onChange={(e) => setPrefValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddPref()}
                   placeholder="입력 후 Enter"
                   style={{ ...inputStyle, flex: 1 }}
                 />
                 <button
                   onClick={handleAddPref}
                   style={{
-                    padding: '8px 16px', fontSize: 13, fontWeight: 600,
-                    background: '#111', color: '#fff', border: 'none',
-                    borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: '#111',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
                   }}
                 >
                   추가
@@ -393,47 +584,119 @@ export default function ContactDetailPage() {
               </div>
 
               {contact.preferences.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af', fontSize: 14 }}>
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '60px 0',
+                    color: '#9ca3af',
+                    fontSize: 14,
+                  }}
+                >
                   아직 취향 정보가 없어요
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  {(Object.keys(PREF_LABELS) as PreferenceType[]).map(type => {
-                    const items = contact.preferences.filter(p => p.type === type)
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 12,
+                  }}
+                >
+                  {(Object.keys(PREF_LABELS) as PreferenceType[]).map((type) => {
+                    const items = contact.preferences.filter((p) => p.type === type)
                     if (items.length === 0) return null
                     const cs = PREF_COLORS[type]
                     return (
-                      <div key={type} style={{
-                        background: cs.bg,
-                        border: `1px solid ${cs.border}`,
-                        borderRadius: 10, padding: '14px 16px',
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                      <div
+                        key={type}
+                        style={{
+                          background: cs.bg,
+                          border: `1px solid ${cs.border}`,
+                          borderRadius: 10,
+                          padding: '14px 16px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            marginBottom: 10,
+                          }}
+                        >
                           <span style={{ fontSize: 15 }}>{PREF_ICONS[type]}</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: cs.color, letterSpacing: '0.03em' }}>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: cs.color,
+                              letterSpacing: '0.03em',
+                            }}
+                          >
                             {PREF_LABELS[type]}
                           </span>
-                          <span style={{ fontSize: 10, color: cs.color, opacity: 0.6, marginLeft: 'auto' }}>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              color: cs.color,
+                              opacity: 0.6,
+                              marginLeft: 'auto',
+                            }}
+                          >
                             {items.length}개
                           </span>
                         </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {items.map(p => (
-                            <span key={p.id} style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5,
-                              fontSize: 12, padding: '4px 10px', borderRadius: 20,
-                              background: '#fff', color: cs.color,
-                              border: `1px solid ${cs.border}`,
-                              fontWeight: 500,
-                            }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 6,
+                          }}
+                        >
+                          {items.map((p) => (
+                            <span
+                              key={p.id}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                fontSize: 12,
+                                padding: '4px 10px',
+                                borderRadius: 20,
+                                background: '#fff',
+                                color: cs.color,
+                                border: `1px solid ${cs.border}`,
+                                fontWeight: 500,
+                              }}
+                            >
                               {p.value}
                               <button
                                 onClick={() => {
                                   deletePreference(p.id)
-                                  setContact(prev => prev ? { ...prev, preferences: prev.preferences.filter(x => x.id !== p.id) } : prev)
+                                  setContact((prev) =>
+                                    prev
+                                      ? {
+                                          ...prev,
+                                          preferences: prev.preferences.filter(
+                                            (x) => x.id !== p.id,
+                                          ),
+                                        }
+                                      : prev,
+                                  )
                                 }}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.4, padding: 0, fontSize: 11, lineHeight: 1 }}
-                              >✕</button>
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: 'inherit',
+                                  opacity: 0.4,
+                                  padding: 0,
+                                  fontSize: 11,
+                                  lineHeight: 1,
+                                }}
+                              >
+                                ✕
+                              </button>
                             </span>
                           ))}
                         </div>
@@ -448,14 +711,27 @@ export default function ContactDetailPage() {
           {/* 선물 탭 */}
           {tab === 'gift' && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 16,
+                }}
+              >
                 <span style={{ fontSize: 13, color: '#6b7280' }}>선물 {gifts.length}건</span>
                 <button
-                  onClick={() => setShowGiftForm(v => !v)}
+                  onClick={() => setShowGiftForm((v) => !v)}
                   style={{
-                    fontSize: 13, fontWeight: 600, padding: '7px 14px',
-                    background: '#111', color: '#fff', border: 'none',
-                    borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    padding: '7px 14px',
+                    background: '#111',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
                   }}
                 >
                   + 선물 추가
@@ -463,69 +739,246 @@ export default function ContactDetailPage() {
               </div>
 
               {showGiftForm && (
-                <form onSubmit={handleAddGift} style={{
-                  background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
-                  padding: '16px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10,
-                }}>
-                  <input type="text" value={giftForm.item} onChange={e => setGiftForm(p => ({ ...p, item: e.target.value }))} placeholder="선물 이름 *" style={{ ...inputStyle, width: '100%' }} />
+                <form
+                  onSubmit={handleAddGift}
+                  style={{
+                    background: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    padding: '16px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={giftForm.item}
+                    onChange={(e) => setGiftForm((p) => ({ ...p, item: e.target.value }))}
+                    placeholder="선물 이름 *"
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="number" value={giftForm.price} onChange={e => setGiftForm(p => ({ ...p, price: e.target.value }))} placeholder="금액 (원)" style={{ ...inputStyle, flex: 1 }} />
-                    <input type="date" value={giftForm.date} onChange={e => setGiftForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
-                    <input type="text" value={giftForm.occasion} onChange={e => setGiftForm(p => ({ ...p, occasion: e.target.value }))} placeholder="기념일" style={{ ...inputStyle, flex: 1 }} />
+                    <input
+                      type="number"
+                      value={giftForm.price}
+                      onChange={(e) => setGiftForm((p) => ({ ...p, price: e.target.value }))}
+                      placeholder="금액 (원)"
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <input
+                      type="date"
+                      value={giftForm.date}
+                      onChange={(e) => setGiftForm((p) => ({ ...p, date: e.target.value }))}
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <input
+                      type="text"
+                      value={giftForm.occasion}
+                      onChange={(e) => setGiftForm((p) => ({ ...p, occasion: e.target.value }))}
+                      placeholder="기념일"
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={giftForm.isWishlist} onChange={e => setGiftForm(p => ({ ...p, isWishlist: e.target.checked }))} />
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 13,
+                        color: '#374151',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={giftForm.isWishlist}
+                        onChange={(e) =>
+                          setGiftForm((p) => ({
+                            ...p,
+                            isWishlist: e.target.checked,
+                          }))
+                        }
+                      />
                       위시리스트
                     </label>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button type="button" onClick={() => setShowGiftForm(false)} style={{ fontSize: 13, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>
-                      <button type="submit" style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
+                      <button
+                        type="button"
+                        onClick={() => setShowGiftForm(false)}
+                        style={{
+                          fontSize: 13,
+                          color: '#9ca3af',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="submit"
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          padding: '6px 14px',
+                          background: '#111',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        저장
+                      </button>
                     </div>
                   </div>
                 </form>
               )}
 
               {gifts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: '#9ca3af', fontSize: 14 }}>선물 기록이 없어요</div>
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '60px 0',
+                    color: '#9ca3af',
+                    fontSize: 14,
+                  }}
+                >
+                  선물 기록이 없어요
+                </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {gifts.map(g => (
-                    <div key={g.id} style={{
-                      display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-                      background: g.isWishlist ? 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)' : '#fff',
-                      border: `1px solid ${g.isWishlist ? '#f5d0fe' : '#e5e7eb'}`,
-                      borderRadius: 10, padding: '14px 16px',
-                    }}>
-                      <div style={{ display: 'flex', gap: 12, flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                          background: g.isWishlist ? '#fce7f3' : '#f9fafb',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 18,
-                        }}>
+                  {gifts.map((g) => (
+                    <div
+                      key={g.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        background: g.isWishlist
+                          ? 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)'
+                          : '#fff',
+                        border: `1px solid ${g.isWishlist ? '#f5d0fe' : '#e5e7eb'}`,
+                        borderRadius: 10,
+                        padding: '14px 16px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 12,
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 10,
+                            flexShrink: 0,
+                            background: g.isWishlist ? '#fce7f3' : '#f9fafb',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 18,
+                          }}
+                        >
                           {g.isWishlist ? '🎀' : '🎁'}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{g.item}</span>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              marginBottom: 4,
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: '#111',
+                              }}
+                            >
+                              {g.item}
+                            </span>
                             {g.isWishlist && (
-                              <span style={{ fontSize: 10, fontWeight: 700, background: '#be185d', color: '#fff', borderRadius: 20, padding: '2px 7px' }}>위시리스트</span>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  background: '#be185d',
+                                  color: '#fff',
+                                  borderRadius: 20,
+                                  padding: '2px 7px',
+                                }}
+                              >
+                                위시리스트
+                              </span>
                             )}
                             {g.occasion && (
-                              <span style={{ fontSize: 11, background: '#f3f4f6', color: '#6b7280', borderRadius: 20, padding: '2px 8px' }}>{g.occasion}</span>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  background: '#f3f4f6',
+                                  color: '#6b7280',
+                                  borderRadius: 20,
+                                  padding: '2px 8px',
+                                }}
+                              >
+                                {g.occasion}
+                              </span>
                             )}
                           </div>
-                          <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#9ca3af' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              gap: 10,
+                              fontSize: 12,
+                              color: '#9ca3af',
+                            }}
+                          >
                             {g.date && <span>📅 {g.date}</span>}
-                            {g.price && <span style={{ color: '#059669', fontWeight: 600 }}>₩ {g.price.toLocaleString()}</span>}
+                            {g.price && (
+                              <span style={{ color: '#059669', fontWeight: 600 }}>
+                                ₩ {g.price.toLocaleString()}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                       <button
-                        onClick={() => deleteGift(g.id).then(() => setGifts(prev => prev.filter(x => x.id !== g.id)))}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '0 0 0 8px', flexShrink: 0 }}
-                      >✕</button>
+                        onClick={() =>
+                          deleteGift(g.id).then(() =>
+                            setGifts((prev) => prev.filter((x) => x.id !== g.id)),
+                          )
+                        }
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#d1d5db',
+                          fontSize: 14,
+                          padding: '0 0 0 8px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -537,16 +990,27 @@ export default function ContactDetailPage() {
           {tab === 'meeting' && (
             <div>
               {/* 헤더: 만남 수 + 추가 버튼 */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 16,
+                }}
+              >
                 <span style={{ fontSize: 13, color: '#6b7280' }}>만남 {meetings.length}회</span>
                 <button
-                  onClick={() => setShowMeetForm(v => !v)}
+                  onClick={() => setShowMeetForm((v) => !v)}
                   style={{
-                    fontSize: 13, fontWeight: 600, padding: '7px 14px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    padding: '7px 14px',
                     background: showMeetForm ? '#f3f4f6' : '#111',
                     color: showMeetForm ? '#374151' : '#fff',
                     border: showMeetForm ? '1px solid #e5e7eb' : 'none',
-                    borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
                   }}
                 >
                   {showMeetForm ? '취소' : '+ 만남 추가'}
@@ -555,44 +1019,83 @@ export default function ContactDetailPage() {
 
               {/* 만남 추가 폼 (버튼 클릭 시에만 표시) */}
               {showMeetForm && (
-                <form onSubmit={handleAddMeeting} style={{
-                  background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
-                  padding: '16px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10,
-                }}>
+                <form
+                  onSubmit={handleAddMeeting}
+                  style={{
+                    background: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    padding: '16px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="date" value={meetForm.date} onChange={e => setMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
+                    <input
+                      type="date"
+                      value={meetForm.date}
+                      onChange={(e) => setMeetForm((p) => ({ ...p, date: e.target.value }))}
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
                     <PlaceSearch
                       value=""
-                      onSelect={({ name, lat, lng }) => setMeetForm(p => ({ ...p, places: [...p.places, { name, lat, lng }] }))}
+                      onSelect={({ name, lat, lng }) =>
+                        setMeetForm((p) => ({
+                          ...p,
+                          places: [...p.places, { name, lat, lng }],
+                        }))
+                      }
                       style={{ flex: 1 }}
                     />
                   </div>
                   {/* 추가된 장소 태그 목록 (드래그앤드롭 순서 변경 가능) */}
                   <PlaceTagList
                     places={meetForm.places}
-                    onChange={places => setMeetForm(p => ({ ...p, places }))}
+                    onChange={(places) => setMeetForm((p) => ({ ...p, places }))}
                   />
-                  <input type="text" value={meetForm.memo} onChange={e => setMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, width: '100%' }} />
+                  <input
+                    type="text"
+                    value={meetForm.memo}
+                    onChange={(e) => setMeetForm((p) => ({ ...p, memo: e.target.value }))}
+                    placeholder="메모"
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
 
                   {/* 함께한 지인 다중 선택 (현재 지인은 자동 포함) */}
                   {allContacts.length > 0 && (
                     <div>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', margin: '0 0 6px', letterSpacing: '0.05em' }}>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: '#9ca3af',
+                          margin: '0 0 6px',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
                         함께한 지인 (선택)
                       </p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {allContacts.map(c => {
+                        {allContacts.map((c) => {
                           const selected = extraContactIds.includes(c.id)
                           return (
                             <button
                               key={c.id}
                               type="button"
-                              onClick={() => setExtraContactIds(prev =>
-                                selected ? prev.filter(id => id !== c.id) : [...prev, c.id]
-                              )}
+                              onClick={() =>
+                                setExtraContactIds((prev) =>
+                                  selected ? prev.filter((id) => id !== c.id) : [...prev, c.id],
+                                )
+                              }
                               style={{
-                                fontSize: 12, padding: '4px 10px', borderRadius: 5, cursor: 'pointer',
-                                fontFamily: 'inherit', transition: 'all 0.1s',
+                                fontSize: 12,
+                                padding: '4px 10px',
+                                borderRadius: 5,
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                transition: 'all 0.1s',
                                 background: selected ? '#111' : '#f3f4f6',
                                 color: selected ? '#fff' : '#374151',
                                 border: selected ? '1px solid #111' : '1px solid #e5e7eb',
@@ -607,20 +1110,35 @@ export default function ContactDetailPage() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, alignItems: 'center' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: 8,
+                      alignItems: 'center',
+                    }}
+                  >
                     {meetSubmitAttempted && meetForm.places.length === 0 && (
-                      <span style={{ fontSize: 11, color: '#ef4444' }}>장소를 1개 이상 추가해주세요</span>
+                      <span style={{ fontSize: 11, color: '#ef4444' }}>
+                        장소를 1개 이상 추가해주세요
+                      </span>
                     )}
                     <button
                       type="submit"
                       style={{
-                        fontSize: 13, fontWeight: 600, padding: '6px 14px',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        padding: '6px 14px',
                         background: meetForm.places.length === 0 ? '#e5e7eb' : '#111',
                         color: meetForm.places.length === 0 ? '#9ca3af' : '#fff',
-                        border: 'none', borderRadius: 6, cursor: 'pointer',
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: 'pointer',
                         fontFamily: 'inherit',
                       }}
-                    >저장</button>
+                    >
+                      저장
+                    </button>
                   </div>
                 </form>
               )}
@@ -638,31 +1156,73 @@ export default function ContactDetailPage() {
               {/* 2열 레이아웃: 달력(왼쪽) + 지도(오른쪽) */}
               <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
                 {/* 왼쪽: 달력 + 만남 목록 */}
-                <div style={{ flex: '0 0 390px', display: 'flex', flexDirection: 'column' }}>
+                <div
+                  style={{
+                    flex: '0 0 390px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
                   <MeetingCalendar
                     meetings={meetings}
                     selectedDate={selectedMeetingDate}
-                    onDateSelect={date => {
+                    onDateSelect={(date) => {
                       setSelectedMeetingDate(date)
                       setHeatmapFilter(null)
                     }}
                   />
 
                   {meetings.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '30px 0', color: '#9ca3af', fontSize: 14 }}>
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        padding: '30px 0',
+                        color: '#9ca3af',
+                        fontSize: 14,
+                      }}
+                    >
                       아직 만남 기록이 없어요
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
+                      }}
+                    >
                       {/* 날짜/기간 필터 표시 */}
                       {(selectedMeetingDate || heatmapFilter) && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: '#3b82f6', fontWeight: 600 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 12,
+                              color: '#3b82f6',
+                              fontWeight: 600,
+                            }}
+                          >
                             {heatmapFilter ? heatmapFilter.label : selectedMeetingDate} 만남
                           </span>
                           <button
-                            onClick={() => { setSelectedMeetingDate(null); setHeatmapFilter(null) }}
-                            style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                            onClick={() => {
+                              setSelectedMeetingDate(null)
+                              setHeatmapFilter(null)
+                            }}
+                            style={{
+                              fontSize: 11,
+                              color: '#9ca3af',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                            }}
                           >
                             전체보기
                           </button>
@@ -670,67 +1230,218 @@ export default function ContactDetailPage() {
                       )}
                       {(() => {
                         const filtered = heatmapFilter
-                          ? meetings.filter(m => m.date >= heatmapFilter.start && m.date <= heatmapFilter.end)
+                          ? meetings.filter(
+                              (m) => m.date >= heatmapFilter.start && m.date <= heatmapFilter.end,
+                            )
                           : selectedMeetingDate
-                          ? meetings.filter(m => m.date === selectedMeetingDate)
-                          : meetings
+                            ? meetings.filter((m) => m.date === selectedMeetingDate)
+                            : meetings
                         return filtered.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '20px 0', color: '#9ca3af', fontSize: 13 }}>
-                            {heatmapFilter || selectedMeetingDate ? '이 기간 만남 기록이 없어요' : '아직 만남 기록이 없어요'}
+                          <div
+                            style={{
+                              textAlign: 'center',
+                              padding: '20px 0',
+                              color: '#9ca3af',
+                              fontSize: 13,
+                            }}
+                          >
+                            {heatmapFilter || selectedMeetingDate
+                              ? '이 기간 만남 기록이 없어요'
+                              : '아직 만남 기록이 없어요'}
                           </div>
                         ) : null
                       })()}
                       {(() => {
                         const filtered = heatmapFilter
-                          ? meetings.filter(m => m.date >= heatmapFilter.start && m.date <= heatmapFilter.end)
+                          ? meetings.filter(
+                              (m) => m.date >= heatmapFilter.start && m.date <= heatmapFilter.end,
+                            )
                           : selectedMeetingDate
-                          ? meetings.filter(m => m.date === selectedMeetingDate)
-                          : meetings
+                            ? meetings.filter((m) => m.date === selectedMeetingDate)
+                            : meetings
                         return filtered
-                      })().map(m => (
-                        <div key={m.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
+                      })().map((m) => (
+                        <div
+                          key={m.id}
+                          style={{
+                            background: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                          }}
+                        >
                           {editingMeetingId === m.id ? (
                             /* 인라인 수정 폼 */
-                            <form onSubmit={e => handleUpdateMeeting(e, m.id)} style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <form
+                              onSubmit={(e) => handleUpdateMeeting(e, m.id)}
+                              style={{
+                                padding: '12px 16px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 8,
+                              }}
+                            >
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <input type="date" value={editMeetForm.date} onChange={e => setEditMeetForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, flex: 1, fontSize: 12 }} />
+                                <input
+                                  type="date"
+                                  value={editMeetForm.date}
+                                  onChange={(e) =>
+                                    setEditMeetForm((p) => ({
+                                      ...p,
+                                      date: e.target.value,
+                                    }))
+                                  }
+                                  style={{
+                                    ...inputStyle,
+                                    flex: 1,
+                                    fontSize: 12,
+                                  }}
+                                />
                                 <PlaceSearch
                                   value=""
-                                  onSelect={({ name, lat, lng }) => setEditMeetForm(p => ({ ...p, places: [...p.places, { name, lat, lng }] }))}
+                                  onSelect={({ name, lat, lng }) =>
+                                    setEditMeetForm((p) => ({
+                                      ...p,
+                                      places: [...p.places, { name, lat, lng }],
+                                    }))
+                                  }
                                   style={{ flex: 1, fontSize: 12 }}
                                 />
                               </div>
                               {/* 수정 폼 장소 태그 목록 (드래그앤드롭 순서 변경 가능) */}
                               <PlaceTagList
                                 places={editMeetForm.places}
-                                onChange={places => setEditMeetForm(p => ({ ...p, places }))}
+                                onChange={(places) => setEditMeetForm((p) => ({ ...p, places }))}
                               />
-                              <input type="text" value={editMeetForm.memo} onChange={e => setEditMeetForm(p => ({ ...p, memo: e.target.value }))} placeholder="메모" style={{ ...inputStyle, fontSize: 12 }} />
-                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                                <button type="button" onClick={() => setEditingMeetingId(null)} style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>
-                                <button type="submit" style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', background: '#111', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}>저장</button>
+                              <input
+                                type="text"
+                                value={editMeetForm.memo}
+                                onChange={(e) =>
+                                  setEditMeetForm((p) => ({
+                                    ...p,
+                                    memo: e.target.value,
+                                  }))
+                                }
+                                placeholder="메모"
+                                style={{ ...inputStyle, fontSize: 12 }}
+                              />
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'flex-end',
+                                  gap: 6,
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingMeetingId(null)}
+                                  style={{
+                                    fontSize: 12,
+                                    color: '#9ca3af',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                  }}
+                                >
+                                  취소
+                                </button>
+                                <button
+                                  type="submit"
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    padding: '5px 12px',
+                                    background: '#111',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 6,
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                  }}
+                                >
+                                  저장
+                                </button>
                               </div>
                             </form>
                           ) : (
                             /* 일반 표시 */
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '12px 16px',
+                              }}
+                            >
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: '0 0 2px' }}>{m.date}</p>
+                                <p
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    color: '#111',
+                                    margin: '0 0 2px',
+                                  }}
+                                >
+                                  {m.date}
+                                </p>
                                 {m.places.map((p, i) => (
-                                  <p key={i} style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>📍 {p.name}</p>
+                                  <p
+                                    key={i}
+                                    style={{
+                                      fontSize: 12,
+                                      color: '#6b7280',
+                                      margin: '0 0 2px',
+                                    }}
+                                  >
+                                    📍 {p.name}
+                                  </p>
                                 ))}
-                                {m.memo && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{m.memo}</p>}
+                                {m.memo && (
+                                  <p
+                                    style={{
+                                      fontSize: 12,
+                                      color: '#9ca3af',
+                                      margin: 0,
+                                    }}
+                                  >
+                                    {m.memo}
+                                  </p>
+                                )}
                               </div>
-                              <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: 4,
+                                  flexShrink: 0,
+                                  marginLeft: 8,
+                                }}
+                              >
                                 <button
                                   onClick={() => startEditMeeting(m)}
-                                  style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit' }}
+                                  style={{
+                                    fontSize: 12,
+                                    color: '#6b7280',
+                                    background: 'none',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                    padding: '3px 8px',
+                                    fontFamily: 'inherit',
+                                  }}
                                 >
                                   수정
                                 </button>
                                 <button
                                   onClick={() => handleDeleteMeeting(m.id)}
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 14, padding: '3px 4px' }}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: '#d1d5db',
+                                    fontSize: 14,
+                                    padding: '3px 4px',
+                                  }}
                                 >
                                   ✕
                                 </button>

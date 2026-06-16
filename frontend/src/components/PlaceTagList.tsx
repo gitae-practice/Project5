@@ -2,7 +2,10 @@ import { useState } from 'react'
 import type { MeetingPlaceInput } from '../types'
 
 // 드래그앤드롭으로 순서 변경 가능한 장소 태그 목록
-export default function PlaceTagList({ places, onChange }: {
+export default function PlaceTagList({
+  places,
+  onChange,
+}: {
   places: MeetingPlaceInput[]
   onChange: (places: MeetingPlaceInput[]) => void
 }) {
@@ -13,7 +16,10 @@ export default function PlaceTagList({ places, onChange }: {
 
   const handleDrop = (e: React.DragEvent, toIdx: number) => {
     e.preventDefault()
-    if (draggingIdx === null || draggingIdx === toIdx) { setDragOverIdx(null); return }
+    if (draggingIdx === null || draggingIdx === toIdx) {
+      setDragOverIdx(null)
+      return
+    }
     const next = [...places]
     const [item] = next.splice(draggingIdx, 1)
     next.splice(toIdx, 0, item)
@@ -29,17 +35,28 @@ export default function PlaceTagList({ places, onChange }: {
           key={i}
           draggable
           onDragStart={() => setDraggingIdx(i)}
-          onDragOver={e => { e.preventDefault(); setDragOverIdx(i) }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setDragOverIdx(i)
+          }}
           onDragLeave={() => setDragOverIdx(null)}
-          onDrop={e => handleDrop(e, i)}
-          onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null) }}
+          onDrop={(e) => handleDrop(e, i)}
+          onDragEnd={() => {
+            setDraggingIdx(null)
+            setDragOverIdx(null)
+          }}
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
             fontSize: 12,
             background: dragOverIdx === i ? '#eff6ff' : '#f3f4f6',
             border: `1px solid ${dragOverIdx === i ? '#bfdbfe' : '#e5e7eb'}`,
-            borderRadius: 5, padding: '3px 8px', color: '#374151',
-            cursor: 'grab', userSelect: 'none',
+            borderRadius: 5,
+            padding: '3px 8px',
+            color: '#374151',
+            cursor: 'grab',
+            userSelect: 'none',
             opacity: draggingIdx === i ? 0.4 : 1,
             transition: 'opacity 0.1s, background 0.1s, border-color 0.1s',
           }}
@@ -49,8 +66,18 @@ export default function PlaceTagList({ places, onChange }: {
           <button
             type="button"
             onClick={() => onChange(places.filter((_, j) => j !== i))}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 13, padding: 0, lineHeight: 1 }}
-          >×</button>
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#9ca3af',
+              fontSize: 13,
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
         </span>
       ))}
     </div>

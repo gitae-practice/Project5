@@ -9,9 +9,15 @@ let state: State = 'idle'
 const queue: Array<(ok: boolean) => void> = []
 
 export function loadKakaoSdk(): Promise<boolean> {
-  return new Promise(resolve => {
-    if (state === 'done') { resolve(true); return }
-    if (state === 'error') { resolve(false); return }
+  return new Promise((resolve) => {
+    if (state === 'done') {
+      resolve(true)
+      return
+    }
+    if (state === 'error') {
+      resolve(false)
+      return
+    }
 
     queue.push(resolve)
 
@@ -24,13 +30,13 @@ export function loadKakaoSdk(): Promise<boolean> {
     script.onload = () => {
       ;(window as any).kakao.maps.load(() => {
         state = 'done'
-        queue.splice(0).forEach(cb => cb(true))
+        queue.splice(0).forEach((cb) => cb(true))
       })
     }
 
     script.onerror = () => {
       state = 'error'
-      queue.splice(0).forEach(cb => cb(false))
+      queue.splice(0).forEach((cb) => cb(false))
     }
 
     document.head.appendChild(script)

@@ -48,7 +48,10 @@ function buildDayMap(meetings: Meeting[]): Record<string, number> {
   return map
 }
 
-function buildYearData(meetings: Meeting[], today: Date): { points: DataPoint[]; markers: { x: number; label: string }[] } {
+function buildYearData(
+  meetings: Meeting[],
+  today: Date,
+): { points: DataPoint[]; markers: { x: number; label: string }[] } {
   const WEEKS = 52
   const dayMap = buildDayMap(meetings)
 
@@ -94,7 +97,10 @@ function buildYearData(meetings: Meeting[], today: Date): { points: DataPoint[];
   return { points, markers }
 }
 
-function buildMonthData(meetings: Meeting[], today: Date): { points: DataPoint[]; markers: { x: number; label: string }[] } {
+function buildMonthData(
+  meetings: Meeting[],
+  today: Date,
+): { points: DataPoint[]; markers: { x: number; label: string }[] } {
   const year = today.getFullYear()
   const month = today.getMonth()
   const firstDay = new Date(year, month, 1)
@@ -144,7 +150,10 @@ function buildMonthData(meetings: Meeting[], today: Date): { points: DataPoint[]
   return { points, markers }
 }
 
-function buildWeekData(meetings: Meeting[], today: Date): { points: DataPoint[]; markers: { x: number; label: string }[] } {
+function buildWeekData(
+  meetings: Meeting[],
+  today: Date,
+): { points: DataPoint[]; markers: { x: number; label: string }[] } {
   const dow = today.getDay() || 7
   const monday = new Date(today)
   monday.setDate(today.getDate() - (dow - 1))
@@ -193,11 +202,13 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
     today.setHours(0, 0, 0, 0)
 
     const { points, markers } =
-      filter === 'year' ? buildYearData(meetings, today) :
-      filter === 'month' ? buildMonthData(meetings, today) :
-      buildWeekData(meetings, today)
+      filter === 'year'
+        ? buildYearData(meetings, today)
+        : filter === 'month'
+          ? buildMonthData(meetings, today)
+          : buildWeekData(meetings, today)
 
-    const maxCount = Math.max(...points.map(p => p.count), 1)
+    const maxCount = Math.max(...points.map((p) => p.count), 1)
     const totalCount = points.reduce((s, p) => s + p.count, 0)
     return { points, markers, maxCount, totalCount }
   }, [meetings, filter])
@@ -209,42 +220,70 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
   ])
 
   const linePath = smoothLinePath(pts)
-  const areaPath = pts.length > 0
-    ? `${linePath} L ${pts[pts.length - 1][0]},${PT + IH} L ${pts[0][0]},${PT + IH} Z`
-    : ''
+  const areaPath =
+    pts.length > 0
+      ? `${linePath} L ${pts[pts.length - 1][0]},${PT + IH} L ${pts[0][0]},${PT + IH} Z`
+      : ''
 
   const yTicks = [0, Math.round(maxCount / 2), maxCount]
   const hov = hoveredIdx !== null ? points[hoveredIdx] : null
   const hovPt = hoveredIdx !== null ? pts[hoveredIdx] : null
 
   return (
-    <div style={{
-      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
-      padding: '18px 20px 14px', marginBottom: 20,
-    }}>
+    <div
+      style={{
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 8,
+        padding: '18px 20px 14px',
+        marginBottom: 20,
+      }}
+    >
       {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 14,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>
             {FILTER_TITLE[filter]} 만남
           </span>
-          <span style={{
-            fontSize: 11, fontWeight: 700, color: '#fff', borderRadius: 10, padding: '1px 8px',
-            background: totalCount > 0 ? '#ea580c' : '#d1d5db',
-          }}>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#fff',
+              borderRadius: 10,
+              padding: '1px 8px',
+              background: totalCount > 0 ? '#ea580c' : '#d1d5db',
+            }}
+          >
             총 {totalCount}회
           </span>
         </div>
 
         {/* 필터 탭 */}
-        <div style={{ display: 'flex', gap: 2, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
+        <div
+          style={{ display: 'flex', gap: 2, background: '#f3f4f6', borderRadius: 8, padding: 3 }}
+        >
           {FILTERS.map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => { setFilter(key); setHoveredIdx(null) }}
+              onClick={() => {
+                setFilter(key)
+                setHoveredIdx(null)
+              }}
               style={{
-                fontSize: 11, fontWeight: 600,
-                padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '3px 10px',
+                borderRadius: 6,
+                border: 'none',
+                cursor: 'pointer',
                 transition: 'all 0.15s',
                 background: filter === key ? '#fff' : 'transparent',
                 color: filter === key ? '#ea580c' : '#6b7280',
@@ -270,12 +309,14 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
         </defs>
 
         {/* Y축 눈금선 */}
-        {yTicks.map(v => {
+        {yTicks.map((v) => {
           const y = PT + IH - (v / maxCount) * IH
           return (
             <g key={v}>
               <line x1={PL} y1={y} x2={PL + IW} y2={y} stroke="#f3f4f6" strokeWidth="1" />
-              <text x={PL - 4} y={y + 3.5} textAnchor="end" fontSize="9" fill="#c4c4c4">{v}</text>
+              <text x={PL - 4} y={y + 3.5} textAnchor="end" fontSize="9" fill="#c4c4c4">
+                {v}
+              </text>
             </g>
           )
         })}
@@ -284,13 +325,21 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
         {markers.map(({ x, label }, idx) => (
           <g key={idx}>
             {filter === 'year' && (
-              <line x1={x} y1={PT} x2={x} y2={PT + IH}
-                stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3" />
+              <line
+                x1={x}
+                y1={PT}
+                x2={x}
+                y2={PT + IH}
+                stroke="#e5e7eb"
+                strokeWidth="1"
+                strokeDasharray="3,3"
+              />
             )}
             <text
               x={x + (filter === 'year' ? 3 : 0)}
               y={PT + IH + 18}
-              fontSize="9" fill="#9ca3af"
+              fontSize="9"
+              fill="#9ca3af"
               textAnchor={filter === 'year' ? 'start' : 'middle'}
             >
               {label}
@@ -300,13 +349,20 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
 
         {/* 현재 주/일 하이라이트 밴드 */}
         {(() => {
-          const currentIdx = points.findIndex(p => p.isCurrent)
+          const currentIdx = points.findIndex((p) => p.isCurrent)
           if (currentIdx < 0 || pts.length === 0) return null
           const cx = pts[currentIdx][0]
           const bw = N > 1 ? IW / N : IW
           return (
-            <rect x={cx - bw / 2} y={PT} width={bw} height={IH}
-              fill="#6366f1" fillOpacity="0.06" rx="2" />
+            <rect
+              x={cx - bw / 2}
+              y={PT}
+              width={bw}
+              height={IH}
+              fill="#6366f1"
+              fillOpacity="0.06"
+              rx="2"
+            />
           )
         })()}
 
@@ -314,13 +370,27 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
         <path d={areaPath} fill="url(#areaGrad)" />
 
         {/* 라인 */}
-        <path d={linePath} fill="none" stroke="#f97316" strokeWidth="2"
-          strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d={linePath}
+          fill="none"
+          stroke="#f97316"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
         {/* 호버 세로선 */}
         {hovPt && (
-          <line x1={hovPt[0]} y1={PT} x2={hovPt[0]} y2={PT + IH}
-            stroke="#f97316" strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
+          <line
+            x1={hovPt[0]}
+            y1={PT}
+            x2={hovPt[0]}
+            y2={PT + IH}
+            stroke="#f97316"
+            strokeWidth="1"
+            strokeDasharray="3,3"
+            opacity="0.5"
+          />
         )}
 
         {/* 데이터 포인트 */}
@@ -328,62 +398,91 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
           if (points[i].count === 0 && hoveredIdx !== i) return null
           const isHov = hoveredIdx === i
           return (
-            <circle key={i} cx={x} cy={y}
+            <circle
+              key={i}
+              cx={x}
+              cy={y}
               r={isHov ? 5 : 3.5}
               fill={isHov ? '#ea580c' : '#f97316'}
-              stroke="#fff" strokeWidth={isHov ? 2 : 1.5}
+              stroke="#fff"
+              strokeWidth={isHov ? 2 : 1.5}
               style={{ transition: 'r 0.1s' }}
             />
           )
         })}
 
         {/* 선택된 포인트 하이라이트 링 */}
-        {selectedRange && pts.map(([x, y], i) => {
-          const p = points[i]
-          const s = p.startDate.toISOString().slice(0, 10)
-          const e = p.endDate.toISOString().slice(0, 10)
-          if (s !== selectedRange.start || e !== selectedRange.end) return null
-          return (
-            <circle key={`sel-${i}`} cx={x} cy={y} r={7}
-              fill="none" stroke="#ea580c" strokeWidth="2" opacity="0.8" />
-          )
-        })}
+        {selectedRange &&
+          pts.map(([x, y], i) => {
+            const p = points[i]
+            const s = p.startDate.toISOString().slice(0, 10)
+            const e = p.endDate.toISOString().slice(0, 10)
+            if (s !== selectedRange.start || e !== selectedRange.end) return null
+            return (
+              <circle
+                key={`sel-${i}`}
+                cx={x}
+                cy={y}
+                r={7}
+                fill="none"
+                stroke="#ea580c"
+                strokeWidth="2"
+                opacity="0.8"
+              />
+            )
+          })}
 
         {/* 인터랙션 오버레이 */}
         {pts.map(([x], i) => {
           const slotW = N > 1 ? IW / N : IW
           const p = points[i]
           return (
-            <rect key={i} x={x - slotW / 2} y={PT} width={slotW} height={IH}
-              fill="transparent" style={{ cursor: onPointClick ? 'pointer' : 'crosshair' }}
+            <rect
+              key={i}
+              x={x - slotW / 2}
+              y={PT}
+              width={slotW}
+              height={IH}
+              fill="transparent"
+              style={{ cursor: onPointClick ? 'pointer' : 'crosshair' }}
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
-              onClick={() => onPointClick?.(
-                p.startDate.toISOString().slice(0, 10),
-                p.endDate.toISOString().slice(0, 10),
-                p.label,
-              )}
+              onClick={() =>
+                onPointClick?.(
+                  p.startDate.toISOString().slice(0, 10),
+                  p.endDate.toISOString().slice(0, 10),
+                  p.label,
+                )
+              }
             />
           )
         })}
 
         {/* 툴팁 */}
-        {hov && hovPt && (() => {
-          const tx = hovPt[0]
-          const ty = hovPt[1] - 14
-          const text = `${hov.label} · ${hov.count}회`
-          const boxW = text.length * 6.2 + 16
-          const boxX = Math.min(Math.max(tx - boxW / 2, PL), PL + IW - boxW)
-          return (
-            <g>
-              <rect x={boxX} y={ty - 16} width={boxW} height={22} rx="5" fill="#1f2937" />
-              <text x={boxX + boxW / 2} y={ty - 1}
-                textAnchor="middle" fontSize="10" fill="#fff" fontWeight="600">
-                {text}
-              </text>
-            </g>
-          )
-        })()}
+        {hov &&
+          hovPt &&
+          (() => {
+            const tx = hovPt[0]
+            const ty = hovPt[1] - 14
+            const text = `${hov.label} · ${hov.count}회`
+            const boxW = text.length * 6.2 + 16
+            const boxX = Math.min(Math.max(tx - boxW / 2, PL), PL + IW - boxW)
+            return (
+              <g>
+                <rect x={boxX} y={ty - 16} width={boxW} height={22} rx="5" fill="#1f2937" />
+                <text
+                  x={boxX + boxW / 2}
+                  y={ty - 1}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fill="#fff"
+                  fontWeight="600"
+                >
+                  {text}
+                </text>
+              </g>
+            )
+          })()}
 
         {/* X축 베이스라인 */}
         <line x1={PL} y1={PT + IH} x2={PL + IW} y2={PT + IH} stroke="#e5e7eb" strokeWidth="1" />
