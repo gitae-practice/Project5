@@ -536,8 +536,8 @@ export default function Layout() {
             </div>
           )}
 
-          {/* 미분류 섹션 */}
-          {(ungrouped.length > 0 || dropTarget === 'ungrouped') && (
+          {/* 미분류 섹션 — 지인 드래그 중에도 표시해서 그룹 밖으로 빼낼 드롭존 보장 */}
+          {(ungrouped.length > 0 || draggingId !== null) && (
             <div {...dropZoneProps('ungrouped')}>
               <div
                 onClick={() => setCollapsed((p) => ({ ...p, ungrouped: !p.ungrouped }))}
