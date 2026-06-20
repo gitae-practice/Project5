@@ -29,7 +29,7 @@ export default function PlaceTagList({
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+    <div className="flex flex-wrap gap-1.5">
       {places.map((p, i) => (
         <span
           key={i}
@@ -45,36 +45,16 @@ export default function PlaceTagList({
             setDraggingIdx(null)
             setDragOverIdx(null)
           }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 12,
-            background: dragOverIdx === i ? '#eff6ff' : '#f3f4f6',
-            border: `1px solid ${dragOverIdx === i ? '#bfdbfe' : '#e5e7eb'}`,
-            borderRadius: 5,
-            padding: '3px 8px',
-            color: '#374151',
-            cursor: 'grab',
-            userSelect: 'none',
-            opacity: draggingIdx === i ? 0.4 : 1,
-            transition: 'opacity 0.1s, background 0.1s, border-color 0.1s',
-          }}
+          className={`inline-flex select-none items-center gap-1 rounded-[5px] border px-2 py-[3px] text-xs text-gray-700 transition duration-100 ${
+            dragOverIdx === i ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-100'
+          } ${draggingIdx === i ? 'opacity-40' : 'opacity-100'} cursor-grab`}
         >
-          <span style={{ color: '#9ca3af', fontSize: 11 }}>⠿</span>
+          <span className="text-[11px] text-gray-400">⠿</span>
           📍 {p.name}
           <button
             type="button"
             onClick={() => onChange(places.filter((_, j) => j !== i))}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#9ca3af',
-              fontSize: 13,
-              padding: 0,
-              lineHeight: 1,
-            }}
+            className="cursor-pointer border-none bg-transparent p-0 text-[13px] leading-none text-gray-400"
           >
             ×
           </button>

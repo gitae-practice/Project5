@@ -83,48 +83,20 @@ export default function MeetingMap({ meetings }: Props) {
   }, [ready, allPlacesKey])
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="flex h-full flex-col">
       {allPlaces.length > 0 && (
-        <p
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: '#9ca3af',
-            letterSpacing: '0.05em',
-            margin: '0 0 8px',
-          }}
-        >
+        <p className="m-0 mb-2 text-[11px] font-bold tracking-[0.05em] text-gray-400">
           VISITED PLACES ({allPlaces.length})
         </p>
       )}
 
       {/* position:relative 래퍼 + 내부 absolute div → Kakao가 크기를 정확히 인식 */}
-      <div
-        style={{
-          flex: 1,
-          position: 'relative',
-          minHeight: 380,
-          borderRadius: 10,
-          border: '1px solid #e5e7eb',
-          overflow: 'hidden',
-          background: '#f9fafb',
-        }}
-      >
-        <div ref={mapRef} style={{ position: 'absolute', inset: 0 }} />
+      <div className="relative min-h-[380px] flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-gray-50">
+        <div ref={mapRef} className="absolute inset-0" />
 
         {/* 지도 컨트롤: + / - */}
         {ready && (
-          <div
-            style={{
-              position: 'absolute',
-              right: 10,
-              bottom: 20,
-              zIndex: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-            }}
-          >
+          <div className="absolute bottom-[20px] right-[10px] z-10 flex flex-col gap-0.5">
             {[
               {
                 label: '+',
@@ -141,22 +113,7 @@ export default function MeetingMap({ meetings }: Props) {
                 key={btn.label}
                 onClick={btn.onClick}
                 title={btn.title}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 4,
-                  background: '#fff',
-                  border: '1px solid #d1d5db',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                  fontSize: 20,
-                  fontWeight: 600,
-                  color: '#374151',
-                  lineHeight: 1,
-                }}
+                className="flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-xl font-semibold leading-none text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
               >
                 {btn.label}
               </button>
@@ -165,22 +122,9 @@ export default function MeetingMap({ meetings }: Props) {
         )}
 
         {sdkError && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              background: '#f9fafb',
-            }}
-          >
-            <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 600 }}>
-              지도를 불러올 수 없어요
-            </span>
-            <span style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', lineHeight: 1.8 }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-50">
+            <span className="text-[13px] font-semibold text-red-500">지도를 불러올 수 없어요</span>
+            <span className="text-center text-[11px] leading-[1.8] text-gray-400">
               네트워크 연결을 확인하거나 페이지를 새로고침 해주세요
             </span>
           </div>
@@ -188,7 +132,7 @@ export default function MeetingMap({ meetings }: Props) {
       </div>
 
       {allPlaces.length === 0 && !sdkError && (
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#d1d5db', margin: '8px 0 0' }}>
+        <p className="m-0 mt-2 text-center text-xs text-gray-300">
           장소를 추가하면 지도에 표시돼요
         </p>
       )}

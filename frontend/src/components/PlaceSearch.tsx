@@ -58,56 +58,25 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
   const modal = open
     ? createPortal(
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-          }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45"
           onClick={handleClose}
         >
           <div
-            style={{
-              background: '#fff',
-              borderRadius: 10,
-              padding: 20,
-              width: 420,
-              maxHeight: '70vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-            }}
+            className="flex max-h-[70vh] w-[420px] flex-col rounded-[10px] bg-white p-5 shadow-[0_8px_32px_rgba(0,0,0,0.18)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 14,
-              }}
-            >
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>장소 검색</span>
+            <div className="mb-3.5 flex items-center justify-between">
+              <span className="text-[15px] font-bold text-[#111]">장소 검색</span>
               <button
                 type="button"
                 onClick={handleClose}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 18,
-                  color: '#9ca3af',
-                  lineHeight: 1,
-                }}
+                className="cursor-pointer border-none bg-transparent text-lg leading-none text-gray-400"
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <div className="mb-3 flex gap-2">
               <input
                 autoFocus
                 type="text"
@@ -120,68 +89,33 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
                   }
                 }}
                 placeholder="장소명 검색 (예: 성수동 카페)"
-                style={{
-                  flex: 1,
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 6,
-                  padding: '9px 12px',
-                  fontSize: 13,
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                }}
+                className="flex-1 rounded-md border border-gray-200 px-3 py-[9px] text-[13px] outline-none"
               />
               {/* type="button" 필수 - 없으면 부모 form submit 트리거 */}
               <button
                 type="button"
                 onClick={handleSearch}
-                style={{
-                  padding: '9px 16px',
-                  background: '#111',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontFamily: 'inherit',
-                }}
+                className="cursor-pointer rounded-md border-none bg-[#111] px-4 py-[9px] text-[13px] text-white"
               >
                 검색
               </button>
             </div>
 
             {sdkError && (
-              <p
-                style={{
-                  textAlign: 'center',
-                  color: '#ef4444',
-                  fontSize: 12,
-                  padding: '8px 0',
-                  margin: 0,
-                }}
-              >
+              <p className="m-0 py-2 text-center text-xs text-red-500">
                 지도 SDK를 불러올 수 없어요. 네트워크를 확인해주세요.
               </p>
             )}
 
-            <div style={{ overflowY: 'auto', flex: 1 }}>
+            <div className="flex-1 overflow-y-auto">
               {searching && (
-                <p
-                  style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '20px 0' }}
-                >
-                  검색 중...
-                </p>
+                <p className="py-5 text-center text-[13px] text-gray-400">검색 중...</p>
               )}
               {!searching && results.length === 0 && query && !sdkError && (
-                <p
-                  style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '20px 0' }}
-                >
-                  검색 결과가 없어요
-                </p>
+                <p className="py-5 text-center text-[13px] text-gray-400">검색 결과가 없어요</p>
               )}
               {!searching && results.length === 0 && !query && (
-                <p
-                  style={{ textAlign: 'center', color: '#d1d5db', fontSize: 13, padding: '20px 0' }}
-                >
+                <p className="py-5 text-center text-[13px] text-gray-300">
                   위에 장소명을 입력하세요
                 </p>
               )}
@@ -189,23 +123,12 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
                 <div
                   key={i}
                   onClick={() => handleSelect(place)}
-                  style={{
-                    padding: '10px 8px',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    borderBottom: i < results.length - 1 ? '1px solid #f3f4f6' : 'none',
-                  }}
-                  onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLElement).style.background = '#f9fafb')
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLElement).style.background = 'transparent')
-                  }
+                  className={`cursor-pointer rounded-md px-2 py-[10px] hover:bg-gray-50 ${
+                    i < results.length - 1 ? 'border-b border-gray-100' : 'border-b-0'
+                  }`}
                 >
-                  <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, color: '#111' }}>
-                    {place.place_name}
-                  </p>
-                  <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>{place.address_name}</p>
+                  <p className="m-0 mb-0.5 text-sm font-semibold text-[#111]">{place.place_name}</p>
+                  <p className="m-0 text-xs text-gray-400">{place.address_name}</p>
                 </div>
               ))}
             </div>
@@ -219,24 +142,15 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
     <>
       <div
         onClick={() => setOpen(true)}
-        style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: 6,
-          padding: '8px 10px',
-          fontSize: 13,
-          color: value ? '#111' : '#9ca3af',
-          cursor: 'pointer',
-          background: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          ...style,
-        }}
+        style={style}
+        className={`flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] ${
+          value ? 'text-[#111]' : 'text-gray-400'
+        }`}
       >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className="overflow-hidden text-ellipsis whitespace-nowrap">
           {value || '장소 검색'}
         </span>
-        <span style={{ fontSize: 13, flexShrink: 0, marginLeft: 4 }}>🔍</span>
+        <span className="ml-1 flex-shrink-0 text-[13px]">🔍</span>
       </div>
       {modal}
     </>

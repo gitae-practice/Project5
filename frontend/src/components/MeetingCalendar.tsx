@@ -102,56 +102,24 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
         ? `${year}년`
         : `${yearRangeStart} – ${yearRangeStart + 11}`
 
-  const btnStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 22,
-    color: '#374151',
-    padding: '2px 10px',
-    lineHeight: 1,
-  }
+  const btnClass =
+    'cursor-pointer border-none bg-transparent px-2.5 py-0.5 text-[22px] leading-none text-gray-700'
 
   return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 10,
-        border: '1px solid #e5e7eb',
-        padding: '24px',
-        marginBottom: 20,
-      }}
-    >
+    <div className="mb-5 rounded-[10px] border border-gray-200 bg-white p-6">
       {/* 헤더 */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 20,
-        }}
-      >
-        <button type="button" onClick={prevUnit} style={btnStyle}>
+      <div className="mb-5 flex items-center justify-between">
+        <button type="button" onClick={prevUnit} className={btnClass}>
           ‹
         </button>
         <button
           type="button"
           onClick={handleHeaderClick}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 17,
-            fontWeight: 700,
-            color: '#111',
-            fontFamily: 'inherit',
-            padding: '4px 8px',
-            borderRadius: 6,
-          }}
+          className="cursor-pointer rounded-md border-none bg-transparent px-2 py-1 text-[17px] font-bold text-[#111]"
         >
-          {headerText} <span style={{ fontSize: 11, color: '#9ca3af' }}>▾</span>
+          {headerText} <span className="text-[11px] text-gray-400">▾</span>
         </button>
-        <button type="button" onClick={nextUnit} style={btnStyle}>
+        <button type="button" onClick={nextUnit} className={btnClass}>
           ›
         </button>
       </div>
@@ -159,50 +127,46 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
       {/* 날짜 뷰 */}
       {viewMode === 'days' && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
+          <div className="mb-1.5 grid grid-cols-7">
             {DAY_LABELS.map((d, i) => (
               <div
                 key={d}
-                style={{
-                  textAlign: 'center',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  paddingBottom: 8,
-                  color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : '#9ca3af',
-                }}
+                className={`pb-2 text-center text-xs font-semibold ${
+                  i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-400'
+                }`}
               >
                 {d}
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+          <div className="grid grid-cols-7">
             {cells.map((day, i) => {
               const isToday = isCurrentMonth && day === todayDate
               const hasMeeting = day !== null && meetingDates.has(day)
               const isSun = i % 7 === 0
               const isSat = i % 7 === 6
 
-              let bg = 'transparent'
-              let border = 'none'
-              let color = isSun ? '#ef4444' : isSat ? '#3b82f6' : '#111'
-              let fw = 400
+              let bgClass = ''
+              let borderClass = ''
+              let colorClass = isSun ? 'text-red-500' : isSat ? 'text-blue-500' : 'text-[#111]'
+              let fwClass = 'font-normal'
 
               if (hasMeeting && isToday) {
                 // 오늘 + 만남: 빨간 채움
-                bg = '#ef4444'
-                color = '#fff'
-                fw = 700
+                bgClass = 'bg-red-500'
+                colorClass = 'text-white'
+                fwClass = 'font-bold'
               } else if (hasMeeting) {
                 // 만남: 빨간 테두리 원
-                border = '2px solid #ef4444'
-                color = '#ef4444'
-                fw = 700
+                borderClass = 'border-2 border-red-500'
+                colorClass = 'text-red-500'
+                fwClass = 'font-bold'
               } else if (isToday) {
                 // 오늘: 검은 채움
-                bg = '#111'
-                color = '#fff'
-                fw = 700
+                bgClass = 'bg-[#111]'
+                colorClass = 'text-white'
+                fwClass = 'font-bold'
               }
 
               const dateStr =
@@ -212,30 +176,16 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
               const isSelected = dateStr !== null && selectedDate === dateStr
 
               return (
-                <div
-                  key={i}
-                  style={{ display: 'flex', justifyContent: 'center', padding: '4px 0' }}
-                >
+                <div key={i} className="flex justify-center py-1">
                   {day !== null && (
                     <div
                       onClick={() => onDateSelect?.(isSelected ? null : dateStr)}
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: bg,
-                        border,
-                        fontSize: 14,
-                        fontWeight: fw,
-                        color,
-                        cursor: 'pointer',
+                      className={`flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full text-sm ${bgClass} ${borderClass} ${colorClass} ${fwClass} ${
                         // 선택된 날: 파란 외곽선으로 표시
-                        outline: isSelected ? '2.5px solid #3b82f6' : 'none',
-                        outlineOffset: '2px',
-                      }}
+                        isSelected
+                          ? 'outline outline-[2.5px] outline-offset-2 outline-blue-500'
+                          : 'outline-none'
+                      }`}
                     >
                       {day}
                     </div>
@@ -246,16 +196,7 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
           </div>
 
           {meetingDates.size > 0 && (
-            <div
-              style={{
-                marginTop: 14,
-                paddingTop: 14,
-                borderTop: '1px solid #f3f4f6',
-                fontSize: 12,
-                color: '#9ca3af',
-                textAlign: 'center',
-              }}
-            >
+            <div className="mt-3.5 border-t border-gray-100 pt-3.5 text-center text-xs text-gray-400">
               {year}년 {month + 1}월 만남 {meetingDates.size}회
             </div>
           )}
@@ -264,7 +205,7 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
 
       {/* 월 선택 뷰 */}
       {viewMode === 'months' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div className="grid grid-cols-4 gap-2">
           {MONTH_LABELS.map((label, i) => {
             const isSelected = i === month
             return (
@@ -272,17 +213,11 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
                 key={i}
                 type="button"
                 onClick={() => selectMonth(i)}
-                style={{
-                  padding: '14px 0',
-                  fontSize: 14,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  border: isSelected ? 'none' : '1px solid #e5e7eb',
-                  background: isSelected ? '#111' : '#fff',
-                  color: isSelected ? '#fff' : '#111',
-                  fontWeight: isSelected ? 700 : 400,
-                  fontFamily: 'inherit',
-                }}
+                className={`cursor-pointer rounded-lg px-0 py-3.5 text-sm ${
+                  isSelected
+                    ? 'border-none bg-[#111] font-bold text-white'
+                    : 'border border-gray-200 bg-white font-normal text-[#111]'
+                }`}
               >
                 {label}
               </button>
@@ -293,7 +228,7 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
 
       {/* 년도 선택 뷰 */}
       {viewMode === 'years' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div className="grid grid-cols-4 gap-2">
           {Array.from({ length: 12 }, (_, i) => yearRangeStart + i).map((y) => {
             const isSelected = y === year
             return (
@@ -301,17 +236,11 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
                 key={y}
                 type="button"
                 onClick={() => selectYear(y)}
-                style={{
-                  padding: '14px 0',
-                  fontSize: 14,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  border: isSelected ? 'none' : '1px solid #e5e7eb',
-                  background: isSelected ? '#111' : '#fff',
-                  color: isSelected ? '#fff' : '#111',
-                  fontWeight: isSelected ? 700 : 400,
-                  fontFamily: 'inherit',
-                }}
+                className={`cursor-pointer rounded-lg px-0 py-3.5 text-sm ${
+                  isSelected
+                    ? 'border-none bg-[#111] font-bold text-white'
+                    : 'border border-gray-200 bg-white font-normal text-[#111]'
+                }`}
               >
                 {y}
               </button>

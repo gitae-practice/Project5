@@ -52,24 +52,14 @@ function Avatar({
       style={{
         width: size,
         height: size,
-        borderRadius: '50%',
-        flexShrink: 0,
-        overflow: 'hidden',
         background: photoUrl ? '#f3f4f6' : color + '22',
         color,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         fontSize: size * 0.38,
-        fontWeight: 700,
       }}
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold"
     >
       {photoUrl ? (
-        <img
-          src={photoUrl}
-          alt={name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
+        <img src={photoUrl} alt={name} className="h-full w-full object-cover" />
       ) : (
         name[0]
       )}
@@ -80,19 +70,10 @@ function Avatar({
 // 섹션 헤더
 function SectionHeader({ title, count }: { title: string; count?: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-      <span style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>{title}</span>
+    <div className="mb-3 flex items-center gap-2">
+      <span className="text-xs font-bold text-gray-700">{title}</span>
       {count !== undefined && (
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: '#9ca3af',
-            background: '#f3f4f6',
-            borderRadius: 10,
-            padding: '1px 7px',
-          }}
-        >
+        <span className="rounded-[10px] bg-gray-100 px-1.75 py-px text-[10px] font-bold text-gray-400">
           {count}
         </span>
       )}
@@ -102,7 +83,7 @@ function SectionHeader({ title, count }: { title: string; count?: number }) {
 
 // 빈 상태 메시지
 function EmptyMsg({ text }: { text: string }) {
-  return <p style={{ fontSize: 12, color: '#d1d5db', margin: 0, padding: '10px 0' }}>{text}</p>
+  return <p className="m-0 py-2.5 text-xs text-gray-300">{text}</p>
 }
 
 // 생일 카드
@@ -111,22 +92,9 @@ function BirthdayCard({ item, onClick }: { item: DashboardBirthdayItem; onClick:
   return (
     <div
       onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 8,
-        padding: '14px 12px',
-        borderRadius: 10,
-        cursor: 'pointer',
-        border: `1px solid ${isToday ? '#fce7f3' : '#e5e7eb'}`,
-        background: isToday ? '#fff7fb' : '#fff',
-        minWidth: 90,
-        flexShrink: 0,
-        transition: 'box-shadow 0.15s',
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)')}
-      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
+      className={`flex min-w-22.5 shrink-0 flex-col items-center gap-2 rounded-[10px] border px-3 py-3.5 cursor-pointer transition-shadow duration-150 hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${
+        isToday ? 'border-pink-100 bg-[#fff7fb]' : 'border-gray-200 bg-white'
+      }`}
     >
       <Avatar
         name={item.name}
@@ -134,15 +102,10 @@ function BirthdayCard({ item, onClick }: { item: DashboardBirthdayItem; onClick:
         relationship={item.relationship}
         size={44}
       />
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#111' }}>{item.name}</div>
+      <div className="text-center">
+        <div className="text-xs font-semibold text-[#111]">{item.name}</div>
         <div
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            marginTop: 2,
-            color: isToday ? '#ec4899' : '#f59e0b',
-          }}
+          className={`mt-0.5 text-[11px] font-bold ${isToday ? 'text-pink-500' : 'text-amber-500'}`}
         >
           {isToday ? '🎂 오늘!' : `D-${item.daysUntil}`}
         </div>
@@ -165,17 +128,7 @@ function NotSeenRow({ item, onClick }: { item: DashboardNotSeenItem; onClick: ()
   return (
     <div
       onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
-        borderRadius: 8,
-        cursor: 'pointer',
-        transition: 'background 0.1s',
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      className="flex cursor-pointer items-center gap-3 rounded-lg px-3.5 py-2.5 transition-colors duration-100 hover:bg-gray-50"
     >
       <Avatar
         name={item.name}
@@ -183,11 +136,13 @@ function NotSeenRow({ item, onClick }: { item: DashboardNotSeenItem; onClick: ()
         relationship={item.relationship}
         size={38}
       />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{item.name}</div>
-        <div style={{ fontSize: 11, color: relColor(item.relationship) }}>{item.relationship}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] font-semibold text-[#111]">{item.name}</div>
+        <div style={{ color: relColor(item.relationship) }} className="text-[11px]">
+          {item.relationship}
+        </div>
       </div>
-      <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{label}</span>
+      <span className="shrink-0 text-[11px] text-gray-400">{label}</span>
     </div>
   )
 }
@@ -237,26 +192,14 @@ function GroupedMeetingRow({ group, onClick }: { group: GroupedMeeting; onClick:
   return (
     <div
       onClick={canClick ? onClick : undefined}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
-        borderRadius: 8,
-        cursor: canClick ? 'pointer' : 'default',
-        transition: 'background 0.1s',
-      }}
-      onMouseEnter={(e) => {
-        if (canClick) e.currentTarget.style.background = '#f9fafb'
-      }}
-      onMouseLeave={(e) => {
-        if (canClick) e.currentTarget.style.background = 'transparent'
-      }}
+      className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 transition-colors duration-100 ${
+        canClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
+      }`}
     >
       {/* 아바타: 최대 3개 겹쳐서 표시 */}
-      <div style={{ display: 'flex', flexShrink: 0 }}>
+      <div className="flex shrink-0">
         {group.meetings.slice(0, 3).map((m, i) => (
-          <div key={m.meetingId} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: 3 - i }}>
+          <div key={m.meetingId} style={{ zIndex: 3 - i }} className={i === 0 ? '' : '-ml-2.5'}>
             <Avatar
               name={m.contactName}
               photoUrl={m.contactPhotoUrl}
@@ -266,70 +209,29 @@ function GroupedMeetingRow({ group, onClick }: { group: GroupedMeeting; onClick:
           </div>
         ))}
         {group.meetings.length > 3 && (
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              marginLeft: -10,
-              background: '#e5e7eb',
-              color: '#6b7280',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 11,
-              fontWeight: 700,
-              zIndex: 0,
-            }}
-          >
+          <div className="z-0 -ml-2.5 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-200 text-[11px] font-bold text-gray-500">
             +{group.meetings.length - 3}
           </div>
         )}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#111',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
+      <div className="min-w-0 flex-1">
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#111]">
           {names}
         </div>
         {mainPlace && (
-          <div
-            style={{
-              fontSize: 11,
-              color: '#6b7280',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-gray-500">
             📍 {mainPlace}
             {extraCount > 0 ? ` 외 ${extraCount}곳` : ''}
           </div>
         )}
       </div>
-      <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{group.date}</span>
+      <span className="shrink-0 text-[11px] text-gray-400">{group.date}</span>
     </div>
   )
 }
 
-const inputStyle: React.CSSProperties = {
-  border: '1px solid #e5e7eb',
-  borderRadius: 6,
-  padding: '7px 10px',
-  fontSize: 13,
-  outline: 'none',
-  fontFamily: 'inherit',
-  color: '#111',
-  background: '#fff',
-  boxSizing: 'border-box',
-}
+const inputClass =
+  'box-border rounded-md border border-gray-200 bg-white px-2.5 py-1.75 text-[13px] text-[#111] outline-none'
 
 export default function ContactListPage() {
   const navigate = useNavigate()
@@ -493,20 +395,16 @@ export default function ContactListPage() {
 
   if (loading) {
     return (
-      <div
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
-      >
-        <span style={{ fontSize: 13, color: '#d1d5db' }}>불러오는 중...</span>
+      <div className="flex h-full items-center justify-center">
+        <span className="text-[13px] text-gray-300">불러오는 중...</span>
       </div>
     )
   }
 
   if (!data) {
     return (
-      <div
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
-      >
-        <span style={{ fontSize: 13, color: '#d1d5db' }}>데이터를 불러올 수 없어요</span>
+      <div className="flex h-full items-center justify-center">
+        <span className="text-[13px] text-gray-300">데이터를 불러올 수 없어요</span>
       </div>
     )
   }
@@ -520,36 +418,13 @@ export default function ContactListPage() {
 
   if (!hasAnyData) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          gap: 8,
-        }}
-      >
-        <span style={{ fontSize: 32 }}>🗂️</span>
-        <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: 0 }}>
-          지인을 추가해보세요
-        </p>
-        <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
-          왼쪽에서 지인을 등록하면 여기에 요약이 표시돼요
-        </p>
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        <span className="text-[32px]">🗂️</span>
+        <p className="m-0 text-sm font-semibold text-gray-700">지인을 추가해보세요</p>
+        <p className="m-0 text-xs text-gray-400">왼쪽에서 지인을 등록하면 여기에 요약이 표시돼요</p>
         <button
           onClick={() => navigate('/contacts/new')}
-          style={{
-            marginTop: 8,
-            fontSize: 12,
-            fontWeight: 600,
-            color: '#fff',
-            background: '#111',
-            border: 'none',
-            borderRadius: 7,
-            padding: '8px 16px',
-            cursor: 'pointer',
-          }}
+          className="mt-2 cursor-pointer rounded-[7px] border-none bg-[#111] px-4 py-2 text-xs font-semibold text-white"
         >
           + 지인 추가
         </button>
@@ -558,7 +433,7 @@ export default function ContactListPage() {
   }
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 680, margin: '0 auto' }}>
+    <div className="mx-auto max-w-170 px-8 py-7">
       {confirm && (
         <ConfirmModal
           message={confirm.message}
@@ -568,56 +443,21 @@ export default function ContactListPage() {
       )}
 
       {/* 빠른 만남 기록 */}
-      <section style={{ marginBottom: 32 }}>
+      <section className="mb-8">
         {!showQuickForm ? (
           <button
             onClick={() => setShowQuickForm(true)}
-            style={{
-              width: '100%',
-              padding: '11px 16px',
-              borderRadius: 10,
-              border: '1.5px dashed #d1d5db',
-              background: '#fafafa',
-              fontSize: 13,
-              color: '#9ca3af',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              transition: 'border-color 0.15s, color 0.15s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#111'
-              e.currentTarget.style.color = '#374151'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#d1d5db'
-              e.currentTarget.style.color = '#9ca3af'
-            }}
+            className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-dashed border-gray-300 bg-[#fafafa] px-4 py-2.75 text-left text-[13px] text-gray-400 transition-colors duration-150 hover:border-[#111] hover:text-gray-700"
           >
             + 오늘 만남 기록하기
           </button>
         ) : (
           <form
             onSubmit={handleQuickSave}
-            style={{
-              background: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
+            className="flex flex-col gap-2.5 rounded-[10px] border border-gray-200 bg-white p-4"
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 2,
-              }}
-            >
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>만남 기록</span>
+            <div className="mb-0.5 flex items-center justify-between">
+              <span className="text-[13px] font-bold text-[#111]">만남 기록</span>
               <button
                 type="button"
                 onClick={() => {
@@ -626,27 +466,19 @@ export default function ContactListPage() {
                   setQuickForm({ date: today, places: [], memo: '' })
                   setQuickSubmitAttempted(false)
                 }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9ca3af',
-                  fontSize: 18,
-                  lineHeight: 1,
-                  padding: 0,
-                }}
+                className="cursor-pointer border-none bg-transparent p-0 text-lg leading-none text-gray-400"
               >
                 ×
               </button>
             </div>
 
             {/* 날짜 + 장소 */}
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <input
                 type="date"
                 value={quickForm.date}
                 onChange={(e) => setQuickForm((p) => ({ ...p, date: e.target.value }))}
-                style={{ ...inputStyle, flex: '0 0 140px' }}
+                className={`${inputClass} flex-[0_0_140px]`}
               />
               <PlaceSearch
                 value=""
@@ -665,18 +497,10 @@ export default function ContactListPage() {
 
             {/* 지인 선택 */}
             <div>
-              <p
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: '#9ca3af',
-                  margin: '0 0 6px',
-                  letterSpacing: '0.05em',
-                }}
-              >
+              <p className="m-0 mb-1.5 text-[11px] font-bold tracking-wider text-gray-400">
                 만난 지인 *
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="flex flex-wrap gap-1.5">
                 {allContacts.map((c) => {
                   const selected = selectedIds.includes(c.id)
                   return (
@@ -688,18 +512,11 @@ export default function ContactListPage() {
                           selected ? prev.filter((id) => id !== c.id) : [...prev, c.id],
                         )
                       }
-                      style={{
-                        fontSize: 12,
-                        padding: '4px 10px',
-                        borderRadius: 5,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        transition: 'all 0.1s',
-                        background: selected ? '#111' : '#f3f4f6',
-                        color: selected ? '#fff' : '#374151',
-                        border: selected ? '1px solid #111' : '1px solid #e5e7eb',
-                        fontWeight: selected ? 600 : 400,
-                      }}
+                      className={`cursor-pointer rounded-[5px] border px-2.5 py-1 text-xs transition-all duration-100 ${
+                        selected
+                          ? 'border-[#111] bg-[#111] font-semibold text-white'
+                          : 'border-gray-200 bg-gray-100 font-normal text-gray-700'
+                      }`}
                     >
                       {c.name}
                     </button>
@@ -714,38 +531,25 @@ export default function ContactListPage() {
               value={quickForm.memo}
               onChange={(e) => setQuickForm((p) => ({ ...p, memo: e.target.value }))}
               placeholder="메모 (선택)"
-              style={{ ...inputStyle, width: '100%' }}
+              className={`${inputClass} w-full`}
             />
 
-            <div
-              style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}
-            >
+            <div className="flex items-center justify-end gap-2.5">
               {/* 저장 시도 후 미충족 조건 안내 */}
               {quickSubmitAttempted && quickForm.places.length === 0 && (
-                <span style={{ fontSize: 11, color: '#ef4444' }}>장소를 1개 이상 추가해주세요</span>
+                <span className="text-[11px] text-red-500">장소를 1개 이상 추가해주세요</span>
               )}
               {quickSubmitAttempted && selectedIds.length === 0 && quickForm.places.length > 0 && (
-                <span style={{ fontSize: 11, color: '#ef4444' }}>
-                  만난 지인을 1명 이상 선택해주세요
-                </span>
+                <span className="text-[11px] text-red-500">만난 지인을 1명 이상 선택해주세요</span>
               )}
               <button
                 type="submit"
                 disabled={saving}
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  padding: '7px 18px',
-                  background:
-                    selectedIds.length === 0 || quickForm.places.length === 0 ? '#e5e7eb' : '#111',
-                  color:
-                    selectedIds.length === 0 || quickForm.places.length === 0 ? '#9ca3af' : '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'background 0.1s',
-                }}
+                className={`cursor-pointer rounded-md border-none px-4.5 py-1.75 text-[13px] font-semibold transition-colors duration-100 ${
+                  selectedIds.length === 0 || quickForm.places.length === 0
+                    ? 'bg-gray-200 text-gray-400'
+                    : 'bg-[#111] text-white'
+                }`}
               >
                 {saving ? '저장 중...' : '저장'}
               </button>
@@ -756,9 +560,9 @@ export default function ContactListPage() {
 
       {/* 예정된 만남 */}
       {upcomingMeetings.length > 0 && (
-        <section style={{ marginBottom: 32 }}>
+        <section className="mb-8">
           <SectionHeader title="예정된 만남" count={groupRecentMeetings(upcomingMeetings).length} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="flex flex-col gap-2">
             {groupRecentMeetings(upcomingMeetings).map((group) => {
               const dDay = Math.round(
                 (new Date(group.date).getTime() - new Date(today).getTime()) /
@@ -771,38 +575,25 @@ export default function ContactListPage() {
               return (
                 <div
                   key={group.groupKey}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    border: `1px solid ${dDay === 0 ? '#bfdbfe' : '#e5e7eb'}`,
-                    background: dDay === 0 ? '#eff6ff' : '#fff',
-                  }}
+                  className={`flex items-center gap-3 rounded-[10px] border px-3.5 py-3 ${
+                    dDay === 0 ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-white'
+                  }`}
                 >
                   {/* D-day 배지 */}
                   <div
-                    style={{
-                      flexShrink: 0,
-                      minWidth: 48,
-                      textAlign: 'center',
-                      padding: '4px 6px',
-                      borderRadius: 6,
-                      background: dDay === 0 ? '#3b82f6' : '#f3f4f6',
-                      color: dDay === 0 ? '#fff' : '#374151',
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}
+                    className={`shrink-0 min-w-12 rounded-md px-1.5 py-1 text-center text-[11px] font-bold ${
+                      dDay === 0 ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'
+                    }`}
                   >
                     {dLabel}
                   </div>
                   {/* 아바타 */}
-                  <div style={{ display: 'flex', flexShrink: 0 }}>
+                  <div className="flex shrink-0">
                     {group.meetings.slice(0, 3).map((m, i) => (
                       <div
                         key={m.meetingId}
-                        style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 3 - i }}
+                        style={{ zIndex: 3 - i }}
+                        className={i === 0 ? '' : '-ml-2'}
                       >
                         <Avatar
                           name={m.contactName}
@@ -813,58 +604,25 @@ export default function ContactListPage() {
                       </div>
                     ))}
                     {group.meetings.length > 3 && (
-                      <div
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: '50%',
-                          marginLeft: -8,
-                          background: '#e5e7eb',
-                          color: '#6b7280',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 10,
-                          fontWeight: 700,
-                        }}
-                      >
+                      <div className="-ml-2 flex h-8.5 w-8.5 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-500">
                         +{group.meetings.length - 3}
                       </div>
                     )}
                   </div>
                   {/* 이름 + 장소 */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: '#111',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                  <div className="min-w-0 flex-1">
+                    <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#111]">
                       {names}
                     </div>
                     {mainPlace && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: '#6b7280',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                      <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-gray-500">
                         📍 {mainPlace}
                         {extraCount > 0 ? ` 외 ${extraCount}곳` : ''}
                       </div>
                     )}
                   </div>
                   {/* 날짜 */}
-                  <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>
-                    {group.date}
-                  </span>
+                  <span className="shrink-0 text-[11px] text-gray-400">{group.date}</span>
                 </div>
               )
             })}
@@ -874,9 +632,9 @@ export default function ContactListPage() {
 
       {/* 생일 임박 */}
       {upcomingBirthdays.length > 0 && (
-        <section style={{ marginBottom: 32 }}>
+        <section className="mb-8">
           <SectionHeader title="생일 임박" count={upcomingBirthdays.length} />
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+          <div className="flex gap-2.5 overflow-x-auto pb-1">
             {upcomingBirthdays.map((item) => (
               <BirthdayCard
                 key={item.id}
@@ -889,21 +647,14 @@ export default function ContactListPage() {
       )}
 
       {/* 오래 못 본 지인 */}
-      <section style={{ marginBottom: 32 }}>
+      <section className="mb-8">
         <SectionHeader title="오래 못 본 지인" count={notSeenRecently.length} />
         {notSeenRecently.length === 0 ? (
           <EmptyMsg text="최근 30일 이내에 모든 지인을 만났어요" />
         ) : (
-          <div
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              overflow: 'hidden',
-              background: '#fff',
-            }}
-          >
+          <div className="overflow-hidden rounded-[10px] border border-gray-200 bg-white">
             {notSeenRecently.map((item, i) => (
-              <div key={item.id} style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}>
+              <div key={item.id} className={i === 0 ? '' : 'border-t border-gray-100'}>
                 <NotSeenRow item={item} onClick={() => navigate(`/contacts/${item.id}`)} />
               </div>
             ))}
@@ -917,38 +668,23 @@ export default function ContactListPage() {
         {recentMeetings.length === 0 ? (
           <EmptyMsg text="아직 만남 기록이 없어요" />
         ) : (
-          <div
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              overflow: 'hidden',
-              background: '#fff',
-            }}
-          >
+          <div className="overflow-hidden rounded-[10px] border border-gray-200 bg-white">
             {groupRecentMeetings(recentMeetings)
               .slice(0, 5)
               .map((group, i) => (
-                <div
-                  key={group.groupKey}
-                  style={{ borderTop: i === 0 ? 'none' : '1px solid #f3f4f6' }}
-                >
+                <div key={group.groupKey} className={i === 0 ? '' : 'border-t border-gray-100'}>
                   {editingGroupKey === group.groupKey ? (
                     /* 인라인 수정 폼 */
                     <form
                       onSubmit={(e) => handleUpdateMeeting(e, group)}
-                      style={{
-                        padding: '12px 16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 8,
-                      }}
+                      className="flex flex-col gap-2 px-4 py-3"
                     >
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="flex gap-2">
                         <input
                           type="date"
                           value={editForm.date}
                           onChange={(e) => setEditForm((p) => ({ ...p, date: e.target.value }))}
-                          style={{ ...inputStyle, flex: '0 0 140px', fontSize: 12 }}
+                          className={`${inputClass} flex-[0_0_140px] text-xs`}
                         />
                         <PlaceSearch
                           value=""
@@ -966,37 +702,19 @@ export default function ContactListPage() {
                         onChange={(places) => setEditForm((p) => ({ ...p, places }))}
                       />
                       {editForm.places.length === 0 && (
-                        <p style={{ fontSize: 11, color: '#ef4444', margin: 0 }}>
-                          장소를 1개 이상 추가해주세요
-                        </p>
+                        <p className="m-0 text-[11px] text-red-500">장소를 1개 이상 추가해주세요</p>
                       )}
 
                       {/* 그룹 만남이면 수정 방식 선택 가능 */}
                       {group.meetings.length > 1 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: '#9ca3af',
-                              letterSpacing: '0.05em',
-                            }}
-                          >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-bold tracking-wider text-gray-400">
                             수정 방식
                           </span>
                           <select
                             value={editMode}
                             onChange={(e) => setEditMode(e.target.value as 'bulk' | 'individual')}
-                            style={{
-                              fontSize: 12,
-                              padding: '4px 8px',
-                              borderRadius: 5,
-                              border: '1px solid #e5e7eb',
-                              fontFamily: 'inherit',
-                              color: '#374151',
-                              background: '#fff',
-                              cursor: 'pointer',
-                            }}
+                            className="cursor-pointer rounded-[5px] border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700"
                           >
                             <option value="bulk">일괄 수정</option>
                             <option value="individual">개별 수정</option>
@@ -1011,26 +729,15 @@ export default function ContactListPage() {
                           value={editForm.memo}
                           onChange={(e) => setEditForm((p) => ({ ...p, memo: e.target.value }))}
                           placeholder="메모"
-                          style={{ ...inputStyle, fontSize: 12 }}
+                          className={`${inputClass} text-xs`}
                         />
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        <div className="flex flex-col gap-1.25">
                           {group.meetings
                             .filter((m) => !editRemoveMeetingIds.includes(m.meetingId))
                             .map((m) => (
-                              <div
-                                key={m.meetingId}
-                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                    color: '#374151',
-                                    minWidth: 52,
-                                    flexShrink: 0,
-                                  }}
-                                >
+                              <div key={m.meetingId} className="flex items-center gap-2">
+                                <span className="min-w-13 shrink-0 text-[11px] font-semibold text-gray-700">
                                   {m.contactName}
                                 </span>
                                 <input
@@ -1043,7 +750,7 @@ export default function ContactListPage() {
                                     }))
                                   }
                                   placeholder={`${m.contactName} 메모`}
-                                  style={{ ...inputStyle, fontSize: 12, flex: 1 }}
+                                  className={`${inputClass} flex-1 text-xs`}
                                 />
                               </div>
                             ))}
@@ -1052,18 +759,10 @@ export default function ContactListPage() {
 
                       {/* 현재 멤버 표시 + 지인 추가 (groupId 있는 신규 그룹만) */}
                       <div>
-                        <p
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: '#9ca3af',
-                            margin: '0 0 5px',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
+                        <p className="m-0 mb-1.25 text-[11px] font-bold tracking-wider text-gray-400">
                           만남 멤버
                         </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        <div className="flex flex-wrap gap-1.25">
                           {/* 현재 그룹 멤버: X로 제거 가능 (마지막 1명은 제거 불가) */}
                           {group.meetings.map((m) => {
                             const removing = editRemoveMeetingIds.includes(m.meetingId)
@@ -1072,18 +771,11 @@ export default function ContactListPage() {
                             return (
                               <span
                                 key={m.meetingId}
-                                style={{
-                                  fontSize: 11,
-                                  padding: '3px 6px 3px 8px',
-                                  borderRadius: 4,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 4,
-                                  background: removing ? '#fee2e2' : '#f3f4f6',
-                                  color: removing ? '#ef4444' : '#374151',
-                                  border: `1px solid ${removing ? '#fca5a5' : '#e5e7eb'}`,
-                                  textDecoration: removing ? 'line-through' : 'none',
-                                }}
+                                className={`inline-flex items-center gap-1 rounded py-0.75 pl-2 pr-1.5 text-[11px] border ${
+                                  removing
+                                    ? 'border-red-300 bg-red-100 text-red-500 line-through'
+                                    : 'border-gray-200 bg-gray-100 text-gray-700'
+                                }`}
                               >
                                 {m.contactName}
                                 {canRemove && (
@@ -1096,15 +788,9 @@ export default function ContactListPage() {
                                           : [...prev, m.meetingId],
                                       )
                                     }
-                                    style={{
-                                      background: 'none',
-                                      border: 'none',
-                                      cursor: 'pointer',
-                                      color: removing ? '#ef4444' : '#9ca3af',
-                                      fontSize: 12,
-                                      lineHeight: 1,
-                                      padding: 0,
-                                    }}
+                                    className={`cursor-pointer border-none bg-transparent p-0 text-xs leading-none ${
+                                      removing ? 'text-red-500' : 'text-gray-400'
+                                    }`}
                                   >
                                     {removing ? '↩' : '×'}
                                   </button>
@@ -1126,18 +812,11 @@ export default function ContactListPage() {
                                       selected ? prev.filter((id) => id !== c.id) : [...prev, c.id],
                                     )
                                   }
-                                  style={{
-                                    fontSize: 11,
-                                    padding: '3px 8px',
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                    fontFamily: 'inherit',
-                                    transition: 'all 0.1s',
-                                    background: selected ? '#111' : 'transparent',
-                                    color: selected ? '#fff' : '#9ca3af',
-                                    border: selected ? '1px solid #111' : '1px dashed #d1d5db',
-                                    fontWeight: selected ? 600 : 400,
-                                  }}
+                                  className={`cursor-pointer rounded px-2 py-0.75 text-[11px] transition-all duration-100 border ${
+                                    selected
+                                      ? 'border-[#111] bg-[#111] font-semibold text-white'
+                                      : 'border-dashed border-gray-300 bg-transparent font-normal text-gray-400'
+                                  }`}
                                 >
                                   + {c.name}
                                 </button>
@@ -1146,7 +825,7 @@ export default function ContactListPage() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                      <div className="flex justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => {
@@ -1156,31 +835,18 @@ export default function ContactListPage() {
                             setEditMode('bulk')
                             setEditMemos({})
                           }}
-                          style={{
-                            fontSize: 12,
-                            color: '#9ca3af',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                          }}
+                          className="cursor-pointer border-none bg-transparent text-xs text-gray-400"
                         >
                           취소
                         </button>
                         <button
                           type="submit"
                           disabled={editForm.places.length === 0}
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            padding: '5px 12px',
-                            background: editForm.places.length === 0 ? '#e5e7eb' : '#111',
-                            color: editForm.places.length === 0 ? '#9ca3af' : '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            cursor: editForm.places.length === 0 ? 'default' : 'pointer',
-                            fontFamily: 'inherit',
-                          }}
+                          className={`rounded-md border-none px-3 py-1.25 text-xs font-semibold ${
+                            editForm.places.length === 0
+                              ? 'cursor-default bg-gray-200 text-gray-400'
+                              : 'cursor-pointer bg-[#111] text-white'
+                          }`}
                         >
                           저장
                         </button>
@@ -1188,8 +854,8 @@ export default function ContactListPage() {
                     </form>
                   ) : (
                     /* 일반 표시 + 수정/삭제 버튼 */
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="flex items-center">
+                      <div className="min-w-0 flex-1">
                         <GroupedMeetingRow
                           group={group}
                           onClick={() =>
@@ -1199,32 +865,16 @@ export default function ContactListPage() {
                           }
                         />
                       </div>
-                      <div style={{ display: 'flex', gap: 4, paddingRight: 12, flexShrink: 0 }}>
+                      <div className="flex shrink-0 gap-1 pr-3">
                         <button
                           onClick={() => startEditMeeting(group)}
-                          style={{
-                            fontSize: 11,
-                            color: '#6b7280',
-                            background: 'none',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            padding: '3px 8px',
-                            fontFamily: 'inherit',
-                          }}
+                          className="cursor-pointer rounded border border-gray-200 bg-transparent px-2 py-0.75 text-[11px] text-gray-500"
                         >
                           수정
                         </button>
                         <button
                           onClick={() => handleDeleteMeeting(group)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: '#d1d5db',
-                            fontSize: 14,
-                            padding: '3px 4px',
-                          }}
+                          className="cursor-pointer border-none bg-transparent px-1 py-0.75 text-sm text-gray-300"
                         >
                           ✕
                         </button>

@@ -70,17 +70,8 @@ const PREF_ICONS: Record<PreferenceType, string> = {
   ETC: '💬',
 }
 
-const inputStyle: React.CSSProperties = {
-  border: '1px solid #e5e7eb',
-  borderRadius: 6,
-  padding: '8px 10px',
-  fontSize: 13,
-  outline: 'none',
-  fontFamily: 'inherit',
-  color: '#111',
-  background: '#fff',
-  boxSizing: 'border-box',
-}
+const inputClass =
+  'box-border rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] text-[#111] outline-none'
 
 export default function ContactDetailPage() {
   const { id } = useParams()
@@ -249,22 +240,14 @@ export default function ContactDetailPage() {
     })
   }
 
-  if (!contact)
-    return <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af' }}>불러오는 중...</div>
+  if (!contact) return <div className="p-20 text-center text-gray-400">불러오는 중...</div>
 
   const lastMeeting = meetings[0]
   const daysSince = lastMeeting
     ? Math.floor((Date.now() - new Date(lastMeeting.date).getTime()) / (1000 * 60 * 60 * 24))
     : null
   return (
-    <div
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#f5f5f5',
-      }}
-    >
+    <div className="flex h-full flex-col bg-[#f5f5f5]">
       {confirm && (
         <ConfirmModal
           message={confirm.message}
@@ -278,121 +261,37 @@ export default function ContactDetailPage() {
           background: contact.isMe
             ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
             : (REL_GRADIENT[contact.relationship] ?? REL_GRADIENT['기타']),
-          padding: '36px 36px 28px',
-          position: 'relative',
-          overflow: 'hidden',
         }}
+        className="relative overflow-hidden px-9 pb-7 pt-9"
       >
         {/* 배경 장식 원 */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.06)',
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: -20,
-            right: 80,
-            width: 100,
-            height: 100,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.04)',
-            pointerEvents: 'none',
-          }}
-        />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-45 w-45 rounded-full bg-white/[0.06]" />
+        <div className="pointer-events-none absolute -bottom-5 right-20 h-25 w-25 rounded-full bg-white/[0.04]" />
 
-        <div style={{ maxWidth: 800, position: 'relative' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 30,
-                  fontWeight: 700,
-                  flexShrink: 0,
-                  overflow: 'hidden',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
-                  border: '3px solid rgba(255,255,255,0.4)',
-                }}
-              >
+        <div className="relative max-w-200">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/40 bg-white/15 text-[30px] font-bold text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
                 {contact.photoUrl ? (
                   <img
                     src={contact.photoUrl}
                     alt={contact.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   contact.name[0]
                 )}
               </div>
               <div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <h2
-                    style={{
-                      margin: 0,
-                      fontSize: 26,
-                      fontWeight: 800,
-                      color: '#fff',
-                      letterSpacing: '-0.5px',
-                    }}
-                  >
+                <div className="mb-2 flex items-center gap-2.5">
+                  <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.5px] text-white">
                     {contact.name}
                   </h2>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: '4px 10px',
-                      borderRadius: 20,
-                      background: 'rgba(255,255,255,0.2)',
-                      color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      backdropFilter: 'blur(8px)',
-                    }}
-                  >
+                  <span className="rounded-[20px] border border-white/30 bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-[8px]">
                     {contact.isMe ? '내 정보' : contact.relationship}
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 16,
-                    fontSize: 12,
-                    color: 'rgba(255,255,255,0.75)',
-                  }}
-                >
+                <div className="flex gap-4 text-xs text-white/75">
                   {contact.birthday && <span>🎂 {contact.birthday}</span>}
                   {daysSince !== null && (
                     <span>📅 마지막 만남 {daysSince === 0 ? '오늘' : `${daysSince}일 전`}</span>
@@ -405,41 +304,14 @@ export default function ContactDetailPage() {
               onClick={() =>
                 navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)
               }
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: '#fff',
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: 8,
-                padding: '8px 18px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                backdropFilter: 'blur(8px)',
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+              className="cursor-pointer rounded-lg border border-white/30 bg-white/15 px-4.5 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px] transition-colors duration-150 hover:bg-white/25"
             >
               수정
             </button>
           </div>
-
           {/* 통계 바 */}
           {!contact.isMe && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 0,
-                marginTop: 24,
-                background: 'rgba(255,255,255,0.12)',
-                borderRadius: 10,
-                padding: '14px 20px',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                width: 'fit-content',
-              }}
-            >
+            <div className="mt-6 flex w-fit gap-0 rounded-[10px] border border-white/15 bg-white/12 px-5 py-3.5 backdrop-blur-[8px]">
               {[
                 { label: '만남', value: meetings.length, unit: '회' },
                 { label: '선물', value: gifts.length, unit: '건' },
@@ -451,43 +323,15 @@ export default function ContactDetailPage() {
               ].map((s, i) => (
                 <div
                   key={s.label}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    padding: '0 20px',
-                    borderRight: i < 2 ? '1px solid rgba(255,255,255,0.2)' : 'none',
-                  }}
+                  className={`flex flex-col items-center px-5 ${
+                    i < 2 ? 'border-r border-white/20' : ''
+                  }`}
                 >
-                  <div
-                    style={{
-                      fontSize: 22,
-                      fontWeight: 800,
-                      color: '#fff',
-                      lineHeight: 1,
-                    }}
-                  >
+                  <div className="text-[22px] font-extrabold leading-none text-white">
                     {s.value}
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 500,
-                        marginLeft: 2,
-                        opacity: 0.7,
-                      }}
-                    >
-                      {s.unit}
-                    </span>
+                    <span className="ml-0.5 text-[11px] font-medium opacity-70">{s.unit}</span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: 'rgba(255,255,255,0.6)',
-                      marginTop: 3,
-                    }}
-                  >
-                    {s.label}
-                  </div>
+                  <div className="mt-0.75 text-[11px] text-white/60">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -496,14 +340,8 @@ export default function ContactDetailPage() {
       </div>
 
       {/* 탭 */}
-      <div
-        style={{
-          background: '#fff',
-          borderBottom: '1px solid #e5e7eb',
-          padding: '0 32px',
-        }}
-      >
-        <div style={{ display: 'flex', gap: 0, maxWidth: 800 }}>
+      <div className="border-b border-gray-200 bg-white px-8">
+        <div className="flex max-w-200 gap-0">
           {/* isMe 연락처는 선물/만남 탭 미표시 */}
           {((contact.isMe ? ['preference'] : ['preference', 'gift', 'meeting']) as Tab[]).map(
             (t) => {
@@ -518,20 +356,13 @@ export default function ContactDetailPage() {
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  style={{
-                    padding: '14px 20px',
-                    fontSize: 14,
-                    fontWeight: tab === t ? 600 : 400,
-                    color: tab === t ? '#111' : '#9ca3af',
-                    background: 'none',
-                    border: 'none',
-                    borderBottom: tab === t ? '2px solid #111' : '2px solid transparent',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'all 0.1s',
-                  }}
+                  className={`cursor-pointer border-none border-b-2 bg-transparent px-5 py-3.5 text-sm transition-all duration-100 ${
+                    tab === t
+                      ? 'border-b-[#111] font-semibold text-[#111]'
+                      : 'border-b-transparent font-normal text-gray-400'
+                  }`}
                 >
-                  {label} <span style={{ fontSize: 12 }}>{count}</span>
+                  {label} <span className="text-xs">{count}</span>
                 </button>
               )
             },
@@ -540,16 +371,16 @@ export default function ContactDetailPage() {
       </div>
 
       {/* 콘텐츠 */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
-        <div style={{ maxWidth: tab === 'meeting' ? 'none' : 800 }}>
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className={tab === 'meeting' ? 'max-w-none' : 'max-w-200'}>
           {/* 취향 탭 */}
           {tab === 'preference' && (
             <div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+              <div className="mb-6 flex gap-2">
                 <select
                   value={prefType}
                   onChange={(e) => setPrefType(e.target.value as PreferenceType)}
-                  style={{ ...inputStyle, padding: '8px 12px' }}
+                  className={`${inputClass} px-3 py-2`}
                 >
                   {(Object.keys(PREF_LABELS) as PreferenceType[]).map((k) => (
                     <option key={k} value={k}>
@@ -563,45 +394,22 @@ export default function ContactDetailPage() {
                   onChange={(e) => setPrefValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddPref()}
                   placeholder="입력 후 Enter"
-                  style={{ ...inputStyle, flex: 1 }}
+                  className={`${inputClass} flex-1`}
                 />
                 <button
                   onClick={handleAddPref}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    background: '#111',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className="cursor-pointer rounded-md border-none bg-[#111] px-4 py-2 text-[13px] font-semibold text-white"
                 >
                   추가
                 </button>
               </div>
 
               {contact.preferences.length === 0 ? (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '60px 0',
-                    color: '#9ca3af',
-                    fontSize: 14,
-                  }}
-                >
+                <div className="py-15 text-center text-sm text-gray-400">
                   아직 취향 정보가 없어요
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: 12,
-                  }}
-                >
+                <div className="grid grid-cols-2 gap-3">
                   {(Object.keys(PREF_LABELS) as PreferenceType[]).map((type) => {
                     const items = contact.preferences.filter((p) => p.type === type)
                     if (items.length === 0) return null
@@ -609,65 +417,30 @@ export default function ContactDetailPage() {
                     return (
                       <div
                         key={type}
-                        style={{
-                          background: cs.bg,
-                          border: `1px solid ${cs.border}`,
-                          borderRadius: 10,
-                          padding: '14px 16px',
-                        }}
+                        style={{ background: cs.bg, borderColor: cs.border }}
+                        className="rounded-[10px] border px-4 py-3.5"
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            marginBottom: 10,
-                          }}
-                        >
-                          <span style={{ fontSize: 15 }}>{PREF_ICONS[type]}</span>
+                        <div className="mb-2.5 flex items-center gap-1.5">
+                          <span className="text-[15px]">{PREF_ICONS[type]}</span>
                           <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: cs.color,
-                              letterSpacing: '0.03em',
-                            }}
+                            style={{ color: cs.color }}
+                            className="text-[11px] font-bold tracking-[0.03em]"
                           >
                             {PREF_LABELS[type]}
                           </span>
                           <span
-                            style={{
-                              fontSize: 10,
-                              color: cs.color,
-                              opacity: 0.6,
-                              marginLeft: 'auto',
-                            }}
+                            style={{ color: cs.color }}
+                            className="ml-auto text-[10px] opacity-60"
                           >
                             {items.length}개
                           </span>
                         </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 6,
-                          }}
-                        >
+                        <div className="flex flex-wrap gap-1.5">
                           {items.map((p) => (
                             <span
                               key={p.id}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 5,
-                                fontSize: 12,
-                                padding: '4px 10px',
-                                borderRadius: 20,
-                                background: '#fff',
-                                color: cs.color,
-                                border: `1px solid ${cs.border}`,
-                                fontWeight: 500,
-                              }}
+                              style={{ color: cs.color, borderColor: cs.border }}
+                              className="inline-flex items-center gap-1.25 rounded-[20px] border bg-white px-2.5 py-1 text-xs font-medium"
                             >
                               {p.value}
                               <button
@@ -684,16 +457,7 @@ export default function ContactDetailPage() {
                                       : prev,
                                   )
                                 }}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  color: 'inherit',
-                                  opacity: 0.4,
-                                  padding: 0,
-                                  fontSize: 11,
-                                  lineHeight: 1,
-                                }}
+                                className="cursor-pointer border-none bg-transparent p-0 text-[11px] leading-none text-inherit opacity-40"
                               >
                                 ✕
                               </button>
@@ -711,28 +475,11 @@ export default function ContactDetailPage() {
           {/* 선물 탭 */}
           {tab === 'gift' && (
             <div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 16,
-                }}
-              >
-                <span style={{ fontSize: 13, color: '#6b7280' }}>선물 {gifts.length}건</span>
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[13px] text-gray-500">선물 {gifts.length}건</span>
                 <button
                   onClick={() => setShowGiftForm((v) => !v)}
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    padding: '7px 14px',
-                    background: '#111',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className="cursor-pointer rounded-md border-none bg-[#111] px-3.5 py-1.75 text-[13px] font-semibold text-white"
                 >
                   + 선물 추가
                 </button>
@@ -741,63 +488,39 @@ export default function ContactDetailPage() {
               {showGiftForm && (
                 <form
                   onSubmit={handleAddGift}
-                  style={{
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 8,
-                    padding: '16px',
-                    marginBottom: 16,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
+                  className="mb-4 flex flex-col gap-2.5 rounded-lg border border-gray-200 bg-white p-4"
                 >
                   <input
                     type="text"
                     value={giftForm.item}
                     onChange={(e) => setGiftForm((p) => ({ ...p, item: e.target.value }))}
                     placeholder="선물 이름 *"
-                    style={{ ...inputStyle, width: '100%' }}
+                    className={`${inputClass} w-full`}
                   />
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="flex gap-2">
                     <input
                       type="number"
                       value={giftForm.price}
                       onChange={(e) => setGiftForm((p) => ({ ...p, price: e.target.value }))}
                       placeholder="금액 (원)"
-                      style={{ ...inputStyle, flex: 1 }}
+                      className={`${inputClass} flex-1`}
                     />
                     <input
                       type="date"
                       value={giftForm.date}
                       onChange={(e) => setGiftForm((p) => ({ ...p, date: e.target.value }))}
-                      style={{ ...inputStyle, flex: 1 }}
+                      className={`${inputClass} flex-1`}
                     />
                     <input
                       type="text"
                       value={giftForm.occasion}
                       onChange={(e) => setGiftForm((p) => ({ ...p, occasion: e.target.value }))}
                       placeholder="기념일"
-                      style={{ ...inputStyle, flex: 1 }}
+                      className={`${inputClass} flex-1`}
                     />
                   </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <label
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        fontSize: 13,
-                        color: '#374151',
-                        cursor: 'pointer',
-                      }}
-                    >
+                  <div className="flex items-center justify-between">
+                    <label className="flex cursor-pointer items-center gap-1.5 text-[13px] text-gray-700">
                       <input
                         type="checkbox"
                         checked={giftForm.isWishlist}
@@ -810,34 +533,17 @@ export default function ContactDetailPage() {
                       />
                       위시리스트
                     </label>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setShowGiftForm(false)}
-                        style={{
-                          fontSize: 13,
-                          color: '#9ca3af',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                        }}
+                        className="cursor-pointer border-none bg-transparent text-[13px] text-gray-400"
                       >
                         취소
                       </button>
                       <button
                         type="submit"
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          padding: '6px 14px',
-                          background: '#111',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                        }}
+                        className="cursor-pointer rounded-md border-none bg-[#111] px-3.5 py-1.5 text-[13px] font-semibold text-white"
                       >
                         저장
                       </button>
@@ -847,114 +553,44 @@ export default function ContactDetailPage() {
               )}
 
               {gifts.length === 0 ? (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '60px 0',
-                    color: '#9ca3af',
-                    fontSize: 14,
-                  }}
-                >
-                  선물 기록이 없어요
-                </div>
+                <div className="py-15 text-center text-sm text-gray-400">선물 기록이 없어요</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="flex flex-col gap-2">
                   {gifts.map((g) => (
                     <div
                       key={g.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        background: g.isWishlist
-                          ? 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)'
-                          : '#fff',
-                        border: `1px solid ${g.isWishlist ? '#f5d0fe' : '#e5e7eb'}`,
-                        borderRadius: 10,
-                        padding: '14px 16px',
-                      }}
+                      className={`flex items-start justify-between rounded-[10px] border px-4 py-3.5 ${
+                        g.isWishlist
+                          ? 'border-fuchsia-200 bg-linear-to-br from-fuchsia-50 to-pink-100'
+                          : 'border-gray-200 bg-white'
+                      }`}
                     >
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 12,
-                          flex: 1,
-                          minWidth: 0,
-                        }}
-                      >
+                      <div className="flex min-w-0 flex-1 gap-3">
                         <div
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 10,
-                            flexShrink: 0,
-                            background: g.isWishlist ? '#fce7f3' : '#f9fafb',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 18,
-                          }}
+                          className={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-[10px] text-lg ${
+                            g.isWishlist ? 'bg-pink-100' : 'bg-gray-50'
+                          }`}
                         >
                           {g.isWishlist ? '🎀' : '🎁'}
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              marginBottom: 4,
-                              flexWrap: 'wrap',
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color: '#111',
-                              }}
-                            >
-                              {g.item}
-                            </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                            <span className="text-sm font-bold text-[#111]">{g.item}</span>
                             {g.isWishlist && (
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  background: '#be185d',
-                                  color: '#fff',
-                                  borderRadius: 20,
-                                  padding: '2px 7px',
-                                }}
-                              >
+                              <span className="rounded-[20px] bg-pink-700 px-1.75 py-0.5 text-[10px] font-bold text-white">
                                 위시리스트
                               </span>
                             )}
                             {g.occasion && (
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  background: '#f3f4f6',
-                                  color: '#6b7280',
-                                  borderRadius: 20,
-                                  padding: '2px 8px',
-                                }}
-                              >
+                              <span className="rounded-[20px] bg-gray-100 px-2 py-0.5 text-[11px] text-gray-500">
                                 {g.occasion}
                               </span>
                             )}
                           </div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              gap: 10,
-                              fontSize: 12,
-                              color: '#9ca3af',
-                            }}
-                          >
+                          <div className="flex gap-2.5 text-xs text-gray-400">
                             {g.date && <span>📅 {g.date}</span>}
                             {g.price && (
-                              <span style={{ color: '#059669', fontWeight: 600 }}>
+                              <span className="font-semibold text-emerald-600">
                                 ₩ {g.price.toLocaleString()}
                               </span>
                             )}
@@ -967,15 +603,7 @@ export default function ContactDetailPage() {
                             setGifts((prev) => prev.filter((x) => x.id !== g.id)),
                           )
                         }
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: '#d1d5db',
-                          fontSize: 14,
-                          padding: '0 0 0 8px',
-                          flexShrink: 0,
-                        }}
+                        className="shrink-0 cursor-pointer border-none bg-transparent pl-2 text-sm text-gray-300"
                       >
                         ✕
                       </button>
@@ -990,28 +618,15 @@ export default function ContactDetailPage() {
           {tab === 'meeting' && (
             <div>
               {/* 헤더: 만남 수 + 추가 버튼 */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 16,
-                }}
-              >
-                <span style={{ fontSize: 13, color: '#6b7280' }}>만남 {meetings.length}회</span>
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[13px] text-gray-500">만남 {meetings.length}회</span>
                 <button
                   onClick={() => setShowMeetForm((v) => !v)}
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    padding: '7px 14px',
-                    background: showMeetForm ? '#f3f4f6' : '#111',
-                    color: showMeetForm ? '#374151' : '#fff',
-                    border: showMeetForm ? '1px solid #e5e7eb' : 'none',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className={`cursor-pointer rounded-md px-3.5 py-1.75 text-[13px] font-semibold ${
+                    showMeetForm
+                      ? 'border border-gray-200 bg-gray-100 text-gray-700'
+                      : 'border-none bg-[#111] text-white'
+                  }`}
                 >
                   {showMeetForm ? '취소' : '+ 만남 추가'}
                 </button>
@@ -1021,23 +636,14 @@ export default function ContactDetailPage() {
               {showMeetForm && (
                 <form
                   onSubmit={handleAddMeeting}
-                  style={{
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 8,
-                    padding: '16px',
-                    marginBottom: 16,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
+                  className="mb-4 flex flex-col gap-2.5 rounded-lg border border-gray-200 bg-white p-4"
                 >
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="flex gap-2">
                     <input
                       type="date"
                       value={meetForm.date}
                       onChange={(e) => setMeetForm((p) => ({ ...p, date: e.target.value }))}
-                      style={{ ...inputStyle, flex: 1 }}
+                      className={`${inputClass} flex-1`}
                     />
                     <PlaceSearch
                       value=""
@@ -1060,24 +666,16 @@ export default function ContactDetailPage() {
                     value={meetForm.memo}
                     onChange={(e) => setMeetForm((p) => ({ ...p, memo: e.target.value }))}
                     placeholder="메모"
-                    style={{ ...inputStyle, width: '100%' }}
+                    className={`${inputClass} w-full`}
                   />
 
                   {/* 함께한 지인 다중 선택 (현재 지인은 자동 포함) */}
                   {allContacts.length > 0 && (
                     <div>
-                      <p
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: '#9ca3af',
-                          margin: '0 0 6px',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
+                      <p className="m-0 mb-1.5 text-[11px] font-bold tracking-wider text-gray-400">
                         함께한 지인 (선택)
                       </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      <div className="flex flex-wrap gap-1.5">
                         {allContacts.map((c) => {
                           const selected = extraContactIds.includes(c.id)
                           return (
@@ -1089,18 +687,11 @@ export default function ContactDetailPage() {
                                   selected ? prev.filter((id) => id !== c.id) : [...prev, c.id],
                                 )
                               }
-                              style={{
-                                fontSize: 12,
-                                padding: '4px 10px',
-                                borderRadius: 5,
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                                transition: 'all 0.1s',
-                                background: selected ? '#111' : '#f3f4f6',
-                                color: selected ? '#fff' : '#374151',
-                                border: selected ? '1px solid #111' : '1px solid #e5e7eb',
-                                fontWeight: selected ? 600 : 400,
-                              }}
+                              className={`cursor-pointer rounded-[5px] border px-2.5 py-1 text-xs transition-all duration-100 ${
+                                selected
+                                  ? 'border-[#111] bg-[#111] font-semibold text-white'
+                                  : 'border-gray-200 bg-gray-100 font-normal text-gray-700'
+                              }`}
                             >
                               {c.name}
                             </button>
@@ -1110,32 +701,17 @@ export default function ContactDetailPage() {
                     </div>
                   )}
 
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: 8,
-                      alignItems: 'center',
-                    }}
-                  >
+                  <div className="flex items-center justify-end gap-2">
                     {meetSubmitAttempted && meetForm.places.length === 0 && (
-                      <span style={{ fontSize: 11, color: '#ef4444' }}>
-                        장소를 1개 이상 추가해주세요
-                      </span>
+                      <span className="text-[11px] text-red-500">장소를 1개 이상 추가해주세요</span>
                     )}
                     <button
                       type="submit"
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        padding: '6px 14px',
-                        background: meetForm.places.length === 0 ? '#e5e7eb' : '#111',
-                        color: meetForm.places.length === 0 ? '#9ca3af' : '#fff',
-                        border: 'none',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                      }}
+                      className={`cursor-pointer rounded-md border-none px-3.5 py-1.5 text-[13px] font-semibold ${
+                        meetForm.places.length === 0
+                          ? 'bg-gray-200 text-gray-400'
+                          : 'bg-[#111] text-white'
+                      }`}
                     >
                       저장
                     </button>
@@ -1154,15 +730,9 @@ export default function ContactDetailPage() {
               />
 
               {/* 2열 레이아웃: 달력(왼쪽) + 지도(오른쪽) */}
-              <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
+              <div className="flex items-stretch gap-5">
                 {/* 왼쪽: 달력 + 만남 목록 */}
-                <div
-                  style={{
-                    flex: '0 0 390px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
+                <div className="flex flex-[0_0_390px] flex-col">
                   <MeetingCalendar
                     meetings={meetings}
                     selectedDate={selectedMeetingDate}
@@ -1173,41 +743,15 @@ export default function ContactDetailPage() {
                   />
 
                   {meetings.length === 0 ? (
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        padding: '30px 0',
-                        color: '#9ca3af',
-                        fontSize: 14,
-                      }}
-                    >
+                    <div className="py-7.5 text-center text-sm text-gray-400">
                       아직 만남 기록이 없어요
                     </div>
                   ) : (
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 8,
-                      }}
-                    >
+                    <div className="flex flex-col gap-2">
                       {/* 날짜/기간 필터 표시 */}
                       {(selectedMeetingDate || heatmapFilter) && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 4,
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: '#3b82f6',
-                              fontWeight: 600,
-                            }}
-                          >
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-xs font-semibold text-blue-500">
                             {heatmapFilter ? heatmapFilter.label : selectedMeetingDate} 만남
                           </span>
                           <button
@@ -1215,14 +759,7 @@ export default function ContactDetailPage() {
                               setSelectedMeetingDate(null)
                               setHeatmapFilter(null)
                             }}
-                            style={{
-                              fontSize: 11,
-                              color: '#9ca3af',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontFamily: 'inherit',
-                            }}
+                            className="cursor-pointer border-none bg-transparent text-[11px] text-gray-400"
                           >
                             전체보기
                           </button>
@@ -1237,14 +774,7 @@ export default function ContactDetailPage() {
                             ? meetings.filter((m) => m.date === selectedMeetingDate)
                             : meetings
                         return filtered.length === 0 ? (
-                          <div
-                            style={{
-                              textAlign: 'center',
-                              padding: '20px 0',
-                              color: '#9ca3af',
-                              fontSize: 13,
-                            }}
-                          >
+                          <div className="py-5 text-center text-[13px] text-gray-400">
                             {heatmapFilter || selectedMeetingDate
                               ? '이 기간 만남 기록이 없어요'
                               : '아직 만남 기록이 없어요'}
@@ -1263,25 +793,15 @@ export default function ContactDetailPage() {
                       })().map((m) => (
                         <div
                           key={m.id}
-                          style={{
-                            background: '#fff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: 8,
-                            overflow: 'hidden',
-                          }}
+                          className="overflow-hidden rounded-lg border border-gray-200 bg-white"
                         >
                           {editingMeetingId === m.id ? (
                             /* 인라인 수정 폼 */
                             <form
                               onSubmit={(e) => handleUpdateMeeting(e, m.id)}
-                              style={{
-                                padding: '12px 16px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 8,
-                              }}
+                              className="flex flex-col gap-2 px-4 py-3"
                             >
-                              <div style={{ display: 'flex', gap: 8 }}>
+                              <div className="flex gap-2">
                                 <input
                                   type="date"
                                   value={editMeetForm.date}
@@ -1291,11 +811,7 @@ export default function ContactDetailPage() {
                                       date: e.target.value,
                                     }))
                                   }
-                                  style={{
-                                    ...inputStyle,
-                                    flex: 1,
-                                    fontSize: 12,
-                                  }}
+                                  className={`${inputClass} flex-1 text-xs`}
                                 />
                                 <PlaceSearch
                                   value=""
@@ -1323,42 +839,19 @@ export default function ContactDetailPage() {
                                   }))
                                 }
                                 placeholder="메모"
-                                style={{ ...inputStyle, fontSize: 12 }}
+                                className={`${inputClass} text-xs`}
                               />
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'flex-end',
-                                  gap: 6,
-                                }}
-                              >
+                              <div className="flex justify-end gap-1.5">
                                 <button
                                   type="button"
                                   onClick={() => setEditingMeetingId(null)}
-                                  style={{
-                                    fontSize: 12,
-                                    color: '#9ca3af',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontFamily: 'inherit',
-                                  }}
+                                  className="cursor-pointer border-none bg-transparent text-xs text-gray-400"
                                 >
                                   취소
                                 </button>
                                 <button
                                   type="submit"
-                                  style={{
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    padding: '5px 12px',
-                                    background: '#111',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: 6,
-                                    cursor: 'pointer',
-                                    fontFamily: 'inherit',
-                                  }}
+                                  className="cursor-pointer rounded-md border-none bg-[#111] px-3 py-1.25 text-xs font-semibold text-white"
                                 >
                                   저장
                                 </button>
@@ -1366,82 +859,28 @@ export default function ContactDetailPage() {
                             </form>
                           ) : (
                             /* 일반 표시 */
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '12px 16px',
-                              }}
-                            >
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p
-                                  style={{
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    color: '#111',
-                                    margin: '0 0 2px',
-                                  }}
-                                >
+                            <div className="flex items-center justify-between px-4 py-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="m-0 mb-0.5 text-sm font-semibold text-[#111]">
                                   {m.date}
                                 </p>
                                 {m.places.map((p, i) => (
-                                  <p
-                                    key={i}
-                                    style={{
-                                      fontSize: 12,
-                                      color: '#6b7280',
-                                      margin: '0 0 2px',
-                                    }}
-                                  >
+                                  <p key={i} className="m-0 mb-0.5 text-xs text-gray-500">
                                     📍 {p.name}
                                   </p>
                                 ))}
-                                {m.memo && (
-                                  <p
-                                    style={{
-                                      fontSize: 12,
-                                      color: '#9ca3af',
-                                      margin: 0,
-                                    }}
-                                  >
-                                    {m.memo}
-                                  </p>
-                                )}
+                                {m.memo && <p className="m-0 text-xs text-gray-400">{m.memo}</p>}
                               </div>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  gap: 4,
-                                  flexShrink: 0,
-                                  marginLeft: 8,
-                                }}
-                              >
+                              <div className="ml-2 flex shrink-0 gap-1">
                                 <button
                                   onClick={() => startEditMeeting(m)}
-                                  style={{
-                                    fontSize: 12,
-                                    color: '#6b7280',
-                                    background: 'none',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                    padding: '3px 8px',
-                                    fontFamily: 'inherit',
-                                  }}
+                                  className="cursor-pointer rounded border border-gray-200 bg-transparent px-2 py-0.75 text-xs text-gray-500"
                                 >
                                   수정
                                 </button>
                                 <button
                                   onClick={() => handleDeleteMeeting(m.id)}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: '#d1d5db',
-                                    fontSize: 14,
-                                    padding: '3px 4px',
-                                  }}
+                                  className="cursor-pointer border-none bg-transparent px-1 py-0.75 text-sm text-gray-300"
                                 >
                                   ✕
                                 </button>
@@ -1455,7 +894,7 @@ export default function ContactDetailPage() {
                 </div>
 
                 {/* 오른쪽: 지도 — 명시적 height로 Kakao 지도 렌더링 보장 */}
-                <div style={{ flex: 1, minWidth: 0, height: 520 }}>
+                <div className="h-130 min-w-0 flex-1">
                   <MeetingMap meetings={meetings} />
                 </div>
               </div>

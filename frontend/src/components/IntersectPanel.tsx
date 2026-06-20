@@ -104,76 +104,30 @@ export default function IntersectPanel({ open, onClose }: Props) {
 
   if (!open) return null
 
+  const sectionLabelClass = 'text-[11px] font-bold tracking-[0.05em] text-gray-400'
+
   return (
     // 배경 오버레이
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 200,
-        display: 'flex',
-        justifyContent: 'flex-end',
-      }}
-    >
-      <div
-        onClick={onClose}
-        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.25)' }}
-      />
+    <div className="fixed inset-0 z-[200] flex justify-end">
+      <div onClick={onClose} className="absolute inset-0 bg-black/25" />
 
       {/* 패널 본체 */}
-      <div
-        style={{
-          position: 'relative',
-          width: 480,
-          maxWidth: '90vw',
-          height: '100%',
-          background: '#fff',
-          boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="relative flex h-full w-[480px] max-w-[90vw] flex-col overflow-hidden bg-white shadow-[-4px_0_20px_rgba(0,0,0,0.1)]">
         {/* 헤더 */}
-        <div
-          style={{
-            padding: '18px 20px 14px',
-            borderBottom: '1px solid #f3f4f6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>취향 비교</span>
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 pb-[14px] pt-[18px]">
+          <span className="text-[15px] font-bold text-[#111]">취향 비교</span>
           <button
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 18,
-              color: '#9ca3af',
-              padding: '2px 6px',
-            }}
+            className="cursor-pointer border-none bg-transparent px-1.5 py-0.5 text-lg text-gray-400"
           >
             ✕
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
           {/* 비교 그룹 드롭존 */}
-          <div style={{ marginBottom: 20 }}>
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: '#9ca3af',
-                letterSpacing: '0.05em',
-                marginBottom: 8,
-              }}
-            >
-              비교 그룹
-            </p>
+          <div className="mb-5">
+            <p className={`${sectionLabelClass} mb-2`}>비교 그룹</p>
             <div
               onDragOver={(e) => {
                 e.preventDefault()
@@ -181,52 +135,27 @@ export default function IntersectPanel({ open, onClose }: Props) {
               }}
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
-              style={{
-                minHeight: 64,
-                border: `2px dashed ${isDragOver ? '#6366f1' : '#e5e7eb'}`,
-                borderRadius: 10,
-                background: isDragOver ? '#eef2ff' : '#f9fafb',
-                padding: '10px 12px',
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 8,
-                alignItems: 'center',
-                transition: 'border-color 0.15s, background 0.15s',
-              }}
+              className={`flex min-h-16 flex-wrap items-center gap-2 rounded-[10px] border-2 border-dashed px-3 py-[10px] transition-colors duration-150 ${
+                isDragOver ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-gray-50'
+              }`}
             >
               {group.length === 0 ? (
-                <span style={{ fontSize: 12, color: '#d1d5db' }}>
+                <span className="text-xs text-gray-300">
                   아래 목록에서 사람을 드래그해서 추가하세요
                 </span>
               ) : (
                 group.map((c) => (
                   <div
                     key={c.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      background: c.isMe ? '#111' : '#f3f4f6',
-                      color: c.isMe ? '#fff' : '#111',
-                      borderRadius: 20,
-                      padding: '4px 10px 4px 8px',
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
+                    className={`flex items-center gap-[5px] rounded-[20px] py-1 pl-2 pr-2.5 text-[13px] font-semibold ${
+                      c.isMe ? 'bg-[#111] text-white' : 'bg-gray-100 text-[#111]'
+                    }`}
                   >
-                    <span style={{ fontSize: 11 }}>{c.isMe ? '⭐' : '○'}</span>
+                    <span className="text-[11px]">{c.isMe ? '⭐' : '○'}</span>
                     {c.name}
                     <button
                       onClick={() => removeFromGroup(c.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: c.isMe ? '#9ca3af' : '#9ca3af',
-                        fontSize: 12,
-                        padding: '0 0 0 4px',
-                        lineHeight: 1,
-                      }}
+                      className="cursor-pointer border-none bg-transparent pl-1 text-xs leading-none text-gray-400"
                     >
                       ✕
                     </button>
@@ -237,25 +166,15 @@ export default function IntersectPanel({ open, onClose }: Props) {
           </div>
 
           {/* 전체 목록 (드래그 가능) */}
-          <div style={{ marginBottom: 20 }}>
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: '#9ca3af',
-                letterSpacing: '0.05em',
-                marginBottom: 8,
-              }}
-            >
-              전체 목록 <span style={{ fontWeight: 400 }}>(드래그해서 비교 그룹에 추가)</span>
+          <div className="mb-5">
+            <p className={`${sectionLabelClass} mb-2`}>
+              전체 목록 <span className="font-normal">(드래그해서 비교 그룹에 추가)</span>
             </p>
 
             {loading ? (
-              <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '20px 0' }}>
-                불러오는 중...
-              </p>
+              <p className="py-5 text-center text-xs text-gray-400">불러오는 중...</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="flex flex-col gap-1">
                 {/* 나 등록 안된 경우 */}
                 {!meContact && (
                   <div
@@ -263,34 +182,16 @@ export default function IntersectPanel({ open, onClose }: Props) {
                       onClose()
                       navigate('/contacts/new?me=true')
                     }}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      border: '1px dashed #d1d5db',
-                      background: '#f9fafb',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      fontSize: 13,
-                      color: '#9ca3af',
-                    }}
+                    className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-[10px] text-[13px] text-gray-400"
                   >
                     <span>⭐</span>
-                    <span style={{ fontWeight: 600 }}>내 정보 등록하기</span>
-                    <span style={{ fontSize: 11 }}>→ 교집합 비교에서 나도 포함할 수 있어요</span>
+                    <span className="font-semibold">내 정보 등록하기</span>
+                    <span className="text-[11px]">→ 교집합 비교에서 나도 포함할 수 있어요</span>
                   </div>
                 )}
 
                 {available.length === 0 && meContact && (
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: '#9ca3af',
-                      textAlign: 'center',
-                      padding: '12px 0',
-                    }}
-                  >
+                  <p className="py-3 text-center text-xs text-gray-400">
                     모든 사람이 비교 그룹에 추가됐어요
                   </p>
                 )}
@@ -300,40 +201,15 @@ export default function IntersectPanel({ open, onClose }: Props) {
                     key={c.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, c.id)}
-                    style={{
-                      padding: '9px 12px',
-                      borderRadius: 8,
-                      cursor: 'grab',
-                      border: '1px solid #e5e7eb',
-                      background: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      userSelect: 'none',
-                    }}
+                    className="flex select-none items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-[9px] cursor-grab"
                   >
                     <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        flexShrink: 0,
-                        background: c.isMe ? '#111' : '#f3f4f6',
-                        color: c.isMe ? '#fff' : '#374151',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 13,
-                        fontWeight: 700,
-                        overflow: 'hidden',
-                      }}
+                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-bold ${
+                        c.isMe ? 'bg-[#111] text-white' : 'bg-gray-100 text-gray-700'
+                      }`}
                     >
                       {c.photoUrl ? (
-                        <img
-                          src={c.photoUrl}
-                          alt={c.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
+                        <img src={c.photoUrl} alt={c.name} className="h-full w-full object-cover" />
                       ) : c.isMe ? (
                         '⭐'
                       ) : (
@@ -341,15 +217,15 @@ export default function IntersectPanel({ open, onClose }: Props) {
                       )}
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
+                      <div className="text-[13px] font-semibold text-[#111]">
                         {c.name}{' '}
-                        {c.isMe && <span style={{ fontSize: 11, color: '#6b7280' }}>(본인)</span>}
+                        {c.isMe && <span className="text-[11px] text-gray-500">(본인)</span>}
                       </div>
-                      <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                      <div className="text-[11px] text-gray-400">
                         {c.isMe ? '내 정보' : c.relationship} · 취향 {c.preferences.length}개
                       </div>
                     </div>
-                    <div style={{ marginLeft: 'auto', fontSize: 13, color: '#d1d5db' }}>⠿</div>
+                    <div className="ml-auto text-[13px] text-gray-300">⠿</div>
                   </div>
                 ))}
               </div>
@@ -359,27 +235,15 @@ export default function IntersectPanel({ open, onClose }: Props) {
           {/* 교집합 결과 */}
           {group.length >= 2 && (
             <div>
-              <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginBottom: 12 }}>
-                <p
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: '#9ca3af',
-                    letterSpacing: '0.05em',
-                    margin: 0,
-                  }}
-                >
-                  공통 취향 ({group.length}명 기준)
-                </p>
+              <div className="mb-3 border-t border-gray-100 pt-4">
+                <p className={sectionLabelClass}>공통 취향 ({group.length}명 기준)</p>
               </div>
 
               {intersection && Object.keys(intersection).length > 0 ? (
                 (Object.entries(intersection) as [PreferenceType, any[]][]).map(([type, items]) => (
-                  <div key={type} style={{ marginBottom: 16 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 8 }}>
-                      {PREF_LABEL[type]}
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <div key={type} className="mb-4">
+                    <p className="mb-2 text-xs font-semibold text-gray-700">{PREF_LABEL[type]}</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {items.map((item) => {
                         const col = PREF_COLOR[type]
                         const isAll = item.count === item.total
@@ -388,28 +252,22 @@ export default function IntersectPanel({ open, onClose }: Props) {
                             key={item.value}
                             title={`${item.names.join(', ')}`}
                             style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 5,
-                              padding: '4px 10px',
-                              borderRadius: 20,
                               background: col.bg,
-                              border: `1px solid ${isAll ? col.border : '#e5e7eb'}`,
-                              opacity: isAll ? 1 : 0.7,
+                              borderColor: isAll ? col.border : '#e5e7eb',
                             }}
+                            className={`flex items-center gap-[5px] rounded-[20px] border px-2.5 py-1 ${
+                              isAll ? 'opacity-100' : 'opacity-70'
+                            }`}
                           >
-                            <span style={{ fontSize: 12, color: col.text, fontWeight: 600 }}>
+                            <span style={{ color: col.text }} className="text-xs font-semibold">
                               {item.value}
                             </span>
                             <span
                               style={{
-                                fontSize: 10,
-                                fontWeight: 700,
                                 color: isAll ? col.text : '#9ca3af',
                                 background: isAll ? col.border : '#f3f4f6',
-                                borderRadius: 10,
-                                padding: '1px 6px',
                               }}
+                              className="rounded-[10px] px-1.5 py-px text-[10px] font-bold"
                             >
                               {item.count}/{item.total}명
                             </span>
@@ -420,17 +278,13 @@ export default function IntersectPanel({ open, onClose }: Props) {
                   </div>
                 ))
               ) : (
-                <p
-                  style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '20px 0' }}
-                >
-                  공통 취향이 없어요
-                </p>
+                <p className="py-5 text-center text-xs text-gray-400">공통 취향이 없어요</p>
               )}
             </div>
           )}
 
           {group.length === 1 && (
-            <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '12px 0' }}>
+            <p className="py-3 text-center text-xs text-gray-400">
               한 명 더 추가하면 교집합을 볼 수 있어요
             </p>
           )}

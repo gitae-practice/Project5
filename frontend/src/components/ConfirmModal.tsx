@@ -15,70 +15,23 @@ export default function ConfirmModal({
   return (
     <div
       onClick={onCancel}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.35)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/35"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#fff',
-          borderRadius: 10,
-          padding: '24px 28px',
-          minWidth: 280,
-          maxWidth: 360,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 20,
-        }}
+        className="flex min-w-[280px] max-w-[360px] flex-col gap-5 rounded-[10px] bg-white px-7 py-6 shadow-[0_8px_32px_rgba(0,0,0,0.15)]"
       >
-        <p
-          style={{
-            margin: 0,
-            fontSize: 14,
-            color: '#111',
-            lineHeight: 1.6,
-            whiteSpace: 'pre-line',
-          }}
-        >
-          {message}
-        </p>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <p className="m-0 whitespace-pre-line text-sm leading-[1.6] text-[#111]">{message}</p>
+        <div className="flex justify-end gap-2">
           <button
             onClick={onCancel}
-            style={{
-              fontSize: 13,
-              padding: '7px 16px',
-              borderRadius: 6,
-              background: '#f3f4f6',
-              color: '#374151',
-              border: '1px solid #e5e7eb',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="cursor-pointer rounded-md border border-gray-200 bg-gray-100 px-4 py-[7px] text-[13px] text-gray-700"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              padding: '7px 16px',
-              borderRadius: 6,
-              background: '#111',
-              color: '#fff',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="cursor-pointer rounded-md border-none bg-[#111] px-4 py-[7px] text-[13px] font-semibold text-white"
           >
             {confirmLabel}
           </button>

@@ -211,110 +211,49 @@ export default function Layout() {
         }}
         onClick={() => navigate(`/contacts/${c.id}`)}
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 12px',
-          margin: '1px 8px',
-          borderRadius: 8,
-          cursor: 'pointer',
-          background: isActive ? color + '18' : 'transparent',
+          background: isActive ? color + '18' : undefined,
           borderLeft: isActive ? `3px solid ${color}` : '3px solid transparent',
           opacity: draggingId === c.id ? 0.4 : 1,
-          transition: 'background 0.12s, border-color 0.12s, opacity 0.15s',
         }}
-        onMouseEnter={(e) => {
-          if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f1f5f9'
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'
-        }}
+        className={`group mx-2 my-px flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-colors duration-150 ${
+          !isActive ? 'hover:bg-slate-100' : ''
+        }`}
       >
         <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
-            background: color + '20',
-            color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 13,
-            fontWeight: 700,
-            flexShrink: 0,
-            overflow: 'hidden',
-            border: `1.5px solid ${color}40`,
-            pointerEvents: 'none',
-          }}
+          style={{ background: color + '20', color, border: `1.5px solid ${color}40` }}
+          className="flex h-8.5 w-8.5 shrink-0 items-center justify-center overflow-hidden rounded-full pointer-events-none text-[13px] font-bold"
         >
           {c.photoUrl ? (
-            <img
-              src={c.photoUrl}
-              alt={c.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+            <img src={c.photoUrl} alt={c.name} className="h-full w-full object-cover" />
           ) : (
             c.name[0]
           )}
         </div>
-        <div style={{ flex: 1, minWidth: 0, pointerEvents: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: '#111',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
+        <div className="pointer-events-none min-w-0 flex-1">
+          <div className="mb-0.5 flex items-center gap-1.25">
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#111]">
               {c.name}
             </span>
             {dday && (
               <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: '#fff',
-                  background: dday === 'D-Day' ? '#ec4899' : '#f472b6',
-                  borderRadius: 20,
-                  padding: '1px 5px',
-                  flexShrink: 0,
-                }}
+                className={`shrink-0 rounded-[20px] px-1.25 py-px text-[10px] font-bold text-white ${
+                  dday === 'D-Day' ? 'bg-pink-500' : 'bg-pink-400'
+                }`}
               >
                 {dday}
               </span>
             )}
           </div>
           <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              color,
-              background: color + '15',
-              borderRadius: 4,
-              padding: '1px 5px',
-            }}
+            style={{ color, background: color + '15' }}
+            className="rounded px-1.25 py-px text-[10px] font-semibold"
           >
             {c.relationship}
           </span>
         </div>
         <button
           onClick={(e) => handleDelete(e, c.id)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#d1d5db',
-            fontSize: 13,
-            padding: '2px 4px',
-            flexShrink: 0,
-            opacity: 0,
-          }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0')}
+          className="shrink-0 cursor-pointer border-none bg-transparent px-1 py-0.5 text-[13px] text-gray-300 opacity-0 transition-opacity group-hover:opacity-100"
         >
           ✕
         </button>
@@ -323,65 +262,30 @@ export default function Layout() {
   }
 
   // 섹션 헤더 (미분류 / 커스텀 그룹 공통)
-  const sectionHeaderStyle = (isTarget: boolean, color = '#d1d5db'): React.CSSProperties => ({
-    padding: '10px 14px 4px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    cursor: 'pointer',
-    userSelect: 'none',
-    borderLeft: isTarget ? `3px solid ${color}` : '3px solid transparent',
-    background: isTarget ? color + '20' : 'transparent',
-    transition: 'background 0.1s, border-color 0.1s',
-  })
+  const sectionHeaderClass = (isTarget: boolean, variant: 'gray' | 'indigo' = 'gray') =>
+    `flex cursor-pointer select-none items-center gap-2 border-l-[3px] px-3.5 pb-1 pt-2.5 transition-colors duration-100 ${
+      isTarget
+        ? variant === 'indigo'
+          ? 'border-indigo-500 bg-indigo-500/[12.5%]'
+          : 'border-gray-300 bg-gray-300/[12.5%]'
+        : 'border-transparent'
+    }`
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f5f5' }}>
-      <aside
-        style={{
-          width: 260,
-          flexShrink: 0,
-          background: '#f8fafc',
-          borderRight: '1px solid #e2e8f0',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
+    <div className="flex h-screen overflow-hidden bg-[#f5f5f5]">
+      <aside className="flex w-65 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50">
         {/* 헤더 */}
-        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #e2e8f0' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 12,
-            }}
-          >
+        <div className="border-b border-slate-200 px-4 pb-3.5 pt-4.5">
+          <div className="mb-3 flex items-center justify-between">
             <span
               onClick={() => navigate('/')}
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: '#111',
-                cursor: 'pointer',
-                letterSpacing: '-0.3px',
-              }}
+              className="cursor-pointer text-[15px] font-bold tracking-[-0.3px] text-[#111]"
             >
               알쓸지인
             </span>
             <button
               onClick={() => navigate('/contacts/new')}
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#fff',
-                background: '#111',
-                border: 'none',
-                borderRadius: 6,
-                padding: '5px 10px',
-                cursor: 'pointer',
-              }}
+              className="cursor-pointer rounded-md border-none bg-[#111] px-2.5 py-1.25 text-xs font-semibold text-white"
             >
               + 추가
             </button>
@@ -391,125 +295,56 @@ export default function Layout() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="이름, 관계 검색..."
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              fontSize: 13,
-              color: '#374151',
-              background: '#fff',
-              border: '1px solid #e2e8f0',
-              borderRadius: 6,
-              padding: '7px 10px',
-              outline: 'none',
-            }}
+            className="box-border w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.75 text-[13px] text-gray-700 outline-none"
           />
         </div>
 
         {/* 목록 */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="flex-1 overflow-y-auto">
           {/* 나 섹션 */}
-          <div style={{ padding: '8px 14px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}
-            >
-              나
-            </span>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+          <div className="flex items-center gap-2 px-3.5 pb-1 pt-2">
+            <span className="text-[10px] font-bold tracking-[0.06em] text-gray-400">나</span>
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
 
           {meContact ? (
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '7px 12px',
-                margin: '1px 8px',
-                borderRadius: 8,
-                background: activeId === String(meContact.id) ? '#e2e8f0' : 'transparent',
-              }}
+              className={`mx-2 my-px flex items-center gap-2.5 rounded-lg px-3 py-1.75 ${
+                activeId === String(meContact.id) ? 'bg-slate-200' : ''
+              }`}
             >
               <div
                 onClick={() => navigate(`/contacts/${meContact.id}`)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  flex: 1,
-                  cursor: 'pointer',
-                  minWidth: 0,
-                }}
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5"
               >
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    background: '#111',
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 15,
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                    border: '1.5px solid #374151',
-                  }}
-                >
+                <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-gray-700 bg-[#111] text-[15px] text-white">
                   {meContact.photoUrl ? (
                     <img
                       src={meContact.photoUrl}
                       alt={meContact.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     '⭐'
                   )}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#111',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+                <div className="min-w-0">
+                  <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#111]">
                     {meContact.name}
                   </div>
-                  <div style={{ fontSize: 11, color: '#9ca3af' }}>내 정보</div>
+                  <div className="text-[11px] text-gray-400">내 정보</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              <div className="flex shrink-0 gap-1">
                 <button
                   onClick={() => navigate(`/contacts/${meContact.id}/edit?me=true`)}
-                  style={{
-                    fontSize: 11,
-                    color: '#6b7280',
-                    background: 'none',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 5,
-                    padding: '3px 8px',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className="cursor-pointer rounded px-2 py-0.75 text-[11px] text-gray-500 border border-slate-200 bg-transparent"
                 >
                   수정
                 </button>
                 <button
                   onClick={(e) => handleDelete(e, meContact.id)}
-                  style={{
-                    fontSize: 11,
-                    color: '#ef4444',
-                    background: 'none',
-                    border: '1px solid #fecaca',
-                    borderRadius: 5,
-                    padding: '3px 8px',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className="cursor-pointer rounded px-2 py-0.75 text-[11px] text-red-500 border border-red-200 bg-transparent"
                 >
                   삭제
                 </button>
@@ -518,21 +353,10 @@ export default function Layout() {
           ) : (
             <div
               onClick={() => navigate('/contacts/new?me=true')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '9px 14px',
-                cursor: 'pointer',
-                color: '#9ca3af',
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = '#f1f5f9')}
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLElement).style.background = 'transparent')
-              }
+              className="flex cursor-pointer items-center gap-2 px-3.5 py-2.25 text-gray-400 hover:bg-slate-100"
             >
-              <span style={{ fontSize: 14 }}>⭐</span>
-              <span style={{ fontSize: 12 }}>내 정보 등록하기</span>
+              <span className="text-sm">⭐</span>
+              <span className="text-xs">내 정보 등록하기</span>
             </div>
           )}
 
@@ -541,25 +365,14 @@ export default function Layout() {
             <div {...dropZoneProps('ungrouped')}>
               <div
                 onClick={() => setCollapsed((p) => ({ ...p, ungrouped: !p.ungrouped }))}
-                style={sectionHeaderStyle(dropTarget === 'ungrouped')}
+                className={sectionHeaderClass(dropTarget === 'ungrouped')}
               >
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: '#9ca3af',
-                    letterSpacing: '0.06em',
-                  }}
-                >
+                <span className="text-[10px] font-bold tracking-[0.06em] text-gray-400">
                   미분류
                 </span>
-                <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>
-                  {ungrouped.length}
-                </span>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-                <span style={{ fontSize: 9, color: '#c4c4c4' }}>
-                  {collapsed.ungrouped ? '▶' : '▼'}
-                </span>
+                <span className="text-[10px] font-semibold text-gray-300">{ungrouped.length}</span>
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-[9px] text-[#c4c4c4]">{collapsed.ungrouped ? '▶' : '▼'}</span>
               </div>
               {!collapsed.ungrouped && ungrouped.map(renderContact)}
             </div>
@@ -593,7 +406,8 @@ export default function Layout() {
                   if (draggingGroupId !== null) handleGroupDrop(g.id)
                   else handleDrop(g.id)
                 }}
-                style={{ opacity: draggingGroupId === g.id ? 0.4 : 1, transition: 'opacity 0.15s' }}
+                style={{ opacity: draggingGroupId === g.id ? 0.4 : 1 }}
+                className="transition-opacity duration-150"
               >
                 {/* 그룹 헤더 */}
                 <div
@@ -611,11 +425,9 @@ export default function Layout() {
                   }}
                   onMouseEnter={() => setHoverGroupId(g.id)}
                   onMouseLeave={() => setHoverGroupId(null)}
-                  style={{
-                    ...sectionHeaderStyle(isTarget, '#6366f1'),
-                    borderTop: isGroupTarget ? '2px solid #6366f1' : undefined,
-                    cursor: 'grab',
-                  }}
+                  className={`cursor-grab ${sectionHeaderClass(isTarget, 'indigo')} ${
+                    isGroupTarget ? 'border-t-2 border-t-indigo-500' : ''
+                  }`}
                 >
                   {isEditing ? (
                     // 인라인 이름 수정 입력창
@@ -629,76 +441,40 @@ export default function Layout() {
                         if (e.key === 'Escape') setEditingGroupId(null)
                       }}
                       onBlur={() => handleSaveGroupName(g.id)}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: '#374151',
-                        background: '#fff',
-                        border: '1px solid #6366f1',
-                        borderRadius: 4,
-                        padding: '1px 6px',
-                        outline: 'none',
-                        width: 100,
-                        fontFamily: 'inherit',
-                      }}
+                      className="w-25 rounded border border-indigo-500 bg-white px-1.5 py-px text-[11px] font-bold text-gray-700 outline-none"
                     />
                   ) : (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: '#6366f1',
-                        letterSpacing: '0.06em',
-                      }}
-                    >
+                    <span className="text-[10px] font-bold tracking-[0.06em] text-indigo-500">
                       {g.name}
                     </span>
                   )}
-                  <span style={{ fontSize: 10, color: '#d1d5db', fontWeight: 600 }}>
-                    {members.length}
-                  </span>
-                  <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                  <span className="text-[10px] font-semibold text-gray-300">{members.length}</span>
+                  <div className="h-px flex-1 bg-slate-200" />
 
                   {/* hover 시 수정/삭제 버튼 */}
                   {isHovered && !isEditing && (
-                    <div style={{ display: 'flex', gap: 2 }} onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => {
                           setEditingGroupId(g.id)
                           setEditingName(g.name)
                         }}
                         title="이름 수정"
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: 11,
-                          color: '#9ca3af',
-                          padding: '0 2px',
-                          lineHeight: 1,
-                        }}
+                        className="cursor-pointer border-none bg-transparent px-0.5 text-[11px] leading-none text-gray-400"
                       >
                         ✏️
                       </button>
                       <button
                         onClick={() => handleDeleteGroup(g)}
                         title="그룹 삭제"
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: 11,
-                          color: '#9ca3af',
-                          padding: '0 2px',
-                          lineHeight: 1,
-                        }}
+                        className="cursor-pointer border-none bg-transparent px-0.5 text-[11px] leading-none text-gray-400"
                       >
                         🗑️
                       </button>
                     </div>
                   )}
                   {(!isHovered || isEditing) && (
-                    <span style={{ fontSize: 9, color: '#c4c4c4' }}>{isCollapsed ? '▶' : '▼'}</span>
+                    <span className="text-[9px] text-[#c4c4c4]">{isCollapsed ? '▶' : '▼'}</span>
                   )}
                 </div>
 
@@ -708,12 +484,9 @@ export default function Layout() {
                     {members.map(renderContact)}
                     {members.length === 0 && (
                       <div
-                        style={{
-                          padding: '8px 14px',
-                          fontSize: 11,
-                          color: isTarget ? '#6366f1' : '#d1d5db',
-                          textAlign: 'center',
-                        }}
+                        className={`px-3.5 py-2 text-center text-[11px] ${
+                          isTarget ? 'text-indigo-500' : 'text-gray-300'
+                        }`}
                       >
                         {isTarget ? '여기에 놓기' : '지인을 드래그해서 추가하세요'}
                       </div>
@@ -725,7 +498,7 @@ export default function Layout() {
           })}
 
           {/* 그룹 추가 */}
-          <div style={{ padding: '8px 14px' }}>
+          <div className="px-3.5 py-2">
             {showNewGroup ? (
               <div>
                 <input
@@ -745,40 +518,18 @@ export default function Layout() {
                   }}
                   onBlur={handleCreateGroup}
                   placeholder="그룹 이름 입력..."
-                  style={{
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    fontSize: 12,
-                    color: '#374151',
-                    background: '#fff',
-                    border: `1px solid ${newGroupError ? '#ef4444' : '#6366f1'}`,
-                    borderRadius: 6,
-                    padding: '6px 10px',
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                  }}
+                  className={`box-border w-full rounded-md border bg-white px-2.5 py-1.5 text-xs text-gray-700 outline-none ${
+                    newGroupError ? 'border-red-500' : 'border-indigo-500'
+                  }`}
                 />
                 {newGroupError && (
-                  <p style={{ margin: '4px 0 0', fontSize: 11, color: '#ef4444' }}>
-                    {newGroupError}
-                  </p>
+                  <p className="m-0 mt-1 text-[11px] text-red-500">{newGroupError}</p>
                 )}
               </div>
             ) : (
               <button
                 onClick={() => setShowNewGroup(true)}
-                style={{
-                  width: '100%',
-                  fontSize: 11,
-                  color: '#9ca3af',
-                  background: 'none',
-                  border: '1px dashed #e2e8f0',
-                  borderRadius: 6,
-                  padding: '6px',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  textAlign: 'center',
-                }}
+                className="w-full cursor-pointer rounded-md border border-dashed border-slate-200 bg-transparent p-1.5 text-center text-[11px] text-gray-400"
               >
                 + 그룹 추가
               </button>
@@ -787,32 +538,20 @@ export default function Layout() {
         </div>
 
         {/* 하단 */}
-        <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0' }}>
+        <div className="border-t border-slate-200 px-4 py-2.5">
           <button
             onClick={() => setIntersectOpen(true)}
-            style={{
-              width: '100%',
-              padding: '8px',
-              marginBottom: 6,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: '#f1f5f9',
-              color: '#374151',
-              border: '1px solid #e2e8f0',
-              borderRadius: 7,
-              fontFamily: 'inherit',
-            }}
+            className="mb-1.5 w-full cursor-pointer rounded-[7px] border border-slate-200 bg-slate-100 p-2 text-xs font-semibold text-gray-700"
           >
             취향 비교
           </button>
-          <div style={{ fontSize: 11, color: '#9ca3af' }}>
+          <div className="text-[11px] text-gray-400">
             {contacts.filter((c) => !c.isMe).length}명 등록됨
           </div>
         </div>
       </aside>
 
-      <main style={{ flex: 1, overflowY: 'auto' }}>
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
 
@@ -822,87 +561,43 @@ export default function Layout() {
       {deleteTarget && (
         <div
           onClick={() => setDeleteTarget(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1000,
-            background: 'rgba(0,0,0,0.35)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            animation: 'fadeIn 0.15s ease-out',
-          }}
+          className="fixed inset-0 z-1000 flex items-center justify-center bg-black/35 animate-[fadeIn_0.15s_ease-out]"
         >
           <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }`}</style>
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#fff',
-              borderRadius: 10,
-              padding: '28px 28px 24px',
-              width: 360,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
-              animation: 'fadeIn 0.15s ease-out',
-            }}
+            className="w-90 rounded-[10px] bg-white px-7 pb-6 pt-7 shadow-[0_8px_32px_rgba(0,0,0,0.14)] animate-[fadeIn_0.15s_ease-out]"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 20 }}>🗑️</span>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>
+            <div className="mb-2 flex items-center gap-2.5">
+              <span className="text-xl">🗑️</span>
+              <span className="text-[15px] font-bold text-[#111]">
                 "{deleteTarget.name}" 그룹 삭제
               </span>
             </div>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.6 }}>
+            <p className="m-0 mb-5 text-[13px] leading-[1.6] text-gray-500">
               {contacts.some((c) => c.groupId === deleteTarget.id)
                 ? '소속 지인을 어떻게 처리할까요?'
                 : '그룹을 삭제할까요?'}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            <div className="mb-4 flex flex-col gap-2">
               {contacts.some((c) => c.groupId === deleteTarget.id) ? (
                 <>
                   <button
                     onClick={() => confirmDeleteGroup(false)}
-                    style={{
-                      padding: '10px 16px',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#374151',
-                      background: '#f9fafb',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontFamily: 'inherit',
-                      transition: 'background 0.1s',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                    className="cursor-pointer rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-left text-[13px] font-semibold text-gray-700 transition-colors duration-100 hover:bg-gray-100"
                   >
                     📂 소속 지인을 미분류로 이동
-                    <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400, marginTop: 2 }}>
+                    <div className="mt-0.5 text-[11px] font-normal text-gray-400">
                       지인은 그대로 유지되고 그룹만 삭제돼요
                     </div>
                   </button>
                   <button
                     onClick={() => confirmDeleteGroup(true)}
-                    style={{
-                      padding: '10px 16px',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#fff',
-                      background: '#ef4444',
-                      border: '1px solid #ef4444',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontFamily: 'inherit',
-                      transition: 'background 0.1s',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#dc2626')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = '#ef4444')}
+                    className="cursor-pointer rounded-lg border border-red-500 bg-red-500 px-4 py-2.5 text-left text-[13px] font-semibold text-white transition-colors duration-100 hover:bg-red-600"
                   >
                     🗑️ 지인도 함께 삭제
-                    <div style={{ fontSize: 11, color: '#fecaca', fontWeight: 400, marginTop: 2 }}>
+                    <div className="mt-0.5 text-[11px] font-normal text-red-200">
                       그룹과 소속 지인이 모두 삭제돼요
                     </div>
                   </button>
@@ -910,21 +605,7 @@ export default function Layout() {
               ) : (
                 <button
                   onClick={() => confirmDeleteGroup(false)}
-                  style={{
-                    padding: '10px 16px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#fff',
-                    background: '#ef4444',
-                    border: '1px solid #ef4444',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    fontFamily: 'inherit',
-                    transition: 'background 0.1s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#dc2626')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '#ef4444')}
+                  className="cursor-pointer rounded-lg border border-red-500 bg-red-500 px-4 py-2.5 text-center text-[13px] font-semibold text-white transition-colors duration-100 hover:bg-red-600"
                 >
                   그룹 삭제
                 </button>
@@ -933,16 +614,7 @@ export default function Layout() {
 
             <button
               onClick={() => setDeleteTarget(null)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                fontSize: 13,
-                color: '#9ca3af',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              className="w-full cursor-pointer border-none bg-transparent p-2 text-[13px] text-gray-400"
             >
               취소
             </button>

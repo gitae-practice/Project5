@@ -15,25 +15,10 @@ const REL_COLOR: Record<string, string> = {
   기타: '#9ca3af',
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  border: '1px solid #e5e7eb',
-  borderRadius: 8,
-  padding: '10px 12px',
-  fontSize: 14,
-  color: '#111',
-  outline: 'none',
-  fontFamily: 'inherit',
-}
+const inputClass =
+  'box-border w-full rounded-lg border border-gray-200 px-3 py-[10px] text-sm text-[#111] outline-none'
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 13,
-  fontWeight: 600,
-  color: '#374151',
-  marginBottom: 6,
-}
+const labelClass = 'mb-1.5 block text-[13px] font-semibold text-gray-700'
 
 export default function ContactFormPage() {
   const { id } = useParams()
@@ -123,58 +108,25 @@ export default function ContactFormPage() {
   const color = REL_COLOR[form.relationship] ?? '#9ca3af'
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        minHeight: '100%',
-        padding: '48px 24px',
-      }}
-    >
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 12,
-          padding: '36px 40px',
-          width: '100%',
-          maxWidth: 480,
-        }}
-      >
-        <h2
-          style={{ fontSize: 20, fontWeight: 700, color: '#111', marginBottom: 28, marginTop: 0 }}
-        >
+    <div className="flex min-h-full items-start justify-center px-6 py-12">
+      <div className="w-full max-w-[480px] rounded-xl border border-gray-200 bg-white px-10 py-9">
+        <h2 className="mb-7 mt-0 text-xl font-bold text-[#111]">
           {isMe ? '내 정보 등록' : isEdit ? '지인 수정' : '지인 추가'}
         </h2>
 
         <form onSubmit={handleSubmit}>
           {/* 프로필 사진 업로드 */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div className="mb-7 flex justify-center">
+            <div className="relative inline-block">
               <div
                 onClick={() => fileInputRef.current?.click()}
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  border: '2px solid #e5e7eb',
-                  background: color + '22',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                style={{ background: color + '22' }}
+                className="flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-gray-200"
               >
                 {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="프로필"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  <img src={avatarUrl} alt="프로필" className="h-full w-full object-cover" />
                 ) : (
-                  <span style={{ fontSize: 28, fontWeight: 700, color }}>
+                  <span style={{ color }} className="text-[28px] font-bold">
                     {form.name ? form.name[0] : '?'}
                   </span>
                 )}
@@ -182,65 +134,46 @@ export default function ContactFormPage() {
               {/* 카메라 아이콘 배지 */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  background: '#111',
-                  border: '2px solid #fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                }}
+                className="absolute bottom-0 right-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#111] text-xs"
               >
-                <span style={{ color: '#fff', fontSize: 11 }}>✎</span>
+                <span className="text-[11px] text-white">✎</span>
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                style={{ display: 'none' }}
+                className="hidden"
               />
             </div>
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>이름 *</label>
+          <div className="mb-5">
+            <label className={labelClass}>이름 *</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="이름 입력"
-              style={inputStyle}
+              className={inputClass}
             />
           </div>
 
           {!isMe && (
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>관계</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div className="mb-5">
+              <label className={labelClass}>관계</label>
+              <div className="flex flex-wrap gap-2">
                 {RELATIONSHIPS.map((r) => (
                   <button
                     type="button"
                     key={r}
                     onClick={() => setForm((p) => ({ ...p, relationship: r }))}
-                    style={{
-                      padding: '7px 14px',
-                      fontSize: 13,
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      border: form.relationship === r ? '1px solid #111' : '1px solid #e5e7eb',
-                      background: form.relationship === r ? '#111' : '#fff',
-                      color: form.relationship === r ? '#fff' : '#374151',
-                      fontFamily: 'inherit',
-                    }}
+                    className={`cursor-pointer rounded-md px-3.5 py-[7px] text-[13px] ${
+                      form.relationship === r
+                        ? 'border border-[#111] bg-[#111] text-white'
+                        : 'border border-gray-200 bg-white text-gray-700'
+                    }`}
                   >
                     {r}
                   </button>
@@ -249,37 +182,37 @@ export default function ContactFormPage() {
             </div>
           )}
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>생일</label>
+          <div className="mb-5">
+            <label className={labelClass}>생일</label>
             <input
               type="date"
               value={form.birthday}
               onChange={(e) => setForm((p) => ({ ...p, birthday: e.target.value }))}
-              style={inputStyle}
+              className={inputClass}
             />
           </div>
 
-          <div style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>메모</label>
+          <div className="mb-7">
+            <label className={labelClass}>메모</label>
             <textarea
               value={form.memo}
               onChange={(e) => setForm((p) => ({ ...p, memo: e.target.value }))}
               rows={4}
               placeholder="간단한 메모"
-              style={{ ...inputStyle, resize: 'none' }}
+              className={`${inputClass} resize-none`}
             />
           </div>
 
           {!isEdit && !isMe && groups.length > 0 && (
-            <div style={{ marginBottom: 28 }}>
-              <label style={labelStyle}>그룹</label>
+            <div className="mb-7">
+              <label className={labelClass}>그룹</label>
               <select
                 value={selectedGroupId}
                 onChange={(e) =>
                   setSelectedGroupId(e.target.value === '' ? '' : Number(e.target.value))
                 }
                 onFocus={() => getGroups().then(setGroups)}
-                style={{ ...inputStyle, cursor: 'pointer' }}
+                className={`${inputClass} cursor-pointer`}
               >
                 <option value="">그룹 없음</option>
                 {groups.map((g) => (
@@ -291,39 +224,20 @@ export default function ContactFormPage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="flex gap-2.5">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              style={{
-                flex: 1,
-                padding: '11px',
-                fontSize: 14,
-                borderRadius: 8,
-                cursor: 'pointer',
-                border: '1px solid #e5e7eb',
-                background: '#fff',
-                color: '#374151',
-                fontFamily: 'inherit',
-              }}
+              className="flex-1 cursor-pointer rounded-lg border border-gray-200 bg-white py-[11px] text-sm text-gray-700"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                flex: 1,
-                padding: '11px',
-                fontSize: 14,
-                fontWeight: 600,
-                borderRadius: 8,
-                cursor: 'pointer',
-                border: 'none',
-                background: loading ? '#6b7280' : '#111',
-                color: '#fff',
-                fontFamily: 'inherit',
-              }}
+              className={`flex-1 cursor-pointer rounded-lg border-none py-[11px] text-sm font-semibold text-white ${
+                loading ? 'bg-gray-500' : 'bg-[#111]'
+              }`}
             >
               {loading ? '저장 중...' : isEdit ? '수정 완료' : '추가하기'}
             </button>

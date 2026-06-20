@@ -230,46 +230,22 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
   const hovPt = hoveredIdx !== null ? pts[hoveredIdx] : null
 
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 8,
-        padding: '18px 20px 14px',
-        marginBottom: 20,
-      }}
-    >
+    <div className="mb-5 rounded-lg border border-gray-200 bg-white px-5 pb-[14px] pt-[18px]">
       {/* 헤더 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 14,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>
-            {FILTER_TITLE[filter]} 만남
-          </span>
+      <div className="mb-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-gray-700">{FILTER_TITLE[filter]} 만남</span>
           <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#fff',
-              borderRadius: 10,
-              padding: '1px 8px',
-              background: totalCount > 0 ? '#ea580c' : '#d1d5db',
-            }}
+            className={`rounded-[10px] px-2 py-px text-[11px] font-bold text-white ${
+              totalCount > 0 ? 'bg-orange-600' : 'bg-gray-300'
+            }`}
           >
             총 {totalCount}회
           </span>
         </div>
 
         {/* 필터 탭 */}
-        <div
-          style={{ display: 'flex', gap: 2, background: '#f3f4f6', borderRadius: 8, padding: 3 }}
-        >
+        <div className="flex gap-0.5 rounded-lg bg-gray-100 p-[3px]">
           {FILTERS.map(({ key, label }) => (
             <button
               key={key}
@@ -277,18 +253,11 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
                 setFilter(key)
                 setHoveredIdx(null)
               }}
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '3px 10px',
-                borderRadius: 6,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                background: filter === key ? '#fff' : 'transparent',
-                color: filter === key ? '#ea580c' : '#6b7280',
-                boxShadow: filter === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              }}
+              className={`cursor-pointer rounded-md border-none px-2.5 py-[3px] text-[11px] font-semibold transition-all duration-150 ${
+                filter === key
+                  ? 'bg-white text-orange-600 shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
+                  : 'bg-transparent text-gray-500 shadow-none'
+              }`}
             >
               {label}
             </button>
@@ -297,10 +266,7 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
       </div>
 
       {/* SVG 차트 */}
-      <svg
-        viewBox={`0 0 ${VW} ${VH}`}
-        style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
-      >
+      <svg viewBox={`0 0 ${VW} ${VH}`} className="block h-auto w-full overflow-visible">
         <defs>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
@@ -406,7 +372,7 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
               fill={isHov ? '#ea580c' : '#f97316'}
               stroke="#fff"
               strokeWidth={isHov ? 2 : 1.5}
-              style={{ transition: 'r 0.1s' }}
+              className="transition-[r] duration-100"
             />
           )
         })}
@@ -444,7 +410,7 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
               width={slotW}
               height={IH}
               fill="transparent"
-              style={{ cursor: onPointClick ? 'pointer' : 'crosshair' }}
+              className={onPointClick ? 'cursor-pointer' : 'cursor-crosshair'}
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
               onClick={() =>
