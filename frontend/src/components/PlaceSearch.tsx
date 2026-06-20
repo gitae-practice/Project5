@@ -2,13 +2,6 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { loadKakaoSdk } from '../utils/kakaoLoader'
 
-interface KakaoPlace {
-  place_name: string
-  address_name: string
-  y: string // 위도
-  x: string // 경도
-}
-
 interface Props {
   value: string
   onSelect: (place: { name: string; lat: number; lng: number }) => void
@@ -17,7 +10,7 @@ interface Props {
 
 export default function PlaceSearch({ value, onSelect, style }: Props) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<KakaoPlace[]>([])
+  const [results, setResults] = useState<KakaoPlaceSearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
   const [sdkError, setSdkError] = useState(false)
@@ -31,16 +24,16 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
       return
     }
     setSdkError(false)
-    const kakao = (window as any).kakao
+    const kakao = window.kakao
     const ps = new kakao.maps.services.Places()
     setSearching(true)
-    ps.keywordSearch(query, (data: KakaoPlace[], status: string) => {
+    ps.keywordSearch(query, (data, status) => {
       setSearching(false)
       setResults(status === kakao.maps.services.Status.OK ? data : [])
     })
   }
 
-  const handleSelect = (place: KakaoPlace) => {
+  const handleSelect = (place: KakaoPlaceSearchResult) => {
     onSelect({ name: place.place_name, lat: parseFloat(place.y), lng: parseFloat(place.x) })
     setOpen(false)
     setQuery('')

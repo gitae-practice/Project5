@@ -89,11 +89,8 @@ export default function ContactDetailPage() {
   const [tab, setTab] = useState<Tab>(
     initialTab === 'meeting' || initialTab === 'gift' ? initialTab : 'preference',
   )
-
-  // isMe 연락처로 전환 시 선물/만남 탭에 머물러 있으면 취향 탭으로 리셋
-  useEffect(() => {
-    if (contact?.isMe && tab !== 'preference') setTab('preference')
-  }, [contact?.isMe])
+  // isMe 연락처는 선물/만남 탭이 없으므로 항상 취향 탭으로 표시
+  const effectiveTab = contact?.isMe ? 'preference' : tab
   const [prefType, setPrefType] = useState<PreferenceType>('FOOD_LIKE')
   const [prefValue, setPrefValue] = useState('')
   const [giftForm, setGiftForm] = useState({
@@ -244,7 +241,9 @@ export default function ContactDetailPage() {
 
   const lastMeeting = meetings[0]
   const daysSince = lastMeeting
-    ? Math.floor((Date.now() - new Date(lastMeeting.date).getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor(
+        (new Date().getTime() - new Date(lastMeeting.date).getTime()) / (1000 * 60 * 60 * 24),
+      )
     : null
   return (
     <div className="flex h-full flex-col bg-[#f5f5f5]">
@@ -357,7 +356,7 @@ export default function ContactDetailPage() {
                   key={t}
                   onClick={() => setTab(t)}
                   className={`cursor-pointer border-none border-b-2 bg-transparent px-5 py-3.5 text-sm transition-all duration-100 ${
-                    tab === t
+                    effectiveTab === t
                       ? 'border-b-[#111] font-semibold text-[#111]'
                       : 'border-b-transparent font-normal text-gray-400'
                   }`}
@@ -372,9 +371,9 @@ export default function ContactDetailPage() {
 
       {/* 콘텐츠 */}
       <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div className={tab === 'meeting' ? 'max-w-none' : 'max-w-200'}>
+        <div className={effectiveTab === 'meeting' ? 'max-w-none' : 'max-w-200'}>
           {/* 취향 탭 */}
-          {tab === 'preference' && (
+          {effectiveTab === 'preference' && (
             <div>
               <div className="mb-6 flex gap-2">
                 <select
@@ -473,7 +472,7 @@ export default function ContactDetailPage() {
           )}
 
           {/* 선물 탭 */}
-          {tab === 'gift' && (
+          {effectiveTab === 'gift' && (
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[13px] text-gray-500">선물 {gifts.length}건</span>
@@ -615,7 +614,7 @@ export default function ContactDetailPage() {
           )}
 
           {/* 만남 탭 */}
-          {tab === 'meeting' && (
+          {effectiveTab === 'meeting' && (
             <div>
               {/* 헤더: 만남 수 + 추가 버튼 */}
               <div className="mb-4 flex items-center justify-between">

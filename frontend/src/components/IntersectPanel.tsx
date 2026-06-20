@@ -28,6 +28,13 @@ const PREF_COLOR: Record<PreferenceType, { bg: string; text: string; border: str
   ETC: { bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb' },
 }
 
+interface IntersectionItem {
+  value: string
+  count: number
+  total: number
+  names: string[]
+}
+
 // 선택된 사람들의 취향 교집합 계산 (같은 type+value를 몇 명이 갖는지)
 function calcIntersection(selected: Contact[]) {
   const map = new Map<string, { type: PreferenceType; value: string; people: Contact[] }>()
@@ -68,6 +75,8 @@ export default function IntersectPanel({ open, onClose }: Props) {
   // 패널 열릴 때 전체 목록 로드
   useEffect(() => {
     if (!open) return
+    // 패널이 열릴 때마다 로딩 표시를 켜는 의도된 동작 (fetch-on-open 패턴)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     getContactsFull().then((data) => {
       setContacts(data)
@@ -108,13 +117,13 @@ export default function IntersectPanel({ open, onClose }: Props) {
 
   return (
     // 배경 오버레이
-    <div className="fixed inset-0 z-[200] flex justify-end">
+    <div className="fixed inset-0 z-200 flex justify-end">
       <div onClick={onClose} className="absolute inset-0 bg-black/25" />
 
       {/* 패널 본체 */}
-      <div className="relative flex h-full w-[480px] max-w-[90vw] flex-col overflow-hidden bg-white shadow-[-4px_0_20px_rgba(0,0,0,0.1)]">
+      <div className="relative flex h-full w-120 max-w-[90vw] flex-col overflow-hidden bg-white shadow-[-4px_0_20px_rgba(0,0,0,0.1)]">
         {/* 헤더 */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 pb-[14px] pt-[18px]">
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 pb-3.5 pt-4.5">
           <span className="text-[15px] font-bold text-[#111]">취향 비교</span>
           <button
             onClick={onClose}
@@ -135,7 +144,7 @@ export default function IntersectPanel({ open, onClose }: Props) {
               }}
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
-              className={`flex min-h-16 flex-wrap items-center gap-2 rounded-[10px] border-2 border-dashed px-3 py-[10px] transition-colors duration-150 ${
+              className={`flex min-h-16 flex-wrap items-center gap-2 rounded-[10px] border-2 border-dashed px-3 py-2.5 transition-colors duration-150 ${
                 isDragOver ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-gray-50'
               }`}
             >
@@ -147,7 +156,7 @@ export default function IntersectPanel({ open, onClose }: Props) {
                 group.map((c) => (
                   <div
                     key={c.id}
-                    className={`flex items-center gap-[5px] rounded-[20px] py-1 pl-2 pr-2.5 text-[13px] font-semibold ${
+                    className={`flex items-center gap-1.25 rounded-[20px] py-1 pl-2 pr-2.5 text-[13px] font-semibold ${
                       c.isMe ? 'bg-[#111] text-white' : 'bg-gray-100 text-[#111]'
                     }`}
                   >
@@ -182,7 +191,7 @@ export default function IntersectPanel({ open, onClose }: Props) {
                       onClose()
                       navigate('/contacts/new?me=true')
                     }}
-                    className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-[10px] text-[13px] text-gray-400"
+                    className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2.5 text-[13px] text-gray-400"
                   >
                     <span>⭐</span>
                     <span className="font-semibold">내 정보 등록하기</span>
@@ -201,10 +210,10 @@ export default function IntersectPanel({ open, onClose }: Props) {
                     key={c.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, c.id)}
-                    className="flex select-none items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-[9px] cursor-grab"
+                    className="flex select-none items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.25 cursor-grab"
                   >
                     <div
-                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-bold ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-bold ${
                         c.isMe ? 'bg-[#111] text-white' : 'bg-gray-100 text-gray-700'
                       }`}
                     >
@@ -240,43 +249,45 @@ export default function IntersectPanel({ open, onClose }: Props) {
               </div>
 
               {intersection && Object.keys(intersection).length > 0 ? (
-                (Object.entries(intersection) as [PreferenceType, any[]][]).map(([type, items]) => (
-                  <div key={type} className="mb-4">
-                    <p className="mb-2 text-xs font-semibold text-gray-700">{PREF_LABEL[type]}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {items.map((item) => {
-                        const col = PREF_COLOR[type]
-                        const isAll = item.count === item.total
-                        return (
-                          <div
-                            key={item.value}
-                            title={`${item.names.join(', ')}`}
-                            style={{
-                              background: col.bg,
-                              borderColor: isAll ? col.border : '#e5e7eb',
-                            }}
-                            className={`flex items-center gap-[5px] rounded-[20px] border px-2.5 py-1 ${
-                              isAll ? 'opacity-100' : 'opacity-70'
-                            }`}
-                          >
-                            <span style={{ color: col.text }} className="text-xs font-semibold">
-                              {item.value}
-                            </span>
-                            <span
+                (Object.entries(intersection) as [PreferenceType, IntersectionItem[]][]).map(
+                  ([type, items]) => (
+                    <div key={type} className="mb-4">
+                      <p className="mb-2 text-xs font-semibold text-gray-700">{PREF_LABEL[type]}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {items.map((item) => {
+                          const col = PREF_COLOR[type]
+                          const isAll = item.count === item.total
+                          return (
+                            <div
+                              key={item.value}
+                              title={`${item.names.join(', ')}`}
                               style={{
-                                color: isAll ? col.text : '#9ca3af',
-                                background: isAll ? col.border : '#f3f4f6',
+                                background: col.bg,
+                                borderColor: isAll ? col.border : '#e5e7eb',
                               }}
-                              className="rounded-[10px] px-1.5 py-px text-[10px] font-bold"
+                              className={`flex items-center gap-1.25 rounded-[20px] border px-2.5 py-1 ${
+                                isAll ? 'opacity-100' : 'opacity-70'
+                              }`}
                             >
-                              {item.count}/{item.total}명
-                            </span>
-                          </div>
-                        )
-                      })}
+                              <span style={{ color: col.text }} className="text-xs font-semibold">
+                                {item.value}
+                              </span>
+                              <span
+                                style={{
+                                  color: isAll ? col.text : '#9ca3af',
+                                  background: isAll ? col.border : '#f3f4f6',
+                                }}
+                                className="rounded-[10px] px-1.5 py-px text-[10px] font-bold"
+                              >
+                                {item.count}/{item.total}명
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ),
+                )
               ) : (
                 <p className="py-5 text-center text-xs text-gray-400">공통 취향이 없어요</p>
               )}

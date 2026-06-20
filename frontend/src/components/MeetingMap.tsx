@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Meeting } from '../types'
 import { loadKakaoSdk } from '../utils/kakaoLoader'
 
@@ -11,14 +11,20 @@ interface Props {
 
 export default function MeetingMap({ meetings }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstance = useRef<any>(null)
-  const markersRef = useRef<any[]>([])
+  const mapInstance = useRef<KakaoMap | null>(null)
+  const markersRef = useRef<KakaoMarker[]>([])
   const [ready, setReady] = useState(false)
   const [sdkError, setSdkError] = useState(false)
 
-  // 모든 만남의 장소를 평탄화 (좌표 있는 것만)
-  const allPlaces = meetings.flatMap((m) =>
-    m.places.filter((p) => p.lat && p.lng).map((p) => ({ ...p, meetingDate: m.date })),
+  // 모든 만남의 장소를 평탄화 (좌표 있는 것만), meetings가 바뀔 때만 새로 계산
+  const allPlaces = useMemo(
+    () =>
+      meetings.flatMap((m) =>
+        m.places
+          .filter((p): p is typeof p & { lat: number; lng: number } => !!p.lat && !!p.lng)
+          .map((p) => ({ ...p, meetingDate: m.date })),
+      ),
+    [meetings],
   )
 
   // SDK 동적 로드 → 지도 초기화
@@ -29,7 +35,7 @@ export default function MeetingMap({ meetings }: Props) {
         return
       }
       if (!mapRef.current || mapInstance.current) return
-      const kakao = (window as any).kakao
+      const kakao = window.kakao
       try {
         const center = new kakao.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG)
         mapInstance.current = new kakao.maps.Map(mapRef.current, { center, level: 8 })
@@ -40,12 +46,9 @@ export default function MeetingMap({ meetings }: Props) {
     })
   }, [])
 
-  // 장소 목록의 내용(이름+좌표)을 문자열 키로 만들어 실제 변경 감지
-  const allPlacesKey = allPlaces.map((p) => `${p.name}:${p.lat}:${p.lng}`).join('|')
-
   // 마커 업데이트 (지도 준비 & 장소 내용 변경 시)
   useEffect(() => {
-    const kakao = (window as any).kakao
+    const kakao = window.kakao
     if (!ready || !kakao?.maps || !mapInstance.current) return
 
     // 기존 마커 제거
@@ -80,7 +83,7 @@ export default function MeetingMap({ meetings }: Props) {
     } else {
       map.setBounds(bounds)
     }
-  }, [ready, allPlacesKey])
+  }, [ready, allPlaces])
 
   return (
     <div className="flex h-full flex-col">
@@ -97,27 +100,24 @@ export default function MeetingMap({ meetings }: Props) {
         {/* 지도 컨트롤: + / - */}
         {ready && (
           <div className="absolute bottom-[20px] right-[10px] z-10 flex flex-col gap-0.5">
-            {[
-              {
-                label: '+',
-                title: '확대',
-                onClick: () => mapInstance.current.setLevel(mapInstance.current.getLevel() - 1),
-              },
-              {
-                label: '−',
-                title: '축소',
-                onClick: () => mapInstance.current.setLevel(mapInstance.current.getLevel() + 1),
-              },
-            ].map((btn) => (
-              <button
-                key={btn.label}
-                onClick={btn.onClick}
-                title={btn.title}
-                className="flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-xl font-semibold leading-none text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
-              >
-                {btn.label}
-              </button>
-            ))}
+            <button
+              onClick={() =>
+                mapInstance.current?.setLevel((mapInstance.current?.getLevel() ?? 0) - 1)
+              }
+              title="확대"
+              className="flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-xl font-semibold leading-none text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+            >
+              +
+            </button>
+            <button
+              onClick={() =>
+                mapInstance.current?.setLevel((mapInstance.current?.getLevel() ?? 0) + 1)
+              }
+              title="축소"
+              className="flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-xl font-semibold leading-none text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+            >
+              −
+            </button>
           </div>
         )}
 

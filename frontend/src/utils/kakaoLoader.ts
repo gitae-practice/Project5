@@ -28,7 +28,7 @@ export function loadKakaoSdk(): Promise<boolean> {
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${APP_KEY}&libraries=services&autoload=false`
 
     script.onload = () => {
-      ;(window as any).kakao.maps.load(() => {
+      window.kakao.maps.load(() => {
         state = 'done'
         queue.splice(0).forEach((cb) => cb(true))
       })

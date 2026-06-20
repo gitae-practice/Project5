@@ -27,7 +27,12 @@ export default function ContactFormPage() {
   const isMe = searchParams.get('me') === 'true'
   const isEdit = !!id
 
-  const [form, setForm] = useState({ name: '', relationship: '친구', birthday: '', memo: '' })
+  const [form, setForm] = useState({
+    name: '',
+    relationship: isMe ? '본인' : '친구',
+    birthday: '',
+    memo: '',
+  })
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -40,16 +45,10 @@ export default function ContactFormPage() {
     if (!isMe) getGroups().then(setGroups)
   }, [isMe])
 
+  // /contacts/new ↔ /contacts/:id/edit 전환 시 App.tsx에서 컴포넌트를 key로 새로 마운트시켜
+  // 폼 상태가 초기값으로 리셋되므로, 여기서는 수정 모드일 때 기존 데이터만 불러온다.
   useEffect(() => {
-    if (!isEdit) {
-      // /contacts/new로 이동 시 폼 전체 초기화
-      setForm({ name: '', relationship: isMe ? '본인' : '친구', birthday: '', memo: '' })
-      setCurrentPhotoUrl(null)
-      setPhotoFile(null)
-      setPhotoPreview(null)
-      setSelectedGroupId('')
-      return
-    }
+    if (!isEdit) return
     getContact(Number(id)).then((c) => {
       setForm({
         name: c.name,
