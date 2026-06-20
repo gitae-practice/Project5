@@ -225,7 +225,8 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
       ? `${linePath} L ${pts[pts.length - 1][0]},${PT + IH} L ${pts[0][0]},${PT + IH} Z`
       : ''
 
-  const yTicks = [0, Math.round(maxCount / 2), maxCount]
+  // maxCount가 작으면 중간값이 0/최대값과 겹칠 수 있어 중복 제거
+  const yTicks = Array.from(new Set([0, Math.round(maxCount / 2), maxCount]))
   const hov = hoveredIdx !== null ? points[hoveredIdx] : null
   const hovPt = hoveredIdx !== null ? pts[hoveredIdx] : null
 
