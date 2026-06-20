@@ -4,8 +4,8 @@
 
 ## 기술 스택
 
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
-- **Backend**: Spring Boot 3, Java 21, JPA
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, React Router 7, Axios
+- **Backend**: Spring Boot 4, Java 21, Spring Data JPA, Lombok
 - **Database**: MySQL 8
 
 ## 프로젝트 구조
