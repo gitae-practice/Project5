@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   getContact,
@@ -129,6 +129,13 @@ export default function ContactDetailPage() {
     end: string
     label: string
   } | null>(null)
+  // 히트맵 기간 선택 또는 달력 날짜 선택을 지도 강조용 단일 범위로 통일
+  // (매 렌더마다 새 객체가 만들어지면 MeetingMap의 마커 재생성 effect가 불필요하게 재실행되므로 메모이즈)
+  const selectedRange = useMemo(() => {
+    if (heatmapFilter) return { start: heatmapFilter.start, end: heatmapFilter.end }
+    if (selectedMeetingDate) return { start: selectedMeetingDate, end: selectedMeetingDate }
+    return null
+  }, [heatmapFilter, selectedMeetingDate])
 
   useEffect(() => {
     getContact(contactId).then(setContact)
@@ -264,8 +271,8 @@ export default function ContactDetailPage() {
         className="relative overflow-hidden px-9 pb-7 pt-9"
       >
         {/* 배경 장식 원 */}
-        <div className="pointer-events-none absolute -right-10 -top-10 h-45 w-45 rounded-full bg-white/[0.06]" />
-        <div className="pointer-events-none absolute -bottom-5 right-20 h-25 w-25 rounded-full bg-white/[0.04]" />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-45 w-45 rounded-full bg-white/6" />
+        <div className="pointer-events-none absolute -bottom-5 right-20 h-25 w-25 rounded-full bg-white/4" />
 
         <div className="relative max-w-200">
           <div className="flex items-start justify-between">
@@ -286,7 +293,7 @@ export default function ContactDetailPage() {
                   <h2 className="m-0 text-[26px] font-extrabold tracking-[-0.5px] text-white">
                     {contact.name}
                   </h2>
-                  <span className="rounded-[20px] border border-white/30 bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-[8px]">
+                  <span className="rounded-[20px] border border-white/30 bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
                     {contact.isMe ? '내 정보' : contact.relationship}
                   </span>
                 </div>
@@ -303,14 +310,14 @@ export default function ContactDetailPage() {
               onClick={() =>
                 navigate(`/contacts/${contactId}/edit${contact.isMe ? '?me=true' : ''}`)
               }
-              className="cursor-pointer rounded-lg border border-white/30 bg-white/15 px-4.5 py-2 text-[13px] font-semibold text-white backdrop-blur-[8px] transition-colors duration-150 hover:bg-white/25"
+              className="cursor-pointer rounded-lg border border-white/30 bg-white/15 px-4.5 py-2 text-[13px] font-semibold text-white backdrop-blur-sm transition-colors duration-150 hover:bg-white/25"
             >
               수정
             </button>
           </div>
           {/* 통계 바 */}
           {!contact.isMe && (
-            <div className="mt-6 flex w-fit gap-0 rounded-[10px] border border-white/15 bg-white/12 px-5 py-3.5 backdrop-blur-[8px]">
+            <div className="mt-6 flex w-fit gap-0 rounded-[10px] border border-white/15 bg-white/12 px-5 py-3.5 backdrop-blur-sm">
               {[
                 { label: '만남', value: meetings.length, unit: '회' },
                 { label: '선물', value: gifts.length, unit: '건' },
@@ -735,6 +742,7 @@ export default function ContactDetailPage() {
                   <MeetingCalendar
                     meetings={meetings}
                     selectedDate={selectedMeetingDate}
+                    focusDate={heatmapFilter?.start}
                     onDateSelect={(date) => {
                       setSelectedMeetingDate(date)
                       setHeatmapFilter(null)
@@ -894,7 +902,7 @@ export default function ContactDetailPage() {
 
                 {/* 오른쪽: 지도 — 명시적 height로 Kakao 지도 렌더링 보장 */}
                 <div className="h-130 min-w-0 flex-1">
-                  <MeetingMap meetings={meetings} />
+                  <MeetingMap meetings={meetings} highlightRange={selectedRange} />
                 </div>
               </div>
             </div>

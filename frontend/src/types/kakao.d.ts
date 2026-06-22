@@ -20,6 +20,10 @@ interface KakaoMarker {
   setMap(map: KakaoMap | null): void
 }
 
+// 인스턴스 내부를 직접 다루지 않고 Marker 생성자에 그대로 넘기기만 하는 opaque 핸들
+type KakaoMarkerImage = object
+type KakaoSize = object
+
 interface KakaoInfoWindow {
   open(map: KakaoMap, marker: KakaoMarker): void
 }
@@ -46,7 +50,13 @@ interface KakaoSDK {
     LatLng: new (lat: number, lng: number) => KakaoLatLng
     Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMap
     LatLngBounds: new () => KakaoLatLngBounds
-    Marker: new (options: { map: KakaoMap; position: KakaoLatLng }) => KakaoMarker
+    Size: new (width: number, height: number) => KakaoSize
+    MarkerImage: new (src: string, size: KakaoSize) => KakaoMarkerImage
+    Marker: new (options: {
+      map: KakaoMap
+      position: KakaoLatLng
+      image?: KakaoMarkerImage
+    }) => KakaoMarker
     InfoWindow: new (options: { content: string; removable: boolean }) => KakaoInfoWindow
     event: {
       addListener(target: KakaoMarker, type: string, handler: () => void): void

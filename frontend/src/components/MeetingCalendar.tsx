@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Meeting } from '../types'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -23,9 +23,16 @@ interface Props {
   meetings: Meeting[]
   selectedDate?: string | null
   onDateSelect?: (date: string | null) => void
+  // 외부(히트맵 클릭 등)에서 달력이 특정 날짜가 속한 달로 이동하도록 트리거하는 값
+  focusDate?: string | null
 }
 
-export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }: Props) {
+export default function MeetingCalendar({
+  meetings,
+  selectedDate,
+  onDateSelect,
+  focusDate,
+}: Props) {
   const now = new Date()
   // selectedDate가 있으면 그 달로 초기화 (홈 대시보드 딥링크 대응)
   const initDate = selectedDate ? new Date(selectedDate + 'T00:00:00') : now
@@ -33,6 +40,17 @@ export default function MeetingCalendar({ meetings, selectedDate, onDateSelect }
   const [month, setMonth] = useState(initDate.getMonth())
   const [viewMode, setViewMode] = useState<ViewMode>('days')
   const [yearRangeStart, setYearRangeStart] = useState(Math.floor(initDate.getFullYear() / 12) * 12)
+
+  // focusDate가 바뀌면(히트맵 클릭 등) 해당 날짜가 속한 달로 이동
+  // year/month는 이전/다음 버튼으로도 독립적으로 바뀌는 상태라 derived value로 대체 불가
+  useEffect(() => {
+    if (!focusDate) return
+    const d = new Date(focusDate + 'T00:00:00')
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setYear(d.getFullYear())
+    setMonth(d.getMonth())
+    setViewMode('days')
+  }, [focusDate])
 
   const prevUnit = () => {
     if (viewMode === 'days') {

@@ -7,9 +7,19 @@ const DEFAULT_LNG = 126.978
 
 interface Props {
   meetings: Meeting[]
+  // 지정하면 이 기간(달력/히트맵에서 선택한 날짜)에 해당하는 핀만 강조 표시 + 정보창 자동 오픈
+  highlightRange?: { start: string; end: string } | null
 }
 
-export default function MeetingMap({ meetings }: Props) {
+// 강조된 핀용 오렌지 원형 마커 이미지 (히트맵 라인 컬러와 통일)
+const HIGHLIGHT_MARKER_SRC =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28">' +
+      '<circle cx="14" cy="14" r="10" fill="#f97316" stroke="#fff" stroke-width="3"/></svg>',
+  )
+
+export default function MeetingMap({ meetings, highlightRange }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<KakaoMap | null>(null)
   const markersRef = useRef<KakaoMarker[]>([])
@@ -59,12 +69,25 @@ export default function MeetingMap({ meetings }: Props) {
 
     const map = mapInstance.current
     const bounds = new kakao.maps.LatLngBounds()
+    const highlightImage = new kakao.maps.MarkerImage(
+      HIGHLIGHT_MARKER_SRC,
+      new kakao.maps.Size(28, 28),
+    )
 
     allPlaces.forEach((p) => {
       const pos = new kakao.maps.LatLng(p.lat, p.lng)
       bounds.extend(pos)
 
-      const marker = new kakao.maps.Marker({ map, position: pos })
+      const isHighlighted =
+        !!highlightRange &&
+        p.meetingDate >= highlightRange.start &&
+        p.meetingDate <= highlightRange.end
+
+      const marker = new kakao.maps.Marker({
+        map,
+        position: pos,
+        ...(isHighlighted ? { image: highlightImage } : {}),
+      })
       markersRef.current.push(marker)
 
       const infoContent = `
@@ -75,6 +98,9 @@ export default function MeetingMap({ meetings }: Props) {
       `
       const infoWindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true })
       kakao.maps.event.addListener(marker, 'click', () => infoWindow.open(map, marker))
+
+      // 선택된 기간에 해당하는 핀은 정보창을 바로 열어 눌린 상태처럼 표시
+      if (isHighlighted) infoWindow.open(map, marker)
     })
 
     if (allPlaces.length === 1) {
@@ -83,7 +109,7 @@ export default function MeetingMap({ meetings }: Props) {
     } else {
       map.setBounds(bounds)
     }
-  }, [ready, allPlaces])
+  }, [ready, allPlaces, highlightRange])
 
   return (
     <div className="flex h-full flex-col">
