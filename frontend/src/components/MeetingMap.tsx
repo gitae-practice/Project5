@@ -11,18 +11,20 @@ interface Props {
   highlightRange?: { start: string; end: string } | null
 }
 
-// 강조된 핀용 오렌지 원형 마커 이미지 (히트맵 라인 컬러와 통일)
+// 강조된 핀용 오렌지 마커 이미지 — 기본 카카오 핀과 같은 물방울 모양, 색만 다르게 (히트맵 라인 컬러와 통일)
 const HIGHLIGHT_MARKER_SRC =
   'data:image/svg+xml;charset=utf-8,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28">' +
-      '<circle cx="14" cy="14" r="10" fill="#f97316" stroke="#fff" stroke-width="3"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">' +
+      '<path d="M16 0C7.163 0 0 7.163 0 16c0 11 16 24 16 24s16-13 16-24C32 7.163 24.837 0 16 0z" fill="#f97316" stroke="#fff" stroke-width="2"/>' +
+      '<circle cx="16" cy="15" r="6" fill="#fff"/></svg>',
   )
 
 export default function MeetingMap({ meetings, highlightRange }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<KakaoMap | null>(null)
   const markersRef = useRef<KakaoMarker[]>([])
+  const infoWindowsRef = useRef<KakaoInfoWindow[]>([])
   const [ready, setReady] = useState(false)
   const [sdkError, setSdkError] = useState(false)
 
@@ -61,9 +63,11 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
     const kakao = window.kakao
     if (!ready || !kakao?.maps || !mapInstance.current) return
 
-    // 기존 마커 제거
+    // 기존 마커·정보창 제거 (정보창은 마커와 별개 객체라 명시적으로 닫아야 함)
     markersRef.current.forEach((m) => m.setMap(null))
     markersRef.current = []
+    infoWindowsRef.current.forEach((iw) => iw.close())
+    infoWindowsRef.current = []
 
     if (allPlaces.length === 0) return
 
@@ -71,7 +75,10 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
     const bounds = new kakao.maps.LatLngBounds()
     const highlightImage = new kakao.maps.MarkerImage(
       HIGHLIGHT_MARKER_SRC,
-      new kakao.maps.Size(28, 28),
+      new kakao.maps.Size(32, 40),
+      {
+        offset: new kakao.maps.Point(16, 40),
+      },
     )
 
     allPlaces.forEach((p) => {
@@ -91,12 +98,17 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
       markersRef.current.push(marker)
 
       const infoContent = `
-        <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;min-width:100px;line-height:1.6">
+        <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;width:160px;word-break:break-all;line-height:1.6">
           <strong>${p.name}</strong><br/>
           <span style="color:#9ca3af">${p.meetingDate}</span>
         </div>
       `
-      const infoWindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true })
+      const infoWindow = new kakao.maps.InfoWindow({
+        content: infoContent,
+        removable: true,
+        zIndex: 10,
+      })
+      infoWindowsRef.current.push(infoWindow)
       kakao.maps.event.addListener(marker, 'click', () => infoWindow.open(map, marker))
 
       // 선택된 기간에 해당하는 핀은 정보창을 바로 열어 눌린 상태처럼 표시

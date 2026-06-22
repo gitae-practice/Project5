@@ -22,6 +22,7 @@ import type {
   MeetingPlaceInput,
   PreferenceType,
 } from '../types'
+import { todayKey } from '../utils/date'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
 import ConfirmModal from '../components/ConfirmModal'
@@ -101,7 +102,7 @@ export default function ContactDetailPage() {
     isWishlist: false,
   })
   const [showGiftForm, setShowGiftForm] = useState(false)
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayKey()
   const [meetForm, setMeetForm] = useState({
     date: today,
     places: [] as MeetingPlaceInput[],
@@ -198,7 +199,7 @@ export default function ContactDetailPage() {
       setMeetings((prev) => [meeting, ...prev])
     }
     setMeetForm({
-      date: new Date().toISOString().split('T')[0],
+      date: todayKey(),
       places: [],
       memo: '',
     })

@@ -11,6 +11,7 @@ import {
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
 import ConfirmModal from '../components/ConfirmModal'
+import { todayKey } from '../utils/date'
 import type {
   ContactSummary,
   DashboardResponse,
@@ -239,7 +240,7 @@ export default function ContactListPage() {
   const [loading, setLoading] = useState(true)
 
   // 빠른 만남 기록 폼
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayKey()
   const [showQuickForm, setShowQuickForm] = useState(false)
   const [allContacts, setAllContacts] = useState<ContactSummary[]>([])
   const [quickForm, setQuickForm] = useState({

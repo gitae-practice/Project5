@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Meeting } from '../types'
+import { toDateKey } from '../utils/date'
 
 interface Props {
   meetings: Meeting[]
@@ -70,7 +71,7 @@ function buildYearData(
     for (let d = 0; d < 7; d++) {
       const day = new Date(mon)
       day.setDate(mon.getDate() + d)
-      count += dayMap[day.toISOString().slice(0, 10)] ?? 0
+      count += dayMap[toDateKey(day)] ?? 0
     }
 
     const mo = mon.getMonth() + 1
@@ -126,7 +127,7 @@ function buildMonthData(
     for (let d = 0; d < 7; d++) {
       const day = new Date(mon)
       day.setDate(mon.getDate() + d)
-      count += dayMap[day.toISOString().slice(0, 10)] ?? 0
+      count += dayMap[toDateKey(day)] ?? 0
     }
 
     const wkInMonth = Math.ceil((mon.getDate() + (mon.getDay() || 7) - 1) / 7)
@@ -163,7 +164,7 @@ function buildWeekData(
   const points: DataPoint[] = DAY_LABELS.map((_, d) => {
     const day = new Date(monday)
     day.setDate(monday.getDate() + d)
-    const k = day.toISOString().slice(0, 10)
+    const k = toDateKey(day)
     return {
       startDate: new Date(day),
       endDate: new Date(day),
@@ -382,8 +383,8 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
         {selectedRange &&
           pts.map(([x, y], i) => {
             const p = points[i]
-            const s = p.startDate.toISOString().slice(0, 10)
-            const e = p.endDate.toISOString().slice(0, 10)
+            const s = toDateKey(p.startDate)
+            const e = toDateKey(p.endDate)
             if (s !== selectedRange.start || e !== selectedRange.end) return null
             return (
               <circle
@@ -414,13 +415,7 @@ export default function MeetingHeatmap({ meetings, selectedRange, onPointClick }
               className={onPointClick ? 'cursor-pointer' : 'cursor-crosshair'}
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
-              onClick={() =>
-                onPointClick?.(
-                  p.startDate.toISOString().slice(0, 10),
-                  p.endDate.toISOString().slice(0, 10),
-                  p.label,
-                )
-              }
+              onClick={() => onPointClick?.(toDateKey(p.startDate), toDateKey(p.endDate), p.label)}
             />
           )
         })}
