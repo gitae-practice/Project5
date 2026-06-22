@@ -449,7 +449,7 @@ export default function ContactListPage() {
             onClick={() => setShowQuickForm(true)}
             className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-dashed border-gray-300 bg-[#fafafa] px-4 py-2.75 text-left text-[13px] text-gray-400 transition-colors duration-150 hover:border-[#111] hover:text-gray-700"
           >
-            + 오늘 만남 기록하기
+            + 만남 기록하기
           </button>
         ) : (
           <form
