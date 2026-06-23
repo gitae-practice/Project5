@@ -35,10 +35,24 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
         .filter((p): p is typeof p & { lat: number; lng: number } => !!p.lat && !!p.lng)
         .map((p) => ({ ...p, meetingDate: m.date })),
     )
-    // 장소 이름 기준 방문 횟수 집계 (고유 장소 ID가 없어 이름으로만 식별)
+    // 장소 이름 기준 방문 횟수 + 별점 평균 집계 (고유 장소 ID가 없어 이름으로만 식별)
     const visitCounts = new Map<string, number>()
-    flat.forEach((p) => visitCounts.set(p.name, (visitCounts.get(p.name) ?? 0) + 1))
-    return flat.map((p) => ({ ...p, visitCount: visitCounts.get(p.name) ?? 1 }))
+    const ratingSums = new Map<string, { sum: number; count: number }>()
+    flat.forEach((p) => {
+      visitCounts.set(p.name, (visitCounts.get(p.name) ?? 0) + 1)
+      if (p.rating) {
+        const prev = ratingSums.get(p.name) ?? { sum: 0, count: 0 }
+        ratingSums.set(p.name, { sum: prev.sum + p.rating, count: prev.count + 1 })
+      }
+    })
+    return flat.map((p) => {
+      const rs = ratingSums.get(p.name)
+      return {
+        ...p,
+        visitCount: visitCounts.get(p.name) ?? 1,
+        avgRating: rs ? rs.sum / rs.count : undefined,
+      }
+    })
   }, [meetings])
 
   // SDK 동적 로드 → 지도 초기화
@@ -99,10 +113,13 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
       })
       markersRef.current.push(marker)
 
-      const starsHtml = p.rating
+      const starsHtml = p.avgRating
         ? `<div>${[1, 2, 3, 4, 5]
-            .map((n) => `<span style="color:${n <= p.rating! ? '#f97316' : '#d1d5db'}">★</span>`)
-            .join('')}</div>`
+            .map(
+              (n) =>
+                `<span style="color:${n <= Math.round(p.avgRating!) ? '#f97316' : '#d1d5db'}">★</span>`,
+            )
+            .join('')} <span style="color:#9ca3af">${p.avgRating.toFixed(1)}</span></div>`
         : ''
       const visitCountHtml =
         p.visitCount > 1
