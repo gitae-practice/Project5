@@ -113,12 +113,20 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
       })
       markersRef.current.push(marker)
 
+      // 별점 0.5 단위 채움 — 한 별의 채움 비율을 0/0.5/1로 반올림해 절반만 오렌지색으로 덧씌움
       const starsHtml = p.avgRating
         ? `<div>${[1, 2, 3, 4, 5]
-            .map(
-              (n) =>
-                `<span style="color:${n <= Math.round(p.avgRating!) ? '#f97316' : '#d1d5db'}">★</span>`,
-            )
+            .map((n) => {
+              const fill = Math.max(0, Math.min(1, Math.round((p.avgRating! - (n - 1)) * 2) / 2))
+              if (fill >= 1) return '<span style="color:#f97316">★</span>'
+              if (fill <= 0) return '<span style="color:#d1d5db">★</span>'
+              return (
+                '<span style="position:relative;display:inline-block">' +
+                '<span style="color:#d1d5db">★</span>' +
+                '<span style="position:absolute;left:0;top:0;width:50%;overflow:hidden;color:#f97316">★</span>' +
+                '</span>'
+              )
+            })
             .join('')} <span style="color:#9ca3af">${p.avgRating.toFixed(1)}</span></div>`
         : ''
       const visitCountHtml =
