@@ -278,7 +278,7 @@ export default function ContactListPage() {
     setEditingGroupKey(group.groupKey)
     setEditForm({
       date: group.date,
-      places: group.places.map((p) => ({ name: p.name, lat: p.lat, lng: p.lng })),
+      places: group.places.map((p) => ({ name: p.name, lat: p.lat, lng: p.lng, rating: p.rating })),
       memo: group.memo ?? '',
     })
     setEditAddContactIds([])

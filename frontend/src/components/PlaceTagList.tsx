@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { MeetingPlaceInput } from '../types'
+import StarRating from './StarRating'
 
 // 드래그앤드롭으로 순서 변경 가능한 장소 태그 목록
 export default function PlaceTagList({
@@ -51,6 +52,12 @@ export default function PlaceTagList({
         >
           <span className="text-[11px] text-gray-400">⠿</span>
           📍 {p.name}
+          <StarRating
+            rating={p.rating}
+            onChange={(rating) =>
+              onChange(places.map((pl, j) => (j === i ? { ...pl, rating: rating || undefined } : pl)))
+            }
+          />
           <button
             type="button"
             onClick={() => onChange(places.filter((_, j) => j !== i))}

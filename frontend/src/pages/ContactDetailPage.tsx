@@ -25,6 +25,7 @@ import type {
 import { todayKey } from '../utils/date'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
+import StarRating from '../components/StarRating'
 import ConfirmModal from '../components/ConfirmModal'
 import MeetingMap from '../components/MeetingMap'
 import MeetingCalendar from '../components/MeetingCalendar'
@@ -212,7 +213,7 @@ export default function ContactDetailPage() {
     setEditingMeetingId(m.id)
     setEditMeetForm({
       date: m.date,
-      places: m.places.map((p) => ({ name: p.name, lat: p.lat, lng: p.lng })),
+      places: m.places.map((p) => ({ name: p.name, lat: p.lat, lng: p.lng, rating: p.rating })),
       memo: m.memo ?? '',
     })
   }
@@ -873,8 +874,12 @@ export default function ContactDetailPage() {
                                   {m.date}
                                 </p>
                                 {m.places.map((p, i) => (
-                                  <p key={i} className="m-0 mb-0.5 text-xs text-gray-500">
+                                  <p
+                                    key={i}
+                                    className="m-0 mb-0.5 flex items-center gap-1.5 text-xs text-gray-500"
+                                  >
                                     📍 {p.name}
+                                    <StarRating rating={p.rating} />
                                   </p>
                                 ))}
                                 {m.memo && <p className="m-0 text-xs text-gray-400">{m.memo}</p>}

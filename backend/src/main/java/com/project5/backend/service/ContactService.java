@@ -174,6 +174,7 @@ public class ContactService {
                 meeting.getPlaces().add(MeetingPlace.builder()
                         .meeting(meeting).name(pr.getName())
                         .lat(pr.getLat()).lng(pr.getLng())
+                        .rating(pr.getRating())
                         .sortOrder(i).build());
             }
         }
@@ -200,6 +201,7 @@ public class ContactService {
                     meeting.getPlaces().add(MeetingPlace.builder()
                             .meeting(meeting).name(pr.getName())
                             .lat(pr.getLat()).lng(pr.getLng())
+                            .rating(pr.getRating())
                             .sortOrder(i).build());
                 }
             }
@@ -222,6 +224,7 @@ public class ContactService {
                 meeting.getPlaces().add(MeetingPlace.builder()
                         .meeting(meeting).name(pr.getName())
                         .lat(pr.getLat()).lng(pr.getLng())
+                        .rating(pr.getRating())
                         .sortOrder(i).build());
             }
         }

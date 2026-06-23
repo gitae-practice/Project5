@@ -30,4 +30,7 @@ public class MeetingPlace {
     // 폼에서 추가한 순서 유지
     @Column(name = "sort_order")
     private Integer sortOrder;
+
+    // 이번 방문에 대한 평점 (1~5, 선택 입력)
+    private Integer rating;
 }

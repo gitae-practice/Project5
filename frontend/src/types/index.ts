@@ -59,6 +59,7 @@ export interface MeetingPlace {
   name: string
   lat?: number
   lng?: number
+  rating?: number
 }
 
 // 만남 추가/수정 시 장소 입력용 (id 없음)
@@ -66,6 +67,7 @@ export interface MeetingPlaceInput {
   name: string
   lat?: number
   lng?: number
+  rating?: number
 }
 
 export interface Meeting {

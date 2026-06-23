@@ -29,15 +29,17 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
   const [sdkError, setSdkError] = useState(false)
 
   // 모든 만남의 장소를 평탄화 (좌표 있는 것만), meetings가 바뀔 때만 새로 계산
-  const allPlaces = useMemo(
-    () =>
-      meetings.flatMap((m) =>
-        m.places
-          .filter((p): p is typeof p & { lat: number; lng: number } => !!p.lat && !!p.lng)
-          .map((p) => ({ ...p, meetingDate: m.date })),
-      ),
-    [meetings],
-  )
+  const allPlaces = useMemo(() => {
+    const flat = meetings.flatMap((m) =>
+      m.places
+        .filter((p): p is typeof p & { lat: number; lng: number } => !!p.lat && !!p.lng)
+        .map((p) => ({ ...p, meetingDate: m.date })),
+    )
+    // 장소 이름 기준 방문 횟수 집계 (고유 장소 ID가 없어 이름으로만 식별)
+    const visitCounts = new Map<string, number>()
+    flat.forEach((p) => visitCounts.set(p.name, (visitCounts.get(p.name) ?? 0) + 1))
+    return flat.map((p) => ({ ...p, visitCount: visitCounts.get(p.name) ?? 1 }))
+  }, [meetings])
 
   // SDK 동적 로드 → 지도 초기화
   useEffect(() => {
@@ -97,10 +99,20 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
       })
       markersRef.current.push(marker)
 
+      const starsHtml = p.rating
+        ? `<div>${[1, 2, 3, 4, 5]
+            .map((n) => `<span style="color:${n <= p.rating! ? '#f97316' : '#d1d5db'}">★</span>`)
+            .join('')}</div>`
+        : ''
+      const visitCountHtml =
+        p.visitCount > 1
+          ? `<span style="color:#9ca3af">· ${p.visitCount}회 방문</span>`
+          : ''
       const infoContent = `
         <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;width:160px;word-break:break-all;line-height:1.6">
           <strong>${p.name}</strong><br/>
-          <span style="color:#9ca3af">${p.meetingDate}</span>
+          <span style="color:#9ca3af">${p.meetingDate}</span> ${visitCountHtml}
+          ${starsHtml}
         </div>
       `
       const infoWindow = new kakao.maps.InfoWindow({

@@ -20,6 +20,7 @@ public class MeetingDto {
         private String name;
         private Double lat;
         private Double lng;
+        private Integer rating;
     }
 
     // 장소 응답 DTO
@@ -30,6 +31,7 @@ public class MeetingDto {
         private String name;
         private Double lat;
         private Double lng;
+        private Integer rating;
 
         public static PlaceResponse from(MeetingPlace mp) {
             return PlaceResponse.builder()
@@ -37,6 +39,7 @@ public class MeetingDto {
                     .name(mp.getName())
                     .lat(mp.getLat())
                     .lng(mp.getLng())
+                    .rating(mp.getRating())
                     .build();
         }
     }
