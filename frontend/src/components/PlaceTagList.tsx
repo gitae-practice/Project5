@@ -46,7 +46,7 @@ export default function PlaceTagList({
             setDraggingIdx(null)
             setDragOverIdx(null)
           }}
-          className={`inline-flex select-none items-center gap-1 rounded-[5px] border px-2 py-[3px] text-xs text-gray-700 transition duration-100 ${
+          className={`inline-flex select-none items-center gap-1 rounded-[5px] border px-2 py-0.75 text-xs text-gray-700 transition duration-100 ${
             dragOverIdx === i ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-100'
           } ${draggingIdx === i ? 'opacity-40' : 'opacity-100'} cursor-grab`}
         >

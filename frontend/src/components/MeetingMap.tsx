@@ -163,18 +163,18 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
   return (
     <div className="flex h-full flex-col">
       {allPlaces.length > 0 && (
-        <p className="m-0 mb-2 text-[11px] font-bold tracking-[0.05em] text-gray-400">
+        <p className="m-0 mb-2 text-[11px] font-bold tracking-wider text-gray-400">
           VISITED PLACES ({allPlaces.length})
         </p>
       )}
 
       {/* position:relative 래퍼 + 내부 absolute div → Kakao가 크기를 정확히 인식 */}
-      <div className="relative min-h-[380px] flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-gray-50">
+      <div className="relative min-h-95 flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-gray-50">
         <div ref={mapRef} className="absolute inset-0" />
 
         {/* 지도 컨트롤: + / - */}
         {ready && (
-          <div className="absolute bottom-[20px] right-[10px] z-10 flex flex-col gap-0.5">
+          <div className="absolute bottom-5 right-2.5 z-10 flex flex-col gap-0.5">
             <button
               onClick={() =>
                 mapInstance.current?.setLevel((mapInstance.current?.getLevel() ?? 0) - 1)

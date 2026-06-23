@@ -51,11 +51,11 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
   const modal = open
     ? createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/45"
           onClick={handleClose}
         >
           <div
-            className="flex max-h-[70vh] w-[420px] flex-col rounded-[10px] bg-white p-5 shadow-[0_8px_32px_rgba(0,0,0,0.18)]"
+            className="flex max-h-[70vh] w-105 flex-col rounded-[10px] bg-white p-5 shadow-[0_8px_32px_rgba(0,0,0,0.18)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3.5 flex items-center justify-between">
@@ -82,13 +82,13 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
                   }
                 }}
                 placeholder="장소명 검색 (예: 성수동 카페)"
-                className="flex-1 rounded-md border border-gray-200 px-3 py-[9px] text-[13px] outline-none"
+                className="flex-1 rounded-md border border-gray-200 px-3 py-2.25 text-[13px] outline-none"
               />
               {/* type="button" 필수 - 없으면 부모 form submit 트리거 */}
               <button
                 type="button"
                 onClick={handleSearch}
-                className="cursor-pointer rounded-md border-none bg-[#111] px-4 py-[9px] text-[13px] text-white"
+                className="cursor-pointer rounded-md border-none bg-[#111] px-4 py-2.25 text-[13px] text-white"
               >
                 검색
               </button>
@@ -116,7 +116,7 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
                 <div
                   key={i}
                   onClick={() => handleSelect(place)}
-                  className={`cursor-pointer rounded-md px-2 py-[10px] hover:bg-gray-50 ${
+                  className={`cursor-pointer rounded-md px-2 py-2.5 hover:bg-gray-50 ${
                     i < results.length - 1 ? 'border-b border-gray-100' : 'border-b-0'
                   }`}
                 >
@@ -143,7 +143,7 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
         <span className="overflow-hidden text-ellipsis whitespace-nowrap">
           {value || '장소 검색'}
         </span>
-        <span className="ml-1 flex-shrink-0 text-[13px]">🔍</span>
+        <span className="ml-1 shrink-0 text-[13px]">🔍</span>
       </div>
       {modal}
     </>
