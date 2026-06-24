@@ -78,3 +78,7 @@ export const updateMeeting = (
 ) => api.put<Meeting>(`/contacts/meetings/${meetingId}`, data).then((r) => r.data)
 
 export const deleteMeeting = (meetingId: number) => api.delete(`/contacts/meetings/${meetingId}`)
+
+// 해당 만남에 함께한 다른 지인 이름 목록 (동행 없으면 빈 배열)
+export const getCompanions = (meetingId: number) =>
+  api.get<string[]>(`/contacts/meetings/${meetingId}/companions`).then((r) => r.data)

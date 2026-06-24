@@ -76,6 +76,7 @@ export interface Meeting {
   date: string
   places: MeetingPlace[]
   memo?: string
+  groupId?: string
   createdAt: string
 }
 

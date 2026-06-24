@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Meeting } from '../types'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -40,8 +40,9 @@ export default function MeetingCalendar({
   const [month, setMonth] = useState(initDate.getMonth())
   const [viewMode, setViewMode] = useState<ViewMode>('days')
   const [yearRangeStart, setYearRangeStart] = useState(Math.floor(initDate.getFullYear() / 12) * 12)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // focusDate가 바뀌면(히트맵 클릭 등) 해당 날짜가 속한 달로 이동
+  // focusDate가 바뀌면(히트맵 클릭 등) 해당 날짜가 속한 달로 이동 + 화면도 달력 위치로 스크롤
   // year/month는 이전/다음 버튼으로도 독립적으로 바뀌는 상태라 derived value로 대체 불가
   useEffect(() => {
     if (!focusDate) return
@@ -50,6 +51,7 @@ export default function MeetingCalendar({
     setYear(d.getFullYear())
     setMonth(d.getMonth())
     setViewMode('days')
+    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [focusDate])
 
   const prevUnit = () => {
@@ -124,7 +126,7 @@ export default function MeetingCalendar({
     'cursor-pointer border-none bg-transparent px-2.5 py-0.5 text-[22px] leading-none text-gray-700'
 
   return (
-    <div className="mb-5 rounded-[10px] border border-gray-200 bg-white p-6">
+    <div ref={containerRef} className="mb-5 rounded-[10px] border border-gray-200 bg-white p-6">
       {/* 헤더 */}
       <div className="mb-5 flex items-center justify-between">
         <button type="button" onClick={prevUnit} className={btnClass}>
@@ -198,7 +200,7 @@ export default function MeetingCalendar({
                   {day !== null && (
                     <div
                       onClick={() => onDateSelect?.(isSelected ? null : dateStr)}
-                      className={`flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full text-sm ${bgClass} ${borderClass} ${colorClass} ${fwClass} ${
+                      className={`flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full text-sm ${bgClass} ${borderClass} ${colorClass} ${fwClass} ${
                         // 선택된 날: 파란 외곽선으로 표시
                         isSelected
                           ? 'outline outline-[2.5px] outline-offset-2 outline-blue-500'

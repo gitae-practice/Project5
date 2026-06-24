@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Meeting } from '../types'
 import { loadKakaoSdk } from '../utils/kakaoLoader'
+import { getCompanions } from '../api/contacts'
 
 const DEFAULT_LAT = 37.5665
 const DEFAULT_LNG = 126.978
@@ -27,13 +29,16 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
   const infoWindowsRef = useRef<KakaoInfoWindow[]>([])
   const [ready, setReady] = useState(false)
   const [sdkError, setSdkError] = useState(false)
+  // 인포윈도우의 "방문 기록 보기" 클릭 시 열리는 팝업 대상 장소 이름
+  const [historyPlaceName, setHistoryPlaceName] = useState<string | null>(null)
+  const [companionsByMeeting, setCompanionsByMeeting] = useState<Record<number, string[]>>({})
 
   // 모든 만남의 장소를 평탄화 (좌표 있는 것만), meetings가 바뀔 때만 새로 계산
   const allPlaces = useMemo(() => {
     const flat = meetings.flatMap((m) =>
       m.places
         .filter((p): p is typeof p & { lat: number; lng: number } => !!p.lat && !!p.lng)
-        .map((p) => ({ ...p, meetingDate: m.date })),
+        .map((p) => ({ ...p, meetingDate: m.date, meetingId: m.id })),
     )
     // 장소 이름 기준 방문 횟수 + 별점 평균 집계 (고유 장소 ID가 없어 이름으로만 식별)
     const visitCounts = new Map<string, number>()
@@ -133,11 +138,17 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
         p.visitCount > 1
           ? `<span style="color:#9ca3af">· ${p.visitCount}회 방문</span>`
           : ''
+      // 여러 번 방문한 장소는 인포윈도우에 방문 이력 팝업 버튼 표시 (클릭은 document 레벨 위임으로 처리)
+      const historyBtnHtml =
+        p.visitCount > 1
+          ? `<button data-history-place="${encodeURIComponent(p.name)}" style="margin-top:4px;padding:3px 8px;font-size:11px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#374151;cursor:pointer">방문 기록 보기</button>`
+          : ''
       const infoContent = `
         <div style="padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;width:160px;word-break:break-all;line-height:1.6">
           <strong>${p.name}</strong><br/>
           <span style="color:#9ca3af">${p.meetingDate}</span> ${visitCountHtml}
           ${starsHtml}
+          ${historyBtnHtml}
         </div>
       `
       const infoWindow = new kakao.maps.InfoWindow({
@@ -159,6 +170,88 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
       map.setBounds(bounds)
     }
   }, [ready, allPlaces, highlightRange])
+
+  // 인포윈도우는 raw HTML이라 React 이벤트를 못 붙임 → 클릭 위임으로 "방문 기록 보기" 버튼 처리
+  useEffect(() => {
+    const container = mapRef.current
+    if (!container) return
+    const handleClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('[data-history-place]')
+      if (!target) return
+      setHistoryPlaceName(decodeURIComponent(target.getAttribute('data-history-place')!))
+    }
+    container.addEventListener('click', handleClick)
+    return () => container.removeEventListener('click', handleClick)
+  }, [])
+
+  // 팝업 대상 장소의 방문 목록 (최신 날짜 순)
+  const historyVisits = useMemo(() => {
+    if (!historyPlaceName) return []
+    return allPlaces
+      .filter((p) => p.name === historyPlaceName)
+      .map((p) => ({ meetingId: p.meetingId, date: p.meetingDate }))
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+  }, [historyPlaceName, allPlaces])
+
+  // 팝업이 열려 아직 동행인 정보를 못 가져온 방문 건만 조회
+  useEffect(() => {
+    const missing = historyVisits.filter((v) => !(v.meetingId in companionsByMeeting))
+    if (missing.length === 0) return
+    Promise.all(
+      missing.map((v) => getCompanions(v.meetingId).then((names) => [v.meetingId, names] as const)),
+    ).then((entries) => {
+      setCompanionsByMeeting((prev) => {
+        const next = { ...prev }
+        entries.forEach(([id, names]) => {
+          next[id] = names
+        })
+        return next
+      })
+    })
+  }, [historyVisits, companionsByMeeting])
+
+  const historyModal = historyPlaceName
+    ? createPortal(
+        <div
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/45"
+          onClick={() => setHistoryPlaceName(null)}
+        >
+          <div
+            className="flex max-h-[70vh] w-105 flex-col rounded-[10px] bg-white p-5 shadow-[0_8px_32px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3.5 flex items-center justify-between">
+              <span className="text-[15px] font-bold text-[#111]">{historyPlaceName} 방문 기록</span>
+              <button
+                type="button"
+                onClick={() => setHistoryPlaceName(null)}
+                className="cursor-pointer border-none bg-transparent text-lg leading-none text-gray-400"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {historyVisits.map((v) => {
+                const names = companionsByMeeting[v.meetingId]
+                return (
+                  <div key={v.meetingId} className="border-b border-gray-100 py-2.5 last:border-b-0">
+                    <p className="m-0 text-sm font-semibold text-[#111]">{v.date}</p>
+                    <p className="m-0 mt-0.5 text-xs text-gray-400">
+                      {names === undefined
+                        ? '불러오는 중...'
+                        : names.length > 0
+                          ? `함께: ${names.join(', ')}`
+                          : '동행 없음'}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null
 
   return (
     <div className="flex h-full flex-col">
@@ -211,6 +304,7 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
           장소를 추가하면 지도에 표시돼요
         </p>
       )}
+      {historyModal}
     </div>
   )
 }

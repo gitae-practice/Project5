@@ -158,6 +158,17 @@ public class ContactService {
                 .collect(Collectors.toList());
     }
 
+    // 동행인 조회: 해당 만남과 같은 groupId로 묶인 다른 지인들의 이름 (자기 자신 제외, groupId 없으면 빈 목록)
+    public List<String> getCompanionNames(Long meetingId) {
+        Meeting meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new RuntimeException("Meeting not found: " + meetingId));
+        if (meeting.getGroupId() == null) return List.of();
+        return meetingRepository.findByGroupId(meeting.getGroupId()).stream()
+                .filter(m -> !m.getId().equals(meetingId))
+                .map(m -> m.getContact().getName())
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public MeetingDto.Response addMeeting(Long contactId, MeetingDto.Request req) {
         Contact contact = findContact(contactId);

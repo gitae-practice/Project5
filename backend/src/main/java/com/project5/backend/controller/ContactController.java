@@ -140,4 +140,10 @@ public class ContactController {
         contactService.deleteMeeting(meetingId);
         return ResponseEntity.noContent().build();
     }
+
+    // 동행인 조회: 해당 만남에 함께한 다른 지인 이름 목록
+    @GetMapping("/meetings/{meetingId}/companions")
+    public List<String> getCompanions(@PathVariable Long meetingId) {
+        return contactService.getCompanionNames(meetingId);
+    }
 }

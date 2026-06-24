@@ -23,4 +23,8 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     // 대시보드용: 오늘 이후(오늘 포함) 예정된 만남 (가까운 날짜 순)
     @Query("SELECT m FROM Meeting m JOIN FETCH m.contact WHERE m.contact.me = false AND m.date >= :today ORDER BY m.date ASC")
     List<Meeting> findUpcomingMeetings(@Param("today") LocalDate today);
+
+    // 동행인 조회용: 같은 groupId를 공유하는 모든 만남 (여러 지인 동시 등록 시 각자 생성된 row)
+    @Query("SELECT m FROM Meeting m JOIN FETCH m.contact WHERE m.groupId = :groupId")
+    List<Meeting> findByGroupId(@Param("groupId") String groupId);
 }
