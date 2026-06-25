@@ -14,6 +14,7 @@ import com.project5.backend.repository.ContactGroupRepository;
 import com.project5.backend.repository.ContactPreferenceRepository;
 import com.project5.backend.repository.ContactRepository;
 import com.project5.backend.repository.GiftHistoryRepository;
+import com.project5.backend.repository.MeetingPlaceRepository;
 import com.project5.backend.repository.MeetingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +42,7 @@ public class ContactService {
     private final ContactPreferenceRepository preferenceRepository;
     private final GiftHistoryRepository giftHistoryRepository;
     private final MeetingRepository meetingRepository;
+    private final MeetingPlaceRepository meetingPlaceRepository;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
@@ -155,6 +157,17 @@ public class ContactService {
     public List<MeetingDto.Response> getMeetings(Long contactId) {
         return meetingRepository.findByContactIdOrderByDateDesc(contactId).stream()
                 .map(MeetingDto.Response::from)
+                .collect(Collectors.toList());
+    }
+
+    // 장소 이름 기준 전역 별점 평균 — 동행자/방문일 무관, 같은 이름의 모든 방문을 합산
+    public List<MeetingDto.PlaceRatingStat> getPlaceRatingStats() {
+        return meetingPlaceRepository.findRatingStatsByName().stream()
+                .map(row -> MeetingDto.PlaceRatingStat.builder()
+                        .name((String) row[0])
+                        .avgRating((Double) row[1])
+                        .ratingCount((Long) row[2])
+                        .build())
                 .collect(Collectors.toList());
     }
 

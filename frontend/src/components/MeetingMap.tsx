@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Meeting } from '../types'
 import { loadKakaoSdk } from '../utils/kakaoLoader'
-import { getCompanions } from '../api/contacts'
+import { getCompanions, getPlaceRatingStats } from '../api/contacts'
 
 const DEFAULT_LAT = 37.5665
 const DEFAULT_LNG = 126.978
@@ -32,6 +32,18 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
   // 인포윈도우의 "방문 기록 보기" 클릭 시 열리는 팝업 대상 장소 이름
   const [historyPlaceName, setHistoryPlaceName] = useState<string | null>(null)
   const [companionsByMeeting, setCompanionsByMeeting] = useState<Record<number, string[]>>({})
+  // 장소 이름 기준 전역 별점 평균 (동행자/방문일 무관, meetings 변경 시 — 예: 별점 수정 후 — 다시 조회)
+  const [globalRatingByName, setGlobalRatingByName] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    getPlaceRatingStats().then((stats) => {
+      const map: Record<string, number> = {}
+      stats.forEach((s) => {
+        map[s.name] = s.avgRating
+      })
+      setGlobalRatingByName(map)
+    })
+  }, [meetings])
 
   // 모든 만남의 장소를 평탄화 (좌표 있는 것만), meetings가 바뀔 때만 새로 계산
   const allPlaces = useMemo(() => {
@@ -40,25 +52,15 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
         .filter((p): p is typeof p & { lat: number; lng: number } => !!p.lat && !!p.lng)
         .map((p) => ({ ...p, meetingDate: m.date, meetingId: m.id })),
     )
-    // 장소 이름 기준 방문 횟수 + 별점 평균 집계 (고유 장소 ID가 없어 이름으로만 식별)
+    // 방문 횟수는 지금 보고 있는 지인 기준으로만 집계 (고유 장소 ID가 없어 이름으로만 식별)
     const visitCounts = new Map<string, number>()
-    const ratingSums = new Map<string, { sum: number; count: number }>()
-    flat.forEach((p) => {
-      visitCounts.set(p.name, (visitCounts.get(p.name) ?? 0) + 1)
-      if (p.rating) {
-        const prev = ratingSums.get(p.name) ?? { sum: 0, count: 0 }
-        ratingSums.set(p.name, { sum: prev.sum + p.rating, count: prev.count + 1 })
-      }
-    })
-    return flat.map((p) => {
-      const rs = ratingSums.get(p.name)
-      return {
-        ...p,
-        visitCount: visitCounts.get(p.name) ?? 1,
-        avgRating: rs ? rs.sum / rs.count : undefined,
-      }
-    })
-  }, [meetings])
+    flat.forEach((p) => visitCounts.set(p.name, (visitCounts.get(p.name) ?? 0) + 1))
+    return flat.map((p) => ({
+      ...p,
+      visitCount: visitCounts.get(p.name) ?? 1,
+      avgRating: globalRatingByName[p.name],
+    }))
+  }, [meetings, globalRatingByName])
 
   // SDK 동적 로드 → 지도 초기화
   useEffect(() => {

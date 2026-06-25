@@ -146,4 +146,10 @@ public class ContactController {
     public List<String> getCompanions(@PathVariable Long meetingId) {
         return contactService.getCompanionNames(meetingId);
     }
+
+    // 장소 이름 기준 전역 별점 평균 (동행자/방문일 무관)
+    @GetMapping("/meeting-places/ratings")
+    public List<MeetingDto.PlaceRatingStat> getPlaceRatingStats() {
+        return contactService.getPlaceRatingStats();
+    }
 }
