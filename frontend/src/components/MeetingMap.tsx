@@ -116,6 +116,8 @@ export default function MeetingMap({ meetings, highlightRange }: Props) {
       const marker = new kakao.maps.Marker({
         map,
         position: pos,
+        // 같은 좌표에 마커가 여러 개 겹칠 때 강조된 핀이 항상 위로 오도록 z-index 부여
+        zIndex: isHighlighted ? 10 : 1,
         ...(isHighlighted ? { image: highlightImage } : {}),
       })
       markersRef.current.push(marker)

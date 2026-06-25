@@ -63,6 +63,7 @@ interface KakaoSDK {
       map: KakaoMap
       position: KakaoLatLng
       image?: KakaoMarkerImage
+      zIndex?: number
     }) => KakaoMarker
     InfoWindow: new (options: {
       content: string
