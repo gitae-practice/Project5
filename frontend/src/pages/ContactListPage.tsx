@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDashboard } from '../api/dashboard'
 import {
@@ -12,7 +12,6 @@ import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
 import ConfirmModal from '../components/ConfirmModal'
 import { todayKey } from '../utils/date'
-import { findLastRating } from '../utils/placeRating'
 import type {
   ContactSummary,
   DashboardResponse,
@@ -239,11 +238,6 @@ export default function ContactListPage() {
   const navigate = useNavigate()
   const [data, setData] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  // 장소 선택 시 직전 별점 기본값을 찾기 위한 과거 만남 목록 (최근/예정 만남 합산, 전체 이력은 아님)
-  const pastMeetings = useMemo(
-    () => [...(data?.recentMeetings ?? []), ...(data?.upcomingMeetings ?? [])],
-    [data],
-  )
 
   // 빠른 만남 기록 폼
   const today = todayKey()
@@ -492,7 +486,7 @@ export default function ContactListPage() {
                 onSelect={({ name, lat, lng }) =>
                   setQuickForm((p) => ({
                     ...p,
-                    places: [...p.places, { name, lat, lng, rating: findLastRating(pastMeetings, name) }],
+                    places: [...p.places, { name, lat, lng }],
                   }))
                 }
                 style={{ flex: 1 }}
@@ -701,10 +695,7 @@ export default function ContactListPage() {
                           onSelect={({ name, lat, lng }) =>
                             setEditForm((p) => ({
                               ...p,
-                              places: [
-                                ...p.places,
-                                { name, lat, lng, rating: findLastRating(pastMeetings, name) },
-                              ],
+                              places: [...p.places, { name, lat, lng }],
                             }))
                           }
                           style={{ flex: 1, fontSize: 12 }}

@@ -1,11 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { loadKakaoSdk } from '../utils/kakaoLoader'
+import { getPlaceRatingStats } from '../api/contacts'
 
 interface Props {
   value: string
   onSelect: (place: { name: string; lat: number; lng: number }) => void
   style?: React.CSSProperties
+}
+
+interface PlaceStat {
+  visitCount: number
+  avgRating: number | null
 }
 
 export default function PlaceSearch({ value, onSelect, style }: Props) {
@@ -14,6 +20,19 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
   const [sdkError, setSdkError] = useState(false)
+  // 검색 결과에 "N번 방문 · ★평점" 미리보기를 보여주기 위한 전역 장소 통계 (모달 열 때마다 최신화)
+  const [statsByName, setStatsByName] = useState<Record<string, PlaceStat>>({})
+
+  useEffect(() => {
+    if (!open) return
+    getPlaceRatingStats().then((stats) => {
+      const map: Record<string, PlaceStat> = {}
+      stats.forEach((s) => {
+        map[s.name] = { visitCount: s.visitCount, avgRating: s.avgRating }
+      })
+      setStatsByName(map)
+    })
+  }, [open])
 
   const handleSearch = async () => {
     if (!query.trim()) return
@@ -112,18 +131,29 @@ export default function PlaceSearch({ value, onSelect, style }: Props) {
                   위에 장소명을 입력하세요
                 </p>
               )}
-              {results.map((place, i) => (
-                <div
-                  key={i}
-                  onClick={() => handleSelect(place)}
-                  className={`cursor-pointer rounded-md px-2 py-2.5 hover:bg-gray-50 ${
-                    i < results.length - 1 ? 'border-b border-gray-100' : 'border-b-0'
-                  }`}
-                >
-                  <p className="m-0 mb-0.5 text-sm font-semibold text-[#111]">{place.place_name}</p>
-                  <p className="m-0 text-xs text-gray-400">{place.address_name}</p>
-                </div>
-              ))}
+              {results.map((place, i) => {
+                const stat = statsByName[place.place_name]
+                return (
+                  <div
+                    key={i}
+                    onClick={() => handleSelect(place)}
+                    className={`cursor-pointer rounded-md px-2 py-2.5 hover:bg-gray-50 ${
+                      i < results.length - 1 ? 'border-b border-gray-100' : 'border-b-0'
+                    }`}
+                  >
+                    <p className="m-0 mb-0.5 text-sm font-semibold text-[#111]">
+                      {place.place_name}
+                    </p>
+                    <p className="m-0 text-xs text-gray-400">{place.address_name}</p>
+                    {stat && (
+                      <p className="m-0 mt-0.5 text-[11px] text-[#f97316]">
+                        {stat.visitCount}번 방문
+                        {stat.avgRating != null ? ` · ★ ${stat.avgRating.toFixed(1)}` : ''}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>,

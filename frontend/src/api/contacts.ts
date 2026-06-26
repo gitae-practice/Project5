@@ -83,8 +83,10 @@ export const deleteMeeting = (meetingId: number) => api.delete(`/contacts/meetin
 export const getCompanions = (meetingId: number) =>
   api.get<string[]>(`/contacts/meetings/${meetingId}/companions`).then((r) => r.data)
 
-// 장소 이름 기준 전역 별점 평균 (동행자/방문일 무관, 별점이 있는 장소만)
+// 장소 이름 기준 전역 방문 통계 (동행자/방문일 무관)
 export const getPlaceRatingStats = () =>
   api
-    .get<{ name: string; avgRating: number; ratingCount: number }[]>('/contacts/meeting-places/ratings')
+    .get<{ name: string; visitCount: number; avgRating: number | null; ratingCount: number }[]>(
+      '/contacts/meeting-places/ratings',
+    )
     .then((r) => r.data)

@@ -26,7 +26,6 @@ import { todayKey } from '../utils/date'
 import PlaceSearch from '../components/PlaceSearch'
 import PlaceTagList from '../components/PlaceTagList'
 import StarRating from '../components/StarRating'
-import { findLastRating } from '../utils/placeRating'
 import ConfirmModal from '../components/ConfirmModal'
 import MeetingMap from '../components/MeetingMap'
 import MeetingCalendar from '../components/MeetingCalendar'
@@ -659,7 +658,7 @@ export default function ContactDetailPage() {
                       onSelect={({ name, lat, lng }) =>
                         setMeetForm((p) => ({
                           ...p,
-                          places: [...p.places, { name, lat, lng, rating: findLastRating(meetings, name) }],
+                          places: [...p.places, { name, lat, lng }],
                         }))
                       }
                       style={{ flex: 1 }}
@@ -828,10 +827,7 @@ export default function ContactDetailPage() {
                                   onSelect={({ name, lat, lng }) =>
                                     setEditMeetForm((p) => ({
                                       ...p,
-                                      places: [
-                                        ...p.places,
-                                        { name, lat, lng, rating: findLastRating(meetings, name) },
-                                      ],
+                                      places: [...p.places, { name, lat, lng }],
                                     }))
                                   }
                                   style={{ flex: 1, fontSize: 12 }}

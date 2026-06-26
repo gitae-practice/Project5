@@ -165,8 +165,9 @@ public class ContactService {
         return meetingPlaceRepository.findRatingStatsByName().stream()
                 .map(row -> MeetingDto.PlaceRatingStat.builder()
                         .name((String) row[0])
-                        .avgRating((Double) row[1])
-                        .ratingCount((Long) row[2])
+                        .visitCount((Long) row[1])
+                        .avgRating((Double) row[2])
+                        .ratingCount((Long) row[3])
                         .build())
                 .collect(Collectors.toList());
     }

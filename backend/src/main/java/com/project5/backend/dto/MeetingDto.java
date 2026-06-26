@@ -67,12 +67,13 @@ public class MeetingDto {
         private String groupId; // null이면 서버에서 새 UUID 생성
     }
 
-    // 장소 이름 기준 전역 별점 평균 (동행자/방문일 무관)
+    // 장소 이름 기준 전역 방문 통계 (동행자/방문일 무관)
     @Getter
     @Builder
     public static class PlaceRatingStat {
         private String name;
-        private Double avgRating;
+        private Long visitCount;
+        private Double avgRating; // 별점 매긴 방문이 없으면 null
         private Long ratingCount;
     }
 
