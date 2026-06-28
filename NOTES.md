@@ -2,6 +2,13 @@
 
 ## 완료된 작업
 
+### 2026-06-25 (계속)
+- 장소 검색 모달에 과거 방문 미리보기 추가 — 검색 결과에 "N번 방문 · ★평점" 표시
+  - 백엔드: `findRatingStatsByName` 쿼리에서 `WHERE rating IS NOT NULL` 제거하고 전체 방문 횟수(`visitCount`)도 함께 반환
+- 장소 재선택 시 직전 별점 자동 채움 기능 제거 — 전역 평균 도입 이후로는 새 방문에 옛 별점이 자동으로 채워지면 오히려 혼란을 줘서 되돌림 (`findLastRating` 유틸 삭제)
+- 백엔드 단위 테스트 3개 추가 (`ContactServiceTest` — 동행인 조회, 장소 별점 통계 매핑)
+- 프론트엔드 Vitest 도입 + 날짜 유틸(`toDateKey`) 테스트 2개 추가, `npm audit fix`로 기존 취약점 정리
+
 ### 2026-06-25
 - 장소 별점 평균을 지인별 집계에서 전역 집계로 변경 — 같은 장소를 다른 지인과 가도 평균에 그동안의 모든 방문이 반영됨 (방문은 독립적으로 별점 가능, 평균만 전역)
   - 백엔드: `MeetingPlaceRepository.findRatingStatsByName()`, `GET /api/contacts/meeting-places/ratings` 신규

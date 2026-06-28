@@ -48,6 +48,7 @@
 | 백엔드 | Spring Boot 4, Java 21 |
 | ORM | Spring Data JPA, Hibernate |
 | DB | MySQL 8 |
+| 테스트 | JUnit 5, Mockito, AssertJ (백엔드) / Vitest (프론트엔드) |
 
 ## 주요 기능
 
